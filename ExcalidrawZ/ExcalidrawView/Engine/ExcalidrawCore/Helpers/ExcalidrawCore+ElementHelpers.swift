@@ -79,6 +79,20 @@ extension ExcalidrawCore {
     }
 
     @MainActor
+    func addElements(rawElementsJSON elementsJSON: String) async throws {
+        guard !self.webView.isLoading else { return }
+        _ = try await webView.callAsyncJavaScript(
+            """
+            const elements = JSON.parse(elementsJSON);
+            window.excalidrawZHelper.addElements(elements);
+            """,
+            arguments: ["elementsJSON": elementsJSON],
+            contentWorld: .page
+        )
+        documentSyncController.scheduleProgrammaticMutationCommit(reason: "addElementsRaw")
+    }
+
+    @MainActor
     func updateElements(_ operations: [UpdateElementOperation]) async throws {
         guard !self.webView.isLoading, !operations.isEmpty else { return }
         let operationsJSON = try encodeJSON(operations)

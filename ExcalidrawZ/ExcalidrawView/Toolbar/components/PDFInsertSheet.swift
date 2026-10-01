@@ -17,6 +17,7 @@ import SFSafeSymbols
 enum PDFInsertMode: String, CaseIterable {
     case viewer
     case tiled
+    case pastPaper
     
     var title: LocalizedStringKey {
         switch self {
@@ -24,6 +25,8 @@ enum PDFInsertMode: String, CaseIterable {
                 return .localizable(.insertPDFSheetModeViewerTitle)
             case .tiled:
                 return .localizable(.insertPDFSheetModeTiledTitle)
+            case .pastPaper:
+                return .localizable(.insertPDFSheetModePastPaperTitle)
         }
     }
     
@@ -33,6 +36,8 @@ enum PDFInsertMode: String, CaseIterable {
                 return .localizable(.insertPDFSheetModeViewerDescription)
             case .tiled:
                 return .localizable(.insertPDFSheetModeTiledDescription)
+            case .pastPaper:
+                return .localizable(.insertPDFSheetModePastPaperDescription)
         }
     }
 }
@@ -42,7 +47,8 @@ struct PDFInsertSheet: View {
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
     
     var pdfInfo: PDFDropInfo?
-    var onInsert: (Data, PDFInsertMode, String, Int?) async throws -> Void
+    /// (pdfData, mode, tiles direction, tiles per line, past-paper frame width)
+    var onInsert: (Data, PDFInsertMode, String, Int?, Double) async throws -> Void
     
     @State private var selectedMode: PDFInsertMode = .viewer
     @State private var isFilePickerPresented = false
@@ -56,6 +62,12 @@ struct PDFInsertSheet: View {
     }
     @State private var direction: TilesDiection = .vertical
     @State private var itemsPerLine: Int = 1
+
+    // Past paper options
+    @State private var pastPaperFrameWidth: Int = 960
+#if canImport(PDFKit)
+    @State private var pastPaperAnalysis: PastPaperAnalysis?
+#endif
     
 #if canImport(PDFKit)
     @State private var pdfDocument: PDFDocument?
@@ -85,6 +97,7 @@ struct PDFInsertSheet: View {
 #if canImport(PDFKit)
                 self.pdfDocument = PDFDocument(data: pdfData)
                 self.fileName = pdfInfo?.fileName
+                analyzePastPaper()
 #endif
                 self.pdfData = pdfData
             } else {
@@ -225,6 +238,29 @@ struct PDFInsertSheet: View {
                     }
                 }
                 
+                if selectedMode == .pastPaper {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(localizable: .insertPDFSheetOptionsLabel)
+                            .font(.headline)
+
+                        HStack {
+                            Text(localizable: .insertPDFSheetPastPaperFrameWidth)
+                            Spacer(minLength: 0)
+                            HStack {
+                                TextField("", value: $pastPaperFrameWidth, formatter: NumberFormatter())
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 64)
+                                Stepper("", value: $pastPaperFrameWidth, in: 480...2400, step: 80)
+                            }
+                            .labelsHidden()
+                        }
+
+                        pastPaperDetectionText
+                    }
+                }
+
                 if let errorMessage {
                     Text(errorMessage)
                         .font(.caption)
@@ -316,6 +352,23 @@ struct PDFInsertSheet: View {
                                     .monospacedDigit()
                             }
                         }
+                    } header: {
+                        Text(localizable: .insertPDFSheetOptionsLabel)
+                    }
+                }
+
+                if selectedMode == .pastPaper {
+                    Section {
+                        Stepper(value: $pastPaperFrameWidth, in: 480...2400, step: 80) {
+                            HStack {
+                                Text(localizable: .insertPDFSheetPastPaperFrameWidth)
+                                Spacer()
+                                Text("\(pastPaperFrameWidth)")
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                        }
+                        pastPaperDetectionText
                     } header: {
                         Text(localizable: .insertPDFSheetOptionsLabel)
                     }
@@ -466,7 +519,7 @@ struct PDFInsertSheet: View {
 #if canImport(PDFKit)
         if let pdfDocument {
             switch selectedMode {
-                case .viewer:
+                case .viewer, .pastPaper:
                     compactViewerPreview(pdfDocument)
                 case .tiled:
                     compactTiledPreview(pdfDocument)
@@ -528,12 +581,36 @@ struct PDFInsertSheet: View {
     @ViewBuilder
     private func previewContent() -> some View {
         switch selectedMode {
-            case .viewer:
+            case .viewer, .pastPaper:
                 viewerPreview()
             case .tiled:
                 tiledPreview()
         }
     }
+
+    @ViewBuilder
+    private var pastPaperDetectionText: some View {
+#if canImport(PDFKit)
+        if let pastPaperAnalysis {
+            switch pastPaperAnalysis.source {
+                case .textLayer:
+                    Text(localizable: .insertPDFSheetPastPaperQuestionsDetected(pastPaperAnalysis.questions.count))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                case .pagesFallback:
+                    Text(localizable: .insertPDFSheetPastPaperPagesFallback)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+            }
+        }
+#endif
+    }
+
+#if canImport(PDFKit)
+    private func analyzePastPaper() {
+        pastPaperAnalysis = pdfDocument.map { PastPaperAnalyzer.analyze($0) }
+    }
+#endif
     
     @ViewBuilder
     private func viewerPreview() -> some View {
@@ -649,6 +726,7 @@ struct PDFInsertSheet: View {
             
 #if canImport(PDFKit)
             pdfDocument = PDFDocument(data: data)
+            analyzePastPaper()
 #endif
         } catch {
             errorMessage = String(localizable: .insertPDFSheetErrorLoadFailed(error.localizedDescription))
@@ -664,7 +742,7 @@ struct PDFInsertSheet: View {
         Task {
             do {
                 let itemsPerLineValue = itemsPerLine == 0 ? nil : itemsPerLine
-                try await onInsert(pdfData, selectedMode, direction.rawValue, itemsPerLineValue)
+                try await onInsert(pdfData, selectedMode, direction.rawValue, itemsPerLineValue, Double(pastPaperFrameWidth))
                 await MainActor.run {
                     dismiss()
                 }
@@ -702,6 +780,6 @@ struct PDFPageView: View {
 
 #Preview {
     PDFInsertSheet(
-        onInsert: { _, _, _, _ in },
+        onInsert: { _, _, _, _, _ in },
     )
 }
