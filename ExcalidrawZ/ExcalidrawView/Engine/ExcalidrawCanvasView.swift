@@ -155,6 +155,9 @@ struct ExcalidrawCanvasView: View {
             .watch(value: addedFontsData) { _ in
                 applyFonts()
             }
+            .watch(value: appPreference.inlineLatexEnabled) { _ in
+                applyInlineLatexSetting()
+            }
             .watch(value: nativeViewportInsets, initial: true) { _, _ in
                 applyNativeViewportInsets()
             }
@@ -452,6 +455,15 @@ struct ExcalidrawCanvasView: View {
     private func applyAllSettings() {
         applyFonts()
         applyColorMode()
+        applyInlineLatexSetting()
+    }
+
+    private func applyInlineLatexSetting() {
+        guard loadingState == .loaded else { return }
+        let enabled = appPreference.inlineLatexEnabled
+        Task {
+            try? await excalidrawCore.setInlineLatexEnabled(enabled)
+        }
     }
 
     private func applyNativeViewportInsets() {

@@ -16,6 +16,9 @@ extension ExcalidrawCore {
         var renderer: String?
         var width: Double?
         var height: Double?
+        /// Inline LaTeX only: the text the image replaces, echoed back so the
+        /// web side can drop a stale render if the text changed meanwhile.
+        var originalText: String?
     }
 
     struct MathImageOptions: Codable, Hashable {
@@ -33,6 +36,16 @@ extension ExcalidrawCore {
         var width: Double?
         var height: Double?
         var usedLegacyFallback: Bool?
+    }
+
+    /// Sent by the web bundle when a text element whose whole text is a LaTeX
+    /// expression finishes editing (see `inlineMath.js`).
+    struct InlineMathRenderRequest: Codable, Hashable {
+        var textElementId: String
+        var latex: String
+        var originalText: String?
+        var fontSize: Double?
+        var strokeColor: String?
     }
 
     struct MathImageEditRequest: Codable, Hashable, Identifiable {
