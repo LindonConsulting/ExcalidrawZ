@@ -73,10 +73,24 @@ enum PastPaperAnalyzer {
             PageLines(index: index, page: document.page(at: index), options: options)
         }
 
-        let anchors = findAnchors(in: pages, options: options)
+        var anchors = findAnchors(in: pages, options: options)
+        // Papers with a damaged text layer often keep their "(Total for
+        // Question N is X marks)" lines even when the question text is lost.
+        let totalsAnchors = anchorsFromTotalLines(in: pages)
+        if totalsAnchors.count > anchors.count {
+            anchors = totalsAnchors
+        }
         guard anchors.count >= 2 else {
             return PastPaperAnalysis(questions: pagesFallback(document), source: .pagesFallback)
         }
+
+        // Horizontal extent of the printed content across the paper, used when a
+        // question's own text is missing from the text layer.
+        let contentRects = pages.filter { $0.contentLines.count >= 5 }.flatMap { $0.contentLines.map(\.rect) }
+        let paperExtent: ClosedRange<CGFloat>? = {
+            guard let left = contentRects.map(\.minX).min(), let right = contentRects.map(\.maxX).max(), right > left else { return nil }
+            return left...right
+        }()
 
         var questions: [PastPaperQuestion] = []
         for (position, anchor) in anchors.enumerated() {
@@ -85,6 +99,7 @@ enum PastPaperAnalyzer {
                 from: anchor,
                 to: next,
                 pages: pages,
+                paperExtent: paperExtent,
                 options: options
             )
             guard !segments.isEmpty else { continue }
@@ -152,6 +167,13 @@ enum PastPaperAnalyzer {
         var number: Int
         var pageIndex: Int
         var rect: CGRect
+        /// Whether `rect` is the question's own first line (included in the crop)
+        /// or a synthetic boundary derived from the previous question's end.
+        var isQuestionLine = true
+        /// For synthetic anchors: crop from the boundary itself rather than from
+        /// the first detected content line, so question text missing from a
+        /// damaged text layer is still captured.
+        var cropsFromBoundary = false
     }
 
     // MARK: - Classification
@@ -161,11 +183,14 @@ enum PastPaperAnalyzer {
     private static let totalLineRegex = try! NSRegularExpression(
         pattern: #"^\(?\s*total for question"#, options: .caseInsensitive
     )
+    private static let totalLineNumberRegex = try! NSRegularExpression(
+        pattern: #"total for question\s+(\d{1,2})"#, options: .caseInsensitive
+    )
     private static let endOfPaperRegex = try! NSRegularExpression(
         pattern: #"^(end of (paper|questions|test|examination)|total for paper)"#, options: .caseInsensitive
     )
     private static let chromeTextRegex = try! NSRegularExpression(
-        pattern: #"^(turn over|pmt$|do not write|leave\s*$|blank\s*$|blank page|examiner|only$|\*p\d|question \d+ continued)"#,
+        pattern: #"^(turn over|pmt$|do not write|leave\s*$|blank\s*$|blank page|examiner|only$|\*p\d|question \d+ continued|answer all questions|write your answers in the spaces|you must write down all the stages)"#,
         options: .caseInsensitive
     )
 
@@ -240,12 +265,64 @@ enum PastPaperAnalyzer {
         return anchors
     }
 
+    /// Derives question starts from "Total for Question N" lines: question N
+    /// begins right after the total line of question N - 1 (or at the first
+    /// content page for question 1).
+    static func anchorsFromTotalLines(in pages: [PageLines]) -> [Anchor] {
+        var totals: [(number: Int, pageIndex: Int, rect: CGRect)] = []
+        for page in pages {
+            for line in page.lines where line.kind == .totalLine {
+                guard let match = totalLineNumberRegex.firstMatch(in: line.text, range: NSRange(line.text.startIndex..., in: line.text)),
+                      let range = Range(match.range(at: 1), in: line.text),
+                      let number = Int(line.text[range]) else { continue }
+                totals.append((number, page.index, line.rect))
+            }
+        }
+        // Keep the first occurrence of each number, in sequence from 1.
+        var sequence: [(number: Int, pageIndex: Int, rect: CGRect)] = []
+        var expected = 1
+        for total in totals where total.number == expected {
+            sequence.append(total)
+            expected += 1
+        }
+        guard !sequence.isEmpty else { return [] }
+
+        var anchors: [Anchor] = []
+        for (index, total) in sequence.enumerated() {
+            if index == 0 {
+                // Skip the cover / instructions pages.
+                let lastCoverIndex = pages.lastIndex { page in
+                    page.index <= total.pageIndex && page.lines.contains { $0.text.lowercased().contains("instructions") }
+                } ?? -1
+                guard let firstPage = pages.first(where: { $0.index > lastCoverIndex && !$0.contentLines.isEmpty && $0.index <= total.pageIndex }) else { continue }
+                let top = firstPage.contentLines.map(\.rect.maxY).max() ?? firstPage.bounds.maxY
+                anchors.append(Anchor(
+                    number: 1,
+                    pageIndex: firstPage.index,
+                    rect: CGRect(x: firstPage.bounds.minX, y: top, width: 0, height: 0),
+                    isQuestionLine: false
+                ))
+            } else {
+                let previous = sequence[index - 1]
+                anchors.append(Anchor(
+                    number: total.number,
+                    pageIndex: previous.pageIndex,
+                    rect: CGRect(x: previous.rect.minX, y: previous.rect.minY - 1, width: 0, height: 0),
+                    isQuestionLine: false,
+                    cropsFromBoundary: true
+                ))
+            }
+        }
+        return anchors
+    }
+
     // MARK: - Segments
 
     static func buildSegments(
         from anchor: Anchor,
         to next: Anchor?,
         pages: [PageLines],
+        paperExtent: ClosedRange<CGFloat>? = nil,
         options: Options
     ) -> [PastPaperSegment] {
         let pad = options.padding
@@ -261,15 +338,17 @@ enum PastPaperAnalyzer {
             let content = page.contentLines.filter {
                 $0.rect.maxY <= topLimit + 1 && $0.rect.minY >= bottomLimit - 1
             }
-            var includeAnchorLine = pageIndex == anchor.pageIndex
-            if pageIndex == anchor.pageIndex && content.isEmpty {
-                includeAnchorLine = true
-            }
-            guard !content.isEmpty || includeAnchorLine else {
+            let includeAnchorLine = pageIndex == anchor.pageIndex && anchor.isQuestionLine
+            // Boundary-derived questions may occupy pages whose text is missing
+            // entirely; the question begins on the boundary page only if that
+            // page still has content below the boundary.
+            let mayBeTextless = anchor.cropsFromBoundary && pageIndex != anchor.pageIndex
+            guard !content.isEmpty || includeAnchorLine || mayBeTextless else {
                 if next == nil && page.endsPaper { break }
                 continue
             }
 
+            let chromeBand = page.bounds.height * options.chromeFraction
             var minX = CGFloat.greatestFiniteMagnitude
             var maxX = -CGFloat.greatestFiniteMagnitude
             var minY = CGFloat.greatestFiniteMagnitude
@@ -287,7 +366,14 @@ enum PastPaperAnalyzer {
                 maxY = max(maxY, anchor.rect.maxY)
             }
 
-            let chromeBand = page.bounds.height * options.chromeFraction
+            if anchor.cropsFromBoundary {
+                maxY = max(maxY, (pageIndex == anchor.pageIndex ? anchor.rect.maxY : topLimit - chromeBand) - pad)
+                minY = min(minY, bottomLimit + pad * 2)
+                if let paperExtent {
+                    minX = min(minX, paperExtent.lowerBound)
+                    maxX = max(maxX, paperExtent.upperBound)
+                }
+            }
             let top = min(maxY + pad, page.bounds.maxY - chromeBand)
             var bottom = max(minY - pad * 2, page.bounds.minY + chromeBand)
             // Never reach into the answer lines / "Total for Question" line below the content.
