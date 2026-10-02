@@ -17,6 +17,9 @@ final class ViewerMirrorSession: ObservableObject {
     /// Mirror the editor's scroll/zoom into the Viewer.
     @Published var isFollowingCamera = true
 
+    /// Second sink for deltas and laser strokes: browsers on the local network.
+    var networkBroadcaster: NetworkViewerBroadcaster?
+
     let core = ExcalidrawCore()
 
     private let logger = Logger(label: "ViewerMirrorSession")
@@ -142,6 +145,9 @@ final class ViewerMirrorSession: ObservableObject {
     /// already batches points per animation frame, so forward each batch
     /// straight to the Viewer.
     private func forwardLaserPath(_ path: ExcalidrawCore.LaserPointerPath) {
+        if let networkBroadcaster, let text = NetworkViewerMessage.laser(path).encodedText() {
+            Task { await networkBroadcaster.broadcast(text) }
+        }
         guard isViewerReady, isViewerPrepared else { return }
         Task { @MainActor [weak self] in
             guard let self else { return }
@@ -196,6 +202,12 @@ final class ViewerMirrorSession: ObservableObject {
     }
 
     // MARK: - Sync loop
+
+    /// Forces the next delta to carry the whole scene (e.g. a browser joined).
+    func requestFullSync() {
+        needsFullSync = true
+        requestSync()
+    }
 
     private func requestSync() {
         guard !isClosed else { return }
@@ -267,6 +279,11 @@ final class ViewerMirrorSession: ObservableObject {
             guard let payload = delta as? String else {
                 needsFullSync = false
                 return
+            }
+
+            if let networkBroadcaster,
+               let text = NetworkViewerMessage.delta(payload).encodedText() {
+                await networkBroadcaster.broadcast(text)
             }
 
             let result = try await core.webView.callAsyncJavaScript(

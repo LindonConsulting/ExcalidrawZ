@@ -16,6 +16,14 @@ final class ViewerMirrorController: ObservableObject {
     static let shared = ViewerMirrorController()
 
     static let windowID = "viewer"
+    static let shareWindowID = "viewer-share"
+
+    enum NetworkSharingState: Equatable {
+        case off
+        case starting
+        case running
+        case failed(String)
+    }
 
     @Published private(set) var session: ViewerMirrorSession?
 
@@ -28,11 +36,23 @@ final class ViewerMirrorController: ObservableObject {
         }
     }
 
+    /// Sharing to browsers on the local network. Deliberately not persisted:
+    /// the canvas leaves the machine, so it is opt-in per launch.
+    @Published private(set) var isNetworkSharingEnabled = false
+    @Published private(set) var networkSharingState: NetworkSharingState = .off
+    @Published private(set) var networkClientCount = 0
+    @Published private(set) var networkShareURLs: [URL] = []
+
     private static let followDefaultsKey = "ViewerFollowsEditorCamera"
     private let logger = Logger(label: "ViewerMirrorController")
     /// Registered editor cores, most recently key (or registered) first.
     private var editors: [WeakEditor] = []
     private var keyWindowCancellable: AnyCancellable?
+    private var isViewerWindowOpen = false
+    private var networkServer: NetworkViewerServer?
+    private var networkServerTask: Task<Void, Never>?
+    /// Random per launch; the only access control on the shared page.
+    private let networkToken = ViewerMirrorController.makeToken()
 
     private init() {
         isFollowingCamera = UserDefaults.standard.object(forKey: Self.followDefaultsKey) as? Bool ?? true
@@ -57,15 +77,109 @@ final class ViewerMirrorController: ObservableObject {
     }
 
     func viewerDidAppear() {
-        if session == nil {
-            session = ViewerMirrorSession(isFollowingCamera: isFollowingCamera) { [weak self] in
-                self?.currentEditorCore
-            }
-        }
-        session?.refreshEditorBinding()
+        isViewerWindowOpen = true
+        ensureSession().refreshEditorBinding()
     }
 
     func viewerDidDisappear() {
+        isViewerWindowOpen = false
+        closeSessionIfUnused()
+    }
+
+    // MARK: - Network sharing
+
+    func setNetworkSharing(_ enabled: Bool) {
+        guard enabled != isNetworkSharingEnabled else { return }
+        isNetworkSharingEnabled = enabled
+        if enabled {
+            startNetworkServer()
+        } else {
+            stopNetworkServer()
+        }
+    }
+
+    private func startNetworkServer() {
+        guard networkServer == nil else { return }
+
+        let broadcaster = NetworkViewerBroadcaster(
+            onClientCountChanged: { count in
+                Task { @MainActor in
+                    ViewerMirrorController.shared.networkClientCount = count
+                }
+            },
+            onResyncRequested: {
+                Task { @MainActor in
+                    ViewerMirrorController.shared.session?.requestFullSync()
+                }
+            }
+        )
+        let server = NetworkViewerServer(token: networkToken, broadcaster: broadcaster)
+        networkServer = server
+        networkSharingState = .starting
+        networkShareURLs = NetworkViewerAddresses.localIPv4Addresses().compactMap { address in
+            URL(string: "http://\(address):\(server.port)/viewer/\(networkToken)")
+        }
+
+        let session = ensureSession()
+        session.networkBroadcaster = broadcaster
+        session.refreshEditorBinding()
+
+        networkServerTask = Task { [weak self, server] in
+            do {
+                await MainActor.run { self?.networkSharingState = .running }
+                try await server.start()
+                await MainActor.run {
+                    guard self?.networkServer === server else { return }
+                    self?.networkSharingState = .off
+                }
+            } catch {
+                await MainActor.run {
+                    guard self?.networkServer === server else { return }
+                    self?.logger.error("Network viewer server failed: \(error)")
+                    self?.networkSharingState = .failed(error.localizedDescription)
+                    self?.isNetworkSharingEnabled = false
+                    self?.networkServer = nil
+                    self?.networkServerTask = nil
+                    self?.session?.networkBroadcaster = nil
+                    self?.closeSessionIfUnused()
+                }
+            }
+        }
+    }
+
+    private func stopNetworkServer() {
+        guard let server = networkServer else { return }
+        networkServer = nil
+        networkServerTask = nil
+        networkSharingState = .off
+        networkClientCount = 0
+        networkShareURLs = []
+        session?.networkBroadcaster = nil
+        Task { await server.stop() }
+        closeSessionIfUnused()
+    }
+
+    private static func makeToken() -> String {
+        let alphabet = Array("abcdefghijklmnopqrstuvwxyz0123456789")
+        return String((0..<20).map { _ in alphabet.randomElement()! })
+    }
+
+    // MARK: - Session lifecycle
+
+    @discardableResult
+    private func ensureSession() -> ViewerMirrorSession {
+        if let session { return session }
+        let session = ViewerMirrorSession(isFollowingCamera: isFollowingCamera) { [weak self] in
+            self?.currentEditorCore
+        }
+        self.session = session
+        return session
+    }
+
+    /// The session lives while either the Viewer window is open or browsers
+    /// are being served.
+    private func closeSessionIfUnused() {
+        guard !isViewerWindowOpen, !isNetworkSharingEnabled else { return }
         session?.close()
         session = nil
     }

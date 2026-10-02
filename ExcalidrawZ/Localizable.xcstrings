@@ -150626,6 +150626,78 @@
           }
         }
       }
+    },
+    "menubarViewerShareLink": {
+      "comment": "View menu item opening the Viewer sharing window",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Viewer on Network…"
+          }
+        }
+      }
+    },
+    "viewerShareWindowTitle": {
+      "comment": "Title of the window that shares the Viewer on the local network",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viewer Link"
+          }
+        }
+      }
+    },
+    "viewerShareToggleTitle": {
+      "comment": "Toggle that serves the read-only Viewer to browsers on the LAN",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Viewer on local network"
+          }
+        }
+      }
+    },
+    "viewerShareToggleHelp": {
+      "comment": "Help text under the sharing toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone on this network with the link can watch the canvas. The link changes each time the app starts."
+          }
+        }
+      }
+    },
+    "viewerShareConnectedCount": {
+      "comment": "Number of browsers currently connected to the shared Viewer",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected viewers: %lld"
+          }
+        }
+      }
+    },
+    "viewerShareNoNetwork": {
+      "comment": "Shown when the Mac has no LAN address to share",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No network connection found. Join a Wi‑Fi network and try again."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

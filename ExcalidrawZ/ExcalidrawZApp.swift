@@ -382,6 +382,12 @@ struct ExcalidrawZApp: App {
                 .keyboardShortcut("V", modifiers: [.command, .shift])
 
                 ViewerFollowEditorCommand()
+
+                Button {
+                    openWindow(id: ViewerMirrorController.shareWindowID)
+                } label: {
+                    Text(.localizable(.menubarViewerShareLink))
+                }
             }
 
             CommandGroup(after: .help) {
@@ -412,6 +418,13 @@ struct ExcalidrawZApp: App {
                 .preferredColorScheme(appPrefernece.appearance.colorScheme)
         }
         .defaultSize(width: 960, height: 600)
+
+        // Share the Viewer with browsers on the local network.
+        Window(Text(.localizable(.viewerShareWindowTitle)), id: ViewerMirrorController.shareWindowID) {
+            ViewerShareWindowView()
+                .preferredColorScheme(appPrefernece.appearance.colorScheme)
+        }
+        .windowResizability(.contentSize)
 
         Settings {
             SettingsView()
