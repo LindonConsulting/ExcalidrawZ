@@ -20,7 +20,10 @@ struct LessonDrawPlan: @unchecked Sendable {
     var previousFileName: String?
     var previousLessonDate: Date?
     var previousElements: [[String: Any]]
+    /// Date used in the file name: the event's start.
     var lessonDate: Date
+    /// `true` when no lesson is happening now and this is the next one.
+    var isUpcoming: Bool
 
     var fileName: String {
         let formatter = DateFormatter()
@@ -63,7 +66,8 @@ enum LessonDrawCoordinator {
         now: Date = .now
     ) async throws -> LessonDrawPlan {
         let preferences = preferences ?? LessonDrawPreferences.shared
-        let events = try await LessonCalendarService.shared.currentEvents(now: now, lookbackMinutes: preferences.lookbackMinutes)
+        let lookup = try await LessonCalendarService.shared.lessonEvents(now: now, lookbackMinutes: preferences.lookbackMinutes)
+        let events = lookup.events
         let parser = LessonTitleParser(pattern: preferences.titlePattern)
 
         var chosen: (LessonCalendarEvent, LessonTitleMatch)?
@@ -90,7 +94,8 @@ enum LessonDrawCoordinator {
             previousFileName: nil,
             previousLessonDate: nil,
             previousElements: [],
-            lessonDate: now
+            lessonDate: event.startDate,
+            isUpcoming: lookup.isUpcoming
         )
 
         if let group = try findGroup(named: match.student, context: context) {

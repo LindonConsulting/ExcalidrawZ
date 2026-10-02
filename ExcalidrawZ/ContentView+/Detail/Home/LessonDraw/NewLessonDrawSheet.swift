@@ -124,7 +124,7 @@ struct NewLessonDrawSheet: View {
     @ViewBuilder
     private func planView(_ plan: LessonDrawPlan) -> some View {
         Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 8) {
-            row("Event", plan.event.title)
+            row(plan.isUpcoming ? "Next lesson" : "Event", eventDescription(plan))
             row("Student", plan.student)
             if let subject = plan.subject { row("Subject", subject) }
             row("Group", plan.groupObjectID == nil ? "\(plan.student) (will be created)" : plan.student)
@@ -169,6 +169,14 @@ struct NewLessonDrawSheet: View {
                 .padding(8)
                 .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
         }
+    }
+
+    private func eventDescription(_ plan: LessonDrawPlan) -> String {
+        let formatter = DateFormatter()
+        formatter.doesRelativeDateFormatting = true
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return "\(plan.event.title) · \(formatter.string(from: plan.event.startDate))"
     }
 
     private func previousLessonDescription(_ plan: LessonDrawPlan) -> String {

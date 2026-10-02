@@ -16,6 +16,12 @@ struct LessonCalendarEvent: Identifiable, Equatable, Sendable {
     var calendarTitle: String
 }
 
+struct LessonCalendarLookup: Sendable {
+    var events: [LessonCalendarEvent]
+    /// `true` when nothing is happening now and `events` are the next upcoming ones.
+    var isUpcoming: Bool
+}
+
 enum LessonCalendarError: LocalizedError {
     case accessDenied
     case noCurrentEvent
@@ -25,7 +31,7 @@ enum LessonCalendarError: LocalizedError {
             case .accessDenied:
                 return "ExcalidrawZ does not have access to your calendars. Allow it in System Settings → Privacy & Security → Calendars."
             case .noCurrentEvent:
-                return "No calendar event is happening right now."
+                return "No calendar event is happening now or in the next 7 days."
         }
     }
 }
@@ -46,6 +52,24 @@ final class LessonCalendarService: @unchecked Sendable {
                 }
             }
         }
+    }
+
+    /// Events happening now (see `currentEvents`); when there are none, the
+    /// next upcoming events within `upcomingDays`, earliest first.
+    func lessonEvents(now: Date = .now, lookbackMinutes: Int, upcomingDays: Int = 7) async throws -> LessonCalendarLookup {
+        let current = try await currentEvents(now: now, lookbackMinutes: lookbackMinutes)
+        if !current.isEmpty { return LessonCalendarLookup(events: current, isUpcoming: false) }
+
+        let predicate = store.predicateForEvents(
+            withStart: now,
+            end: now.addingTimeInterval(TimeInterval(upcomingDays) * 86_400),
+            calendars: nil
+        )
+        let upcoming = store.events(matching: predicate)
+            .filter { !$0.isAllDay && $0.startDate > now && !($0.title ?? "").trimmingCharacters(in: .whitespaces).isEmpty }
+            .sorted { $0.startDate < $1.startDate }
+            .map(Self.lessonEvent)
+        return LessonCalendarLookup(events: upcoming, isUpcoming: true)
     }
 
     /// Events overlapping `now`, allowing `lookbackMinutes` before an event's
@@ -75,14 +99,16 @@ final class LessonCalendarService: @unchecked Sendable {
             return abs(lhs.startDate.timeIntervalSince(now)) < abs(rhs.startDate.timeIntervalSince(now))
         }
 
-        return candidates.map {
-            LessonCalendarEvent(
-                id: $0.eventIdentifier ?? UUID().uuidString,
-                title: $0.title ?? "",
-                startDate: $0.startDate,
-                endDate: $0.endDate,
-                calendarTitle: $0.calendar?.title ?? ""
-            )
-        }
+        return candidates.map(Self.lessonEvent)
+    }
+
+    private static func lessonEvent(_ event: EKEvent) -> LessonCalendarEvent {
+        LessonCalendarEvent(
+            id: event.eventIdentifier ?? UUID().uuidString,
+            title: event.title ?? "",
+            startDate: event.startDate,
+            endDate: event.endDate,
+            calendarTitle: event.calendar?.title ?? ""
+        )
     }
 }
