@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+#if canImport(PDFKit)
+import PDFKit
+#endif
+
 struct PDFInsertSheetViewModifier: ViewModifier {
     @Environment(\.alertToast) private var alertToast
     @EnvironmentObject private var toolState: ToolState
@@ -20,12 +24,13 @@ struct PDFInsertSheetViewModifier: ViewModifier {
             .sheet(item: $sheetItem) { item in
                 PDFInsertSheet(
                     pdfInfo: item,
-                    onInsert: { pdfData, mode, direction, itemsPerLine in
+                    onInsert: { pdfData, mode, direction, itemsPerLine, frameWidth in
                         try await handlePDFInsert(
                             pdfData: pdfData,
                             mode: mode,
                             direction: direction,
                             itemsPerLine: itemsPerLine,
+                            frameWidth: frameWidth,
                             sceneX: item.sceneX,
                             sceneY: item.sceneY
                         )
@@ -34,12 +39,13 @@ struct PDFInsertSheetViewModifier: ViewModifier {
             }
             .sheet(isPresented: $isPresented) {
                 PDFInsertSheet(
-                    onInsert: { pdfData, mode, direction, itemsPerLine in
+                    onInsert: { pdfData, mode, direction, itemsPerLine, frameWidth in
                         try await handlePDFInsert(
                             pdfData: pdfData,
                             mode: mode,
                             direction: direction,
                             itemsPerLine: itemsPerLine,
+                            frameWidth: frameWidth,
                             sceneX: 0,
                             sceneY: 0
                         )
@@ -58,6 +64,7 @@ struct PDFInsertSheetViewModifier: ViewModifier {
         mode: PDFInsertMode,
         direction: String,
         itemsPerLine: Int?,
+        frameWidth: Double,
         sceneX: Double?,
         sceneY: Double?
     ) async throws {
@@ -80,6 +87,36 @@ struct PDFInsertSheetViewModifier: ViewModifier {
                 direction: direction,
                 itemsPerLine: itemsPerLine
             )
+
+        case .pastPaper:
+#if canImport(PDFKit)
+            // Analyse and rasterise off the main thread, then insert.
+            let rendered = try await Task.detached(priority: .userInitiated) { () throws -> [PastPaperRenderedQuestion] in
+                guard let document = PDFDocument(data: pdfData) else {
+                    throw PastPaperImportError.invalidPDF
+                }
+                let analysis = PastPaperAnalyzer.analyze(document)
+                return try analysis.questions.map { try PastPaperRenderer.render($0, in: document) }
+            }.value
+            _ = try await toolState.excalidrawWebCoordinator?.importPastPaper(
+                rendered,
+                layout: .init(frameWidth: frameWidth)
+            )
+#else
+            throw PastPaperImportError.unsupportedPlatform
+#endif
+        }
+    }
+
+    private enum PastPaperImportError: LocalizedError {
+        case invalidPDF
+        case unsupportedPlatform
+
+        var errorDescription: String? {
+            switch self {
+                case .invalidPDF: return "The file is not a readable PDF."
+                case .unsupportedPlatform: return "Past paper import needs PDFKit."
+            }
         }
     }
 }
