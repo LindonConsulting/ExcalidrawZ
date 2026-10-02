@@ -18,6 +18,8 @@ struct LessonsSettingsView: View {
     @State private var hasStoredKey = false
     @State private var patternSample = "Frankie (CMT) - Maths GCSE"
     @State private var appleAvailability = "Checking…"
+    @State private var isTestingKey = false
+    @State private var keyTestResult: String?
 
     var body: some View {
         SettingsFormContainer(legacyAlignment: .leading, legacySpacing: 18) {
@@ -69,11 +71,20 @@ struct LessonsSettingsView: View {
                     .disabled(apiKeyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
                 if hasStoredKey {
                     Button("Remove key", role: .destructive, action: removeKey)
+                    Button(isTestingKey ? "Testing…" : "Test key") { Task { await testKey() } }
+                        .disabled(isTestingKey)
                 }
                 Spacer()
                 Text(hasStoredKey ? "Key stored in Keychain" : "No key stored")
                     .foregroundStyle(.secondary)
                     .font(.callout)
+            }
+            if let keyTestResult {
+                Text(keyTestResult)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         } header: {
             Text("Anthropic API")
@@ -104,10 +115,36 @@ struct LessonsSettingsView: View {
         }
     }
 
+    private func testKey() async {
+        isTestingKey = true
+        defer { isTestingKey = false }
+        do {
+            guard let key = try keyStore.load() else {
+                keyTestResult = "No key stored."
+                return
+            }
+            let summarizer = AnthropicMessagesSummarizer(apiKey: key, model: preferences.anthropicModelID)
+            let input = LessonRecapInput(
+                student: "Test",
+                subject: "Maths",
+                previousLessonDate: .now,
+                texts: ["Expanding brackets", "(x+2)(x+3) = x² + 5x + 6", "Homework: Q1–5"],
+                elementCounts: ["text": 3, "rectangle": 1]
+            )
+            let started = Date()
+            let reply = try await summarizer.summarize(input)
+            let seconds = String(format: "%.1f", Date().timeIntervalSince(started))
+            keyTestResult = "OK (\(preferences.anthropicModelID), \(seconds)s):\n\(reply)"
+        } catch {
+            keyTestResult = "Failed: \(error.localizedDescription)"
+        }
+    }
+
     private func removeKey() {
         do {
             try keyStore.remove()
             hasStoredKey = false
+            keyTestResult = nil
         } catch {
             alertToast(error)
         }
