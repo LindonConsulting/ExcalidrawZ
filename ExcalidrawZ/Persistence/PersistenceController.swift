@@ -8,15 +8,35 @@
 import Foundation
 @preconcurrency import CoreData
 import Logging
+#if os(macOS)
+import Security
+#endif
 
 class PersistenceController {
     static let shared = {
         let cloudKitEnabled = !UserDefaults.standard.bool(forKey: "DisableCloudSync")
+            && hasICloudContainerEntitlement
         let stack = PersistenceController(cloudKitEnabled: cloudKitEnabled)
         stack.prepare()
         return stack
     }()
-    
+
+    /// A build signed without the iCloud capability (e.g. a personal-team
+    /// development build) traps inside CloudKit at launch if the mirroring
+    /// container is set up, so treat it like the user's "disable sync" switch.
+    private static var hasICloudContainerEntitlement: Bool {
+#if os(macOS)
+        guard let task = SecTaskCreateFromSelf(nil) else { return false }
+        return SecTaskCopyValueForEntitlement(
+            task,
+            "com.apple.developer.icloud-container-identifiers" as CFString,
+            nil
+        ) != nil
+#else
+        return true
+#endif
+    }
+
     let container: NSPersistentContainer
 
     let spotlightIndexingService = SpotlightIndexingService()
