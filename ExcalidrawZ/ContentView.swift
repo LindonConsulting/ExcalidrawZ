@@ -80,6 +80,7 @@ struct ContentView: View {
             .modifier(StartupSyncModifier())
             .modifier(CoreDataMigrationModifier())
             .modifier(ActiveFileSwitchBlockedToastModifier(fileState: fileState))
+            .modifier(QuestionBankCaptureModifier())
             .environmentObject(fileState)
             .environmentObject(exportState)
             .environmentObject(layoutState)

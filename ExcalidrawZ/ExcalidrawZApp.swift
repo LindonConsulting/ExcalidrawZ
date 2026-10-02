@@ -409,6 +409,15 @@ struct ExcalidrawZApp: App {
             }
 
             CommandMenu("Tools") {
+            Button {
+                NotificationCenter.default.post(name: .shouldCaptureQuestionBankSelection, object: nil)
+            } label: {
+                Text("Add Selection to Question Bank…")
+            }
+            .keyboardShortcut("B", modifiers: [.command, .shift])
+
+            Divider()
+
                 Button {
                     ScreenAnnotationController.shared.toggle()
                 } label: {

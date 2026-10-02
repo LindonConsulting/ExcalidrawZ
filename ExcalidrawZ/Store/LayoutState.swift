@@ -15,6 +15,7 @@ final class LayoutState: ObservableObject {
         case presentation
         case preference
         case search
+        case questionBank
 #if DEBUG
         case debug
 #endif
