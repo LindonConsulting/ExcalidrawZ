@@ -41,6 +41,14 @@ enum ViewerMirrorScripts {
     return true;
     """
 
+    /// Replays a laser-pointer stroke segment from the editor in the Viewer.
+    ///
+    /// Arguments: `phase: String`, `points: [[Double]]` (scene coordinates).
+    static let viewerApplyLaserPath = """
+    window.excalidrawZHelper?.applyRemoteLaserPath?.({ phase, points });
+    return true;
+    """
+
     /// Puts the Viewer page into view + zen mode and stops it from reporting
     /// `onStateChanged` to Swift, so nothing the mirror does is ever persisted.
     static let viewerPrepare = """

@@ -49,6 +49,9 @@ class ExcalidrawCore: NSObject, ObservableObject {
     /// Bumped whenever the Viewer mirror subscription reports a scene change.
     /// Unlike `contentChangeToken` this is not throttled on the JS side.
     @Published private(set) var viewerMirrorDirtyToken = 0
+    /// Laser-pointer stroke segments from the web editor, forwarded to the
+    /// Viewer as they arrive (not throttled, unlike scene deltas).
+    let laserPointerPathPublisher = PassthroughSubject<LaserPointerPath, Never>()
 
     var downloadCache: [String : Data] = [:]
     var downloads: [URLRequest : URL] = [:]

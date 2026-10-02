@@ -118,6 +118,10 @@ extension ExcalidrawCore: WKScriptMessageHandler {
                     DispatchQueue.main.async {
                         self.noteViewerMirrorDirty()
                     }
+                case .laserPointerPath(let message):
+                    DispatchQueue.main.async {
+                        self.laserPointerPathPublisher.send(message.data)
+                    }
                 case .onCameraChanged(let message):
                     DispatchQueue.main.async {
                         self.updateCameraState(message.data)
@@ -553,6 +557,7 @@ extension ExcalidrawCore {
         case didUnselectAllElements
         case onElementsChanged
         case onViewerMirrorDirty
+        case laserPointerPath
         case onCameraChanged
         case onAICameraSessionStarted
         case onAICameraSessionUpdated
@@ -607,6 +612,7 @@ extension ExcalidrawCore {
         case didUnselectAllElements
         case onElementsChanged(ElementsChangedMessage)
         case onViewerMirrorDirty
+        case laserPointerPath(LaserPointerPathMessage)
         case onCameraChanged(CameraChangedMessage)
         case onAICameraSessionStarted(AICameraSessionMessage)
         case onAICameraSessionUpdated(AICameraSessionMessage)
@@ -702,6 +708,8 @@ extension ExcalidrawCore {
                     self = .onElementsChanged(try ElementsChangedMessage(from: decoder))
                 case .onViewerMirrorDirty:
                     self = .onViewerMirrorDirty
+                case .laserPointerPath:
+                    self = .laserPointerPath(try LaserPointerPathMessage(from: decoder))
                 case .onCameraChanged:
                     self = .onCameraChanged(try CameraChangedMessage(from: decoder))
                 case .onAICameraSessionStarted:
@@ -772,6 +780,15 @@ extension ExcalidrawCore {
     struct CameraChangedMessage: AnyExcalidrawZMessage {
         var event: String
         var data: CameraState
+    }
+    /// A segment of the editor's laser-pointer stroke, in scene coordinates.
+    struct LaserPointerPath: Codable {
+        var phase: String
+        var points: [[Double]]
+    }
+    struct LaserPointerPathMessage: AnyExcalidrawZMessage {
+        var event: String
+        var data: LaserPointerPath
     }
     struct AICameraSessionMessage: AnyExcalidrawZMessage {
         var event: String

@@ -130,7 +130,31 @@ final class ViewerMirrorSession: ObservableObject {
                 self?.requestSync()
             }
             .store(in: &editorCancellables)
+        resolved.laserPointerPathPublisher
+            .sink { [weak self] path in
+                self?.forwardLaserPath(path)
+            }
+            .store(in: &editorCancellables)
         requestSync()
+    }
+
+    /// Laser strokes bypass the throttled scene-delta loop: the web side
+    /// already batches points per animation frame, so forward each batch
+    /// straight to the Viewer.
+    private func forwardLaserPath(_ path: ExcalidrawCore.LaserPointerPath) {
+        guard isViewerReady, isViewerPrepared else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                _ = try await self.core.webView.callAsyncJavaScript(
+                    ViewerMirrorScripts.viewerApplyLaserPath,
+                    arguments: ["phase": path.phase, "points": path.points],
+                    contentWorld: .page
+                )
+            } catch {
+                self.logger.warning("Failed to forward laser path to viewer: \(error)")
+            }
+        }
     }
 
     /// No editor is available yet (e.g. the Viewer was opened before any file).
