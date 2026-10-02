@@ -193,6 +193,11 @@ extension ExcalidrawCore: WKScriptMessageHandler {
                         self.requestMathImageEdit(message.data)
                     }
 
+                case .requestRenderInlineMath(let message):
+                    Task { @MainActor in
+                        await self.handleInlineMathRenderRequest(message.data)
+                    }
+
                 case .requestNativeEyeDropper(let message):
                     Task { @MainActor in
                         await self.nativeEyeDropper.request(message.data)
@@ -581,6 +586,7 @@ extension ExcalidrawCore {
 
         // Math
         case requestEditMathImage
+        case requestRenderInlineMath
 
         // Native eye dropper
         case requestNativeEyeDropper
@@ -636,6 +642,7 @@ extension ExcalidrawCore {
 
         // Math
         case requestEditMathImage(RequestEditMathImageMessage)
+        case requestRenderInlineMath(RequestRenderInlineMathMessage)
 
         // Native eye dropper
         case requestNativeEyeDropper(RequestNativeEyeDropperMessage)
@@ -746,6 +753,8 @@ extension ExcalidrawCore {
                 // Math
                 case .requestEditMathImage:
                     self = .requestEditMathImage(try RequestEditMathImageMessage(from: decoder))
+                case .requestRenderInlineMath:
+                    self = .requestRenderInlineMath(try RequestRenderInlineMathMessage(from: decoder))
 
                 // Native eye dropper
                 case .requestNativeEyeDropper:
@@ -1313,6 +1322,11 @@ extension ExcalidrawCore {
     struct RequestEditMathImageMessage: AnyExcalidrawZMessage {
         var event: String
         var data: MathImageEditRequest
+    }
+
+    struct RequestRenderInlineMathMessage: AnyExcalidrawZMessage {
+        var event: String
+        var data: InlineMathRenderRequest
     }
 
     struct DidOpenLiveCollaborationMessage: AnyExcalidrawZMessage {

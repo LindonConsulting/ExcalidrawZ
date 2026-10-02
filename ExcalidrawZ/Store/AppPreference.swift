@@ -118,6 +118,8 @@ final class AppPreference: ObservableObject {
     }
     /// Invert the inverted image in dark mode.
     @AppStorage("autoInvertImage") var autoInvertImage = true
+    /// Convert text elements that contain only `$…$` LaTeX into math images.
+    @AppStorage("inlineLatexEnabled") var inlineLatexEnabled = true
     @AppStorage("autoInvertImageSettings") private var autoInvertImageSettings: String = ""
     
     var antiInvertImageSettings: AntiInvertImageSettings {

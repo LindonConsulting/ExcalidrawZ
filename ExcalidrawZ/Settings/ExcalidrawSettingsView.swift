@@ -60,6 +60,22 @@ struct ExcalidrawSettingsView: View {
     private func content() -> some View {
         toolbarOrderSection()
         customDrawingSettingsSection()
+        inlineLatexSection()
+    }
+
+    @ViewBuilder
+    private func inlineLatexSection() -> some View {
+        Section {
+            Toggle("Render inline LaTeX", isOn: $appPreference.inlineLatexEnabled)
+        } header: {
+            Text("Math")
+        } footer: {
+            HStack {
+                Spacer()
+                Text("When a text element contains only a formula such as $x^2$, it is rendered as a math image when you finish editing. Hover the image and choose “Edit as text” to get the text back.")
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     @ViewBuilder
