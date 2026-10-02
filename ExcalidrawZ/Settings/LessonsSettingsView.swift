@@ -1,0 +1,124 @@
+//
+//  LessonsSettingsView.swift
+//  ExcalidrawZ
+//
+//  Settings for "New Lesson Draw": calendar title rule and recap backends.
+//
+
+import SwiftUI
+import ChocofordUI
+
+struct LessonsSettingsView: View {
+    @ObservedObject private var preferences = LessonDrawPreferences.shared
+    @Environment(\.alertToast) private var alertToast
+
+    private let keyStore = AnthropicAPIKeyStore()
+
+    @State private var apiKeyDraft = ""
+    @State private var hasStoredKey = false
+    @State private var patternSample = "Frankie (CMT) - Maths GCSE"
+    @State private var appleAvailability = "Checking…"
+
+    var body: some View {
+        SettingsFormContainer(legacyAlignment: .leading, legacySpacing: 18) {
+            content()
+        }
+        .onAppear {
+            hasStoredKey = keyStore.hasKey()
+            appleAvailability = Self.appleAvailabilityDescription()
+        }
+    }
+
+    @ViewBuilder
+    private func content() -> some View {
+        Section {
+            TextField("Title pattern (regex)", text: $preferences.titlePattern)
+                .font(.body.monospaced())
+            Stepper("Count an event as “now” \(preferences.lookbackMinutes) min before it starts", value: $preferences.lookbackMinutes, in: 0...120, step: 5)
+            TextField("Try a title", text: $patternSample)
+            LabeledContent("Result", value: sampleResult)
+            Button("Reset to default") { preferences.resetTitlePattern() }
+        } header: {
+            Text("Calendar")
+        } footer: {
+            Text("Capture group 1 is the student (a trailing parenthetical such as an agency tag is dropped), group 2 is the subject. The group in ExcalidrawZ is named after the student; the file is named “YYYY-MM-DD Student – Subject”.")
+                .foregroundStyle(.secondary)
+        }
+
+        Section {
+            Picker("Recap backend", selection: $preferences.backend) {
+                ForEach(LessonRecapBackendPreference.allCases) { backend in
+                    Text(backend.title).tag(backend)
+                }
+            }
+            LabeledContent("Apple Intelligence", value: appleAvailability)
+        } header: {
+            Text("Recap")
+        } footer: {
+            Text("Automatic prefers the on-device Apple model when available, then the Anthropic API. The file is still created when no backend is available.")
+                .foregroundStyle(.secondary)
+        }
+
+        Section {
+            TextField("Model", text: $preferences.anthropicModelID)
+                .font(.body.monospaced())
+            SecureField(hasStoredKey ? "API key saved – enter a new one to replace it" : "sk-ant-…", text: $apiKeyDraft)
+                .onSubmit(saveKey)
+            HStack {
+                Button("Save key", action: saveKey)
+                    .disabled(apiKeyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                if hasStoredKey {
+                    Button("Remove key", role: .destructive, action: removeKey)
+                }
+                Spacer()
+                Text(hasStoredKey ? "Key stored in Keychain" : "No key stored")
+                    .foregroundStyle(.secondary)
+                    .font(.callout)
+            }
+        } header: {
+            Text("Anthropic API")
+        } footer: {
+            Text("The key is stored only in this Mac's Keychain and sent only to api.anthropic.com. Usage is billed to your own Anthropic account.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var sampleResult: String {
+        do {
+            guard let match = try LessonTitleParser(pattern: preferences.titlePattern).parse(patternSample) else {
+                return "No match"
+            }
+            return "Student “\(match.student)”" + (match.subject.map { ", subject “\($0)”" } ?? "")
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    private func saveKey() {
+        do {
+            try keyStore.save(apiKeyDraft)
+            apiKeyDraft = ""
+            hasStoredKey = keyStore.hasKey()
+        } catch {
+            alertToast(error)
+        }
+    }
+
+    private func removeKey() {
+        do {
+            try keyStore.remove()
+            hasStoredKey = false
+        } catch {
+            alertToast(error)
+        }
+    }
+
+    private static func appleAvailabilityDescription() -> String {
+#if canImport(FoundationModels)
+        if #available(macOS 26.0, iOS 26.0, *) {
+            return AppleFoundationModelsSummarizer.availabilityDescription()
+        }
+#endif
+        return "Requires macOS 26"
+    }
+}

@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>ExcalidrawZ reads your calendar to find the lesson happening now and name the new lesson file after the student.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>ExcalidrawZ reads your calendar to find the lesson happening now and name the new lesson file after the student.</string>
 	<key>NSScreenCaptureUsageDescription</key>
 	<string>ExcalidrawZ uses screen capture to freeze the current screen for annotation.</string>
 	<key>CFBundleDocumentTypes</key>

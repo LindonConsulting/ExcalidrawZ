@@ -206,6 +206,8 @@ struct SettingsView: View {
                 CloudStorageSettingsView()
             case .ai:
                 AISettingsView()
+            case .lessons:
+                LessonsSettingsView()
 #if os(macOS)
             case .fonts:
                 FontsSettingsView()
@@ -233,6 +235,7 @@ extension SettingsView {
         case security
         case cloudStorage
         case ai
+        case lessons
 #if os(macOS)
         case fonts
 #elseif os(iOS)
@@ -262,6 +265,8 @@ extension SettingsView {
                 case .ai:
                     // TODO: localize once a key is added.
                     return "AI"
+                case .lessons:
+                    return "Lessons"
 #if os(macOS)
                 case .fonts:
                     return .localizable(.settingsFontsName)
@@ -294,6 +299,8 @@ extension SettingsView {
                     return .externaldriveConnectedToLineBelow
                 case .ai:
                     return .sparkles
+                case .lessons:
+                    return .calendarBadgePlus
 #if os(macOS)
                 case .fonts:
                     return .textformat
@@ -319,6 +326,7 @@ extension SettingsView {
                 case .security: "security"
                 case .cloudStorage: "cloudStorage"
                 case .ai: "ai"
+                case .lessons: "lessons"
 #if os(macOS)
                 case .fonts: "fonts"
 #elseif os(iOS)

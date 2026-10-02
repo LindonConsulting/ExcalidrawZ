@@ -301,6 +301,16 @@ struct ExcalidrawZApp: App {
                     Text(.localizable(.generalButtonCreateNewFile))
                 }
                 .keyboardShortcut("N", modifiers: .command)
+
+                Button {
+                    NotificationCenter.default.post(
+                        name: .shouldHandleNewLessonDraw,
+                        object: nil
+                    )
+                } label: {
+                    Text("New Lesson Draw")
+                }
+                .keyboardShortcut("N", modifiers: [.command, .shift])
                 
                 Button {
                     NotificationCenter.default.post(

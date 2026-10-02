@@ -92,7 +92,8 @@ struct HomeView: View {
                 
                 ZStack {
                     VStack(spacing: 30) {
-                        
+                        NewLessonDrawButton()
+
                         RecentlyFilesSection()
 
 #if DEBUG || DEV
