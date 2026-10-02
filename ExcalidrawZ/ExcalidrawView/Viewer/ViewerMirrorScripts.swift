@@ -261,9 +261,13 @@ enum ViewerMirrorScripts {
         const sceneCenterX = -source.scrollX + sceneWidth / 2;
         const sceneCenterY = -source.scrollY + sceneHeight / 2;
         const zoom = Math.min(targetWidth / sceneWidth, targetHeight / sceneHeight);
-        appStateUpdate.scrollX = targetWidth / 2 / zoom - sceneCenterX;
-        appStateUpdate.scrollY = targetHeight / 2 / zoom - sceneCenterY;
-        appStateUpdate.zoom = { value: zoom };
+        // Skip (rather than apply NaN/0) when either side has no size yet,
+        // e.g. a page that has not laid out; the next camera delta retries.
+        if (Number.isFinite(zoom) && zoom > 0) {
+            appStateUpdate.scrollX = targetWidth / 2 / zoom - sceneCenterX;
+            appStateUpdate.scrollY = targetHeight / 2 / zoom - sceneCenterY;
+            appStateUpdate.zoom = { value: zoom };
+        }
     }
     if (Object.keys(appStateUpdate).length > 0) {
         api.updateScene({ appState: appStateUpdate, captureUpdate: "NEVER" });

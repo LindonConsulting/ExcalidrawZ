@@ -207,8 +207,16 @@ final class NetworkViewerServer {
             status.classList.toggle("hidden", !text);
           };
 
-          const editorReady = () =>
-            Boolean(window.excalidrawZHelper && window.excalidrawZHelper._api);
+          // Wait for a laid-out viewport too: the first full sync fits the
+          // editor's camera to this page's size.
+          const editorReady = () => {
+            const api = window.excalidrawZHelper && window.excalidrawZHelper._api;
+            if (!api) {
+              return false;
+            }
+            const appState = api.getAppState();
+            return appState.width > 0 && appState.height > 0;
+          };
 
           const prepare = () => {
             new Function(scripts.chrome)();
@@ -224,6 +232,16 @@ final class NetworkViewerServer {
             const protocol = location.protocol === "https:" ? "wss" : "ws";
             const socket = new WebSocket(`${protocol}://${location.host}/viewer/${token}/ws`);
             socket.onopen = () => setStatus("");
+            // Refit after the browser window changes size.
+            let resizeTimer = null;
+            window.addEventListener("resize", () => {
+              clearTimeout(resizeTimer);
+              resizeTimer = setTimeout(() => {
+                if (socket.readyState === WebSocket.OPEN) {
+                  socket.send(JSON.stringify({ type: "resync" }));
+                }
+              }, 250);
+            });
             socket.onmessage = (event) => {
               const message = JSON.parse(event.data);
               if (message.type === "delta") {
