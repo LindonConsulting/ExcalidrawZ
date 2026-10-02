@@ -63,9 +63,9 @@ struct AnthropicAPIKeyStore: Sendable {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
-#if os(macOS)
-        query[kSecUseDataProtectionKeychain as String] = true
-#endif
+        // Deliberately not `kSecUseDataProtectionKeychain`: that keychain
+        // requires an application-identifier entitlement, which ad-hoc signed
+        // local builds don't have (errSecMissingEntitlement on save).
         return query
     }
 
