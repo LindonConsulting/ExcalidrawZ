@@ -34,7 +34,8 @@ struct LessonDrawPlan: @unchecked Sendable {
     }
 
     var recapInput: LessonRecapInput? {
-        guard let previousLessonDate else { return nil }
+        guard let previousLessonDate,
+              !LessonRecapBuilder.liveElements(previousElements).isEmpty else { return nil }
         return LessonRecapBuilder.recapInput(
             from: previousElements,
             student: student,
