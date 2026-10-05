@@ -27,9 +27,15 @@ struct QuestionBankEntrySheet: View {
     @State private var isSaving = false
     @State private var suggestionError: String?
 
-    init(draft: QuestionBankCaptureDraft) {
+    private let onAdded: (() -> Void)?
+
+    init(draft: QuestionBankCaptureDraft, defaultSource: String = "", onAdded: (() -> Void)? = nil) {
         self.draft = draft
-        _entry = State(initialValue: QuestionBankEntry(title: draft.textContent.first.map { String($0.prefix(60)) } ?? ""))
+        self.onAdded = onAdded
+        _entry = State(initialValue: QuestionBankEntry(
+            title: draft.textContent.first.map { String($0.prefix(60)) } ?? "",
+            source: defaultSource
+        ))
         if let png = draft.thumbnailPNG {
             _thumbnail = State(initialValue: PlatformImage(data: png))
         }
@@ -37,6 +43,7 @@ struct QuestionBankEntrySheet: View {
 
     init(entry: QuestionBankEntry) {
         self.draft = nil
+        self.onAdded = nil
         _entry = State(initialValue: entry)
         _marksText = State(initialValue: entry.marks.map(String.init) ?? "")
         if let png = QuestionBankStore.shared.thumbnailPNG(for: entry.id) {
@@ -180,6 +187,7 @@ struct QuestionBankEntrySheet: View {
             if let draft {
                 try store.add(entry, elementsJSON: draft.elementsJSON, filesJSON: draft.filesJSON, thumbnailPNG: draft.thumbnailPNG)
                 alertToast(.init(displayMode: .hud, type: .complete(.green), title: "Added to Question Bank"))
+                onAdded?()
             } else {
                 try store.update(entry)
             }

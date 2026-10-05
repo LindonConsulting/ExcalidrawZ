@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ChocofordUI
+import UniformTypeIdentifiers
 
 extension Notification.Name {
     static let shouldCaptureQuestionBankSelection = Notification.Name("ShouldCaptureQuestionBankSelection")
@@ -23,6 +24,8 @@ struct QuestionBankInspectorContent: View {
     @State private var editingEntry: QuestionBankEntry?
     @State private var deletingEntry: QuestionBankEntry?
     @State private var insertingID: UUID?
+    @State private var isImporterPresented = false
+    @State private var importDocument: QuestionBankImportDocument?
 
     private var currentStudent: String? {
         if case .file(let file) = fileState.currentActiveFile, let name = file.group?.name, !name.isEmpty {
@@ -64,6 +67,26 @@ struct QuestionBankInspectorContent: View {
             }
         }
         .onAppear { store.loadIfNeeded() }
+        .fileImporterWithAlert(
+            isPresented: $isImporterPresented,
+            allowedContentTypes: [.pdf, .png, .jpeg],
+            allowsMultipleSelection: false
+        ) { urls in
+            guard let url = urls.first else { return }
+            let document = try QuestionBankImportDocument(url: url)
+            await MainActor.run { importDocument = document }
+        }
+        .onDrop(of: [.pdf, .png, .jpeg, .fileURL], isTargeted: nil) { providers in
+            guard let provider = providers.first else { return false }
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                guard let url, let document = try? QuestionBankImportDocument(url: url) else { return }
+                Task { @MainActor in importDocument = document }
+            }
+            return true
+        }
+        .sheet(item: $importDocument) { document in
+            QuestionBankImportSheet(document: document)
+        }
         .sheet(item: $editingEntry) { entry in
             QuestionBankEntrySheet(entry: entry)
         }
@@ -94,6 +117,12 @@ struct QuestionBankInspectorContent: View {
                 }
                 .help("Add the selected frame or elements to the question bank (Tools › Add Selection to Question Bank)")
                 .disabled(fileState.currentActiveFile == nil)
+                Button {
+                    isImporterPresented = true
+                } label: {
+                    Label("Import…", systemSymbol: .docViewfinder)
+                }
+                .help("Crop questions out of a PDF or image (or drop one onto this panel)")
             }
             HStack(spacing: 8) {
                 Menu {
@@ -131,7 +160,7 @@ struct QuestionBankInspectorContent: View {
             VStack(spacing: 10) {
                 Image(systemSymbol: .archivebox).font(.largeTitle).foregroundStyle(.secondary)
                 Text("No questions yet").font(.headline)
-                Text("Select a frame or elements on the canvas, then use Tools › Add Selection to Question Bank.")
+                Text("Select a frame or elements on the canvas and use Tools › Add Selection to Question Bank, or press Import… to crop questions out of a PDF or image.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
