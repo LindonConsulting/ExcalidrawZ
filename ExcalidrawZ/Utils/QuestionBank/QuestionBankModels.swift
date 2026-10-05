@@ -26,6 +26,8 @@ struct QuestionBankEntry: Codable, Hashable, Identifiable {
     var notes: String = ""
     var createdAt: Date = .now
     var uses: [QuestionUse] = []
+    /// dHash of the thumbnail (see QuestionImageHash); nil for old entries.
+    var imageHash: String?
 
     func hasBeenUsed(by student: String) -> Bool {
         let normalized = student.trimmingCharacters(in: .whitespaces).lowercased()

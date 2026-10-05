@@ -26,6 +26,7 @@ struct QuestionBankEntrySheet: View {
     @State private var isSuggesting = false
     @State private var isSaving = false
     @State private var suggestionError: String?
+    @State private var duplicateWarning: String?
 
     private let onAdded: (() -> Void)?
 
@@ -79,6 +80,13 @@ struct QuestionBankEntrySheet: View {
 
             topicsEditor
 
+            if let duplicateWarning {
+                Label(duplicateWarning, systemSymbol: .exclamationmarkTriangle)
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             if let suggestionError {
                 Text(suggestionError)
                     .font(.callout)
@@ -106,6 +114,18 @@ struct QuestionBankEntrySheet: View {
         }
         .padding(20)
         .frame(width: 560)
+        .onAppear(perform: checkForDuplicates)
+    }
+
+    private func checkForDuplicates() {
+        guard let draft, let png = draft.thumbnailPNG, let hash = QuestionImageHash.hash(png: png) else { return }
+        entry.imageHash = hash
+        let matches = store.likelyDuplicates(ofHash: hash)
+        guard let first = matches.first else { return }
+        let when = first.createdAt.formatted(date: .abbreviated, time: .omitted)
+        duplicateWarning = matches.count == 1
+            ? "Looks like a duplicate of “\(first.title)” (added \(when))."
+            : "Looks like a duplicate of “\(first.title)” and \(matches.count - 1) other\(matches.count == 2 ? "" : "s")."
     }
 
     @ViewBuilder

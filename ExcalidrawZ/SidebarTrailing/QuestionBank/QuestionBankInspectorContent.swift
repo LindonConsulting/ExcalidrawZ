@@ -26,6 +26,7 @@ struct QuestionBankInspectorContent: View {
     @State private var insertingID: UUID?
     @State private var isImporterPresented = false
     @State private var importDocument: QuestionBankImportDocument?
+    @State private var bulkImportURLs: [URL]?
 
     private var currentStudent: String? {
         if case .file(let file) = fileState.currentActiveFile, let name = file.group?.name, !name.isEmpty {
@@ -70,22 +71,23 @@ struct QuestionBankInspectorContent: View {
         .fileImporterWithAlert(
             isPresented: $isImporterPresented,
             allowedContentTypes: [.pdf, .png, .jpeg],
-            allowsMultipleSelection: false
+            allowsMultipleSelection: true
         ) { urls in
-            guard let url = urls.first else { return }
-            let document = try QuestionBankImportDocument(url: url)
-            await MainActor.run { importDocument = document }
+            try await handleImport(urls: urls)
         }
         .onDrop(of: [.pdf, .png, .jpeg, .fileURL], isTargeted: nil) { providers in
             guard let provider = providers.first else { return false }
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                guard let url, let document = try? QuestionBankImportDocument(url: url) else { return }
-                Task { @MainActor in importDocument = document }
+                guard let url else { return }
+                Task { @MainActor in try? await handleImport(urls: [url]) }
             }
             return true
         }
         .sheet(item: $importDocument) { document in
             QuestionBankImportSheet(document: document)
+        }
+        .sheet(isPresented: Binding(get: { bulkImportURLs != nil }, set: { if !$0 { bulkImportURLs = nil } })) {
+            QuestionBankBulkImportSheet(urls: bulkImportURLs ?? [])
         }
         .sheet(item: $editingEntry) { entry in
             QuestionBankEntrySheet(entry: entry)
@@ -101,6 +103,18 @@ struct QuestionBankInspectorContent: View {
                 }
                 deletingEntry = nil
             }
+        }
+    }
+
+    /// One PDF or image → crop sheet; several images → bulk import.
+    @MainActor
+    private func handleImport(urls: [URL]) async throws {
+        guard !urls.isEmpty else { return }
+        let isAllImages = urls.allSatisfy { UTType(filenameExtension: $0.pathExtension)?.conforms(to: .image) == true }
+        if urls.count > 1, isAllImages {
+            bulkImportURLs = urls
+        } else {
+            importDocument = try QuestionBankImportDocument(url: urls[0])
         }
     }
 
@@ -122,7 +136,7 @@ struct QuestionBankInspectorContent: View {
                 } label: {
                     Label("Import…", systemSymbol: .docViewfinder)
                 }
-                .help("Crop questions out of a PDF or image (or drop one onto this panel)")
+                .help("Crop questions out of a PDF or image, or pick several images to add one question per file")
             }
             HStack(spacing: 8) {
                 Menu {

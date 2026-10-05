@@ -103,8 +103,10 @@ final class QuestionBankStore: ObservableObject {
         if let filesJSON {
             try filesJSON.write(to: folder.appendingPathComponent("files.json"), options: .atomic)
         }
+        var entry = entry
         if let thumbnailPNG {
             try thumbnailPNG.write(to: folder.appendingPathComponent("thumb.png"), options: .atomic)
+            if entry.imageHash == nil { entry.imageHash = QuestionImageHash.hash(png: thumbnailPNG) }
         }
         entries.insert(entry, at: 0)
         try persistIndex()
@@ -151,6 +153,14 @@ final class QuestionBankStore: ObservableObject {
     func thumbnailPNG(for id: UUID) -> Data? {
         guard let url = thumbnailURL(for: id) else { return nil }
         return try? Data(contentsOf: url)
+    }
+
+    /// Entries whose thumbnail hash is within the duplicate threshold of `hash`.
+    func likelyDuplicates(ofHash hash: String, excluding id: UUID? = nil) -> [QuestionBankEntry] {
+        entries.filter { entry in
+            guard entry.id != id, let other = entry.imageHash else { return false }
+            return QuestionImageHash.distance(hash, other) <= QuestionImageHash.duplicateThreshold
+        }
     }
 
     /// All distinct students seen in the usage log, for the filter menu.
