@@ -143,7 +143,7 @@ public extension TutorDatabase {
 }
 
 public enum ImageHashDistance {
-    public static let duplicateThreshold = 10
+    public static let duplicateThreshold = 4
 
     public static func hamming(_ a: String, _ b: String) -> Int {
         guard let x = UInt64(a, radix: 16), let y = UInt64(b, radix: 16) else { return Int.max }
