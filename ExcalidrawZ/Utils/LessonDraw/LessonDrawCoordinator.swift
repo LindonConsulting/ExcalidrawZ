@@ -163,6 +163,10 @@ enum LessonDrawCoordinator {
         guard let file = context.object(with: fileObjectID) as? File else { return fileObjectID }
         file.visitedAt = .now
         try? context.save()
+        if let student = try? TutorKitContainer.shared.ensureStudent(named: plan.student, subjectHint: plan.subject),
+           let fileID = file.id?.uuidString {
+            try? TutorKitContainer.shared.recordLessonSession(student: student, lessonFileID: fileID, date: plan.lessonDate, subjectLine: plan.subject ?? "", recap: summary)
+        }
         if let group = file.group {
             fileState.currentActiveGroup = .group(group)
             fileState.expandToGroup(group.objectID)

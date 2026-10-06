@@ -146,6 +146,41 @@ final class TutorKitContainer: ObservableObject {
 
     // MARK: - Students
 
+    struct StudentStats {
+        var lessons: Int
+        var questionsShown: Int
+        var lastLesson: Date?
+    }
+
+    func stats(for student: Student) -> StudentStats {
+        let sessions = (try? database?.lessonSessions(forStudent: student.id)) ?? []
+        let shown = outcomes.values.flatMap { $0 }.filter { $0.studentID == student.id || $0.studentName.lowercased() == student.name.lowercased() }
+        return StudentStats(lessons: sessions.count, questionsShown: shown.count, lastLesson: sessions.first?.date)
+    }
+
+    /// Finds the student by name or creates a minimal record (used by Lesson Draw).
+    @discardableResult
+    func ensureStudent(named name: String, subjectHint: String?) throws -> Student {
+        openIfNeeded()
+        if let existing = try db().student(named: name) { return existing }
+        var student = Student(name: name.trimmingCharacters(in: .whitespaces))
+        if let hint = subjectHint?.lowercased() {
+            if hint.contains("computer") || hint.contains("cs") { student.subject = .computerScience }
+            if hint.contains("a level") || hint.contains("a-level") || hint.contains("alevel") { student.level = .aLevel }
+            else if hint.contains("ks3") { student.level = .ks3 }
+            for board in ExamBoard.allCases where hint.contains(board.rawValue.lowercased()) { student.board = board }
+            if hint.contains("foundation") { student.tier = .foundation } else if hint.contains("higher") { student.tier = .higher }
+        }
+        try db().save(student)
+        refresh()
+        return student
+    }
+
+    func recordLessonSession(student: Student, lessonFileID: String, date: Date, subjectLine: String, recap: String?) throws {
+        try db().record(LessonSession(studentID: student.id, lessonFileID: lessonFileID, date: date, subjectLine: subjectLine, recap: recap))
+        refresh()
+    }
+
     func save(_ student: Student) throws {
         try db().save(student)
         refresh()

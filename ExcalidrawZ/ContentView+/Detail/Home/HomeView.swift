@@ -94,6 +94,8 @@ struct HomeView: View {
                     VStack(spacing: 30) {
                         NewLessonDrawButton()
 
+                        StudentsSection()
+
                         RecentlyFilesSection()
 
 #if DEBUG || DEV
