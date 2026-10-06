@@ -2,75 +2,30 @@
 //  AnthropicAPIKeyStore.swift
 //  ExcalidrawZ
 //
-//  Keychain storage for the user's own Anthropic API key used by the lesson
-//  recap summarizer. Follows the WebDAVCredentialStore pattern.
+//  The user's Anthropic API key, in the login keychain (service/account kept
+//  stable across versions so stored keys survive).
 //
 
 import Foundation
-import Security
+import TutorAI
 
-struct AnthropicAPIKeyStore: Sendable {
-    private let service: String
-    private let account = "anthropic-api-key"
-
-    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.chocoford.excalidraw") {
-        self.service = "\(bundleIdentifier).lesson-draw.anthropic"
+enum AnthropicAPIKeyStore {
+    static var store: KeychainSecretStore {
+        KeychainSecretStore(
+            service: "\(Bundle.main.bundleIdentifier ?? "com.chocoford.excalidraw").lesson-draw.anthropic",
+            account: "anthropic-api-key"
+        )
     }
 
-    func load() throws -> String? {
-        var result: CFTypeRef?
-        let status = SecItemCopyMatching(baseQuery.merging([
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecReturnData as String: true,
-        ]) { _, new in new } as CFDictionary, &result)
-        if status == errSecItemNotFound { return nil }
-        guard status == errSecSuccess, let data = result as? Data else { throw keychainError(status) }
-        let key = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
-        return key.isEmpty ? nil : key
-    }
+    static func load() throws -> String? { try store.load() }
+    static func hasKey() -> Bool { store.hasValue() }
+    static func save(_ key: String) throws { try store.save(key) }
+    static func remove() throws { try store.remove() }
 
-    func hasKey() -> Bool {
-        (try? load()) != nil
-    }
-
-    func save(_ key: String) throws {
-        let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            try remove()
-            return
-        }
-        let data = Data(trimmed.utf8)
-        let status = SecItemAdd(baseQuery.merging([
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-        ]) { _, new in new } as CFDictionary, nil)
-        if status == errSecDuplicateItem {
-            let updateStatus = SecItemUpdate(baseQuery as CFDictionary, [kSecValueData as String: data] as CFDictionary)
-            guard updateStatus == errSecSuccess else { throw keychainError(updateStatus) }
-        } else if status != errSecSuccess {
-            throw keychainError(status)
-        }
-    }
-
-    func remove() throws {
-        let status = SecItemDelete(baseQuery as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else { throw keychainError(status) }
-    }
-
-    private var baseQuery: [String: Any] {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ]
-        // Deliberately not `kSecUseDataProtectionKeychain`: that keychain
-        // requires an application-identifier entitlement, which ad-hoc signed
-        // local builds don't have (errSecMissingEntitlement on save).
-        return query
-    }
-
-    private func keychainError(_ status: OSStatus) -> Error {
-        let message = SecCopyErrorMessageString(status, nil) as String? ?? "OSStatus \(status)"
-        return NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: [NSLocalizedDescriptionKey: "Keychain error: \(message)"])
+    /// A Messages client using the stored key and the configured model, or nil when no key is stored.
+    @MainActor
+    static func makeClient(preferences: LessonDrawPreferences? = nil) throws -> AnthropicMessagesClient? {
+        guard let key = try load() else { return nil }
+        return AnthropicMessagesClient(apiKey: key, model: (preferences ?? LessonDrawPreferences.shared).anthropicModelID)
     }
 }

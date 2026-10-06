@@ -6,13 +6,13 @@
 //
 
 import SwiftUI
+import TutorAI
 import ChocofordUI
 
 struct LessonsSettingsView: View {
     @ObservedObject private var preferences = LessonDrawPreferences.shared
     @Environment(\.alertToast) private var alertToast
 
-    private let keyStore = AnthropicAPIKeyStore()
 
     @State private var apiKeyDraft = ""
     @State private var hasStoredKey = false
@@ -26,7 +26,7 @@ struct LessonsSettingsView: View {
             content()
         }
         .onAppear {
-            hasStoredKey = keyStore.hasKey()
+            hasStoredKey = AnthropicAPIKeyStore.hasKey()
             appleAvailability = Self.appleAvailabilityDescription()
         }
     }
@@ -107,9 +107,9 @@ struct LessonsSettingsView: View {
 
     private func saveKey() {
         do {
-            try keyStore.save(apiKeyDraft)
+            try AnthropicAPIKeyStore.save(apiKeyDraft)
             apiKeyDraft = ""
-            hasStoredKey = keyStore.hasKey()
+            hasStoredKey = AnthropicAPIKeyStore.hasKey()
         } catch {
             alertToast(error)
         }
@@ -119,11 +119,11 @@ struct LessonsSettingsView: View {
         isTestingKey = true
         defer { isTestingKey = false }
         do {
-            guard let key = try keyStore.load() else {
+            guard let client = try AnthropicAPIKeyStore.makeClient(preferences: preferences) else {
                 keyTestResult = "No key stored."
                 return
             }
-            let summarizer = AnthropicMessagesSummarizer(apiKey: key, model: preferences.anthropicModelID)
+            let summarizer = AnthropicRecapSummarizer(client: client)
             let input = LessonRecapInput(
                 student: "Test",
                 subject: "Maths",
@@ -142,7 +142,7 @@ struct LessonsSettingsView: View {
 
     private func removeKey() {
         do {
-            try keyStore.remove()
+            try AnthropicAPIKeyStore.remove()
             hasStoredKey = false
             keyTestResult = nil
         } catch {
@@ -151,11 +151,6 @@ struct LessonsSettingsView: View {
     }
 
     private static func appleAvailabilityDescription() -> String {
-#if canImport(FoundationModels)
-        if #available(macOS 26.0, iOS 26.0, *) {
-            return AppleFoundationModelsSummarizer.availabilityDescription()
-        }
-#endif
-        return "Requires macOS 26"
+        LessonRecapSummarizer.appleAvailabilityDescription
     }
 }

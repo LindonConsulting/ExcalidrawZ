@@ -9,6 +9,8 @@
 
 import Foundation
 import SwiftUI
+import TutorModels
+import TutorStore
 
 /// What a capture produces before the user fills in the metadata.
 struct QuestionBankCaptureDraft: Identifiable {
@@ -19,6 +21,10 @@ struct QuestionBankCaptureDraft: Identifiable {
     var elementCount: Int
     /// Text found in the selection, used as the default title and for AI tagging.
     var textContent: [String]
+
+    var payload: QuestionPayload {
+        QuestionPayload(elementsJSON: elementsJSON, filesJSON: filesJSON, thumbnailPNG: thumbnailPNG)
+    }
 }
 
 enum QuestionBankCaptureError: LocalizedError {
@@ -111,12 +117,13 @@ enum QuestionBankCanvasBridge {
     /// Inserts a stored question at the viewport centre and returns the new element ids.
     @MainActor
     static func insert(
-        _ entry: QuestionBankEntry,
-        from store: QuestionBankStore,
+        _ question: Question,
+        from container: TutorKitContainer,
         into coordinator: ExcalidrawCanvasView.Coordinator
     ) async throws {
-        let elementsJSON = try store.elementsJSON(for: entry.id)
-        if let filesJSON = store.filesJSON(for: entry.id),
+        let payload = try container.payload(for: question.id)
+        let elementsJSON = payload.elementsJSON
+        if let filesJSON = payload.filesJSON,
            let filesDict = try JSONSerialization.jsonObject(with: filesJSON) as? [String: Any] {
             let filesArray = Array(filesDict.values)
             let filesData = try JSONSerialization.data(withJSONObject: filesArray)

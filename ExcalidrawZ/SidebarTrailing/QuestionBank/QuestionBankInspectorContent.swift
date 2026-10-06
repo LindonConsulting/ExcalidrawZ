@@ -8,6 +8,7 @@
 import SwiftUI
 import ChocofordUI
 import UniformTypeIdentifiers
+import TutorModels
 
 extension Notification.Name {
     static let shouldCaptureQuestionBankSelection = Notification.Name("ShouldCaptureQuestionBankSelection")
@@ -16,63 +17,56 @@ extension Notification.Name {
 struct QuestionBankInspectorContent: View {
     @Environment(\.alertToast) private var alertToast
     @EnvironmentObject private var fileState: FileState
-    @ObservedObject private var store = QuestionBankStore.shared
+    @ObservedObject private var container = TutorKitContainer.shared
 
     @State private var query = ""
     @State private var hideUsedByCurrentStudent = true
-    @State private var topicFilter = ""
-    @State private var editingEntry: QuestionBankEntry?
-    @State private var deletingEntry: QuestionBankEntry?
+    @State private var strandFilter = ""
+    @State private var editingQuestion: Question?
+    @State private var deletingQuestion: Question?
     @State private var insertingID: UUID?
     @State private var isImporterPresented = false
     @State private var importDocument: QuestionBankImportDocument?
     @State private var bulkImportURLs: [URL]?
 
     private var currentStudent: String? {
-        if case .file(let file) = fileState.currentActiveFile, let name = file.group?.name, !name.isEmpty {
-            return name
-        }
+        if case .file(let file) = fileState.currentActiveFile, let name = file.group?.name, !name.isEmpty { return name }
         return nil
     }
 
     private var currentFileID: String? { fileState.currentActiveFile?.id }
 
-    private var filtered: [QuestionBankEntry] {
-        store.entries.filter { entry in
-            guard entry.matches(query: query) else { return false }
-            if !topicFilter.isEmpty, !entry.topics.contains(topicFilter) { return false }
-            if hideUsedByCurrentStudent, let student = currentStudent, entry.hasBeenUsed(by: student) { return false }
+    private var filtered: [Question] {
+        let names = container.topicNames
+        return container.questions.filter { question in
+            guard question.matches(query: query, topicNames: names) else { return false }
+            if !strandFilter.isEmpty, !question.topicIDs.contains(where: { $0.hasPrefix(strandFilter + ".") || $0 == strandFilter }) { return false }
+            if hideUsedByCurrentStudent, let student = currentStudent, container.hasBeenShown(question.id, to: student) { return false }
             return true
         }
     }
-
-    private var allTopics: [String] { Array(Set(store.entries.flatMap(\.topics))).sorted() }
 
     var body: some View {
         VStack(spacing: 0) {
             header
             Divider()
-            if store.entries.isEmpty {
+            if let error = container.openError {
+                Center { Text(error.localizedDescription).foregroundStyle(.red).padding() }
+            } else if container.questions.isEmpty {
                 emptyState
             } else if filtered.isEmpty {
                 Center { Text("No questions match.").foregroundStyle(.secondary) }
             } else {
                 ScrollView {
                     LazyVStack(spacing: 10) {
-                        ForEach(filtered) { entry in
-                            card(entry)
-                        }
+                        ForEach(filtered) { question in card(question) }
                     }
                     .padding(12)
                 }
             }
         }
-        .onAppear { store.loadIfNeeded() }
-        .fileImporterWithAlert(
-            isPresented: $isImporterPresented,
-            allowedContentTypes: [.pdf, .png, .jpeg],
-            allowsMultipleSelection: true
-        ) { urls in
+        .onAppear { container.openIfNeeded() }
+        .fileImporterWithAlert(isPresented: $isImporterPresented, allowedContentTypes: [.pdf, .png, .jpeg], allowsMultipleSelection: true) { urls in
             try await handleImport(urls: urls)
         }
         .onDrop(of: [.pdf, .png, .jpeg, .fileURL], isTargeted: nil) { providers in
@@ -83,86 +77,65 @@ struct QuestionBankInspectorContent: View {
             }
             return true
         }
-        .sheet(item: $importDocument) { document in
-            QuestionBankImportSheet(document: document)
-        }
+        .sheet(item: $importDocument) { document in QuestionBankImportSheet(document: document) }
         .sheet(isPresented: Binding(get: { bulkImportURLs != nil }, set: { if !$0 { bulkImportURLs = nil } })) {
             QuestionBankBulkImportSheet(urls: bulkImportURLs ?? [])
         }
-        .sheet(item: $editingEntry) { entry in
-            QuestionBankEntrySheet(entry: entry)
-        }
+        .sheet(item: $editingQuestion) { question in QuestionBankEntrySheet(question: question) }
         .confirmationDialog(
-            "Delete “\(deletingEntry?.title ?? "")” from the question bank?",
-            isPresented: Binding(get: { deletingEntry != nil }, set: { if !$0 { deletingEntry = nil } }),
+            "Delete “\(deletingQuestion?.title ?? "")” from the question bank?",
+            isPresented: Binding(get: { deletingQuestion != nil }, set: { if !$0 { deletingQuestion = nil } }),
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                if let entry = deletingEntry {
-                    do { try store.delete(entry.id) } catch { alertToast(error) }
+                if let question = deletingQuestion {
+                    do { try container.deleteQuestion(id: question.id) } catch { alertToast(error) }
                 }
-                deletingEntry = nil
+                deletingQuestion = nil
             }
         }
     }
 
-    /// One PDF or image → crop sheet; several images → bulk import.
     @MainActor
     private func handleImport(urls: [URL]) async throws {
         guard !urls.isEmpty else { return }
         let isAllImages = urls.allSatisfy { UTType(filenameExtension: $0.pathExtension)?.conforms(to: .image) == true }
-        if urls.count > 1, isAllImages {
-            bulkImportURLs = urls
-        } else {
-            importDocument = try QuestionBankImportDocument(url: urls[0])
-        }
+        if urls.count > 1, isAllImages { bulkImportURLs = urls } else { importDocument = try QuestionBankImportDocument(url: urls[0]) }
     }
 
     @ViewBuilder
     private var header: some View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
-                TextField("Search title, source, topic, student…", text: $query)
-                    .textFieldStyle(.roundedBorder)
+                TextField("Search title, source, topic, student…", text: $query).textFieldStyle(.roundedBorder)
                 Button {
                     NotificationCenter.default.post(name: .shouldCaptureQuestionBankSelection, object: nil)
-                } label: {
-                    Label("Add selection", systemSymbol: .plus)
-                }
+                } label: { Label("Add selection", systemSymbol: .plus) }
                 .help("Add the selected frame or elements to the question bank (Tools › Add Selection to Question Bank)")
                 .disabled(fileState.currentActiveFile == nil)
-                Button {
-                    isImporterPresented = true
-                } label: {
-                    Label("Import…", systemSymbol: .docViewfinder)
-                }
-                .help("Crop questions out of a PDF or image, or pick several images to add one question per file")
+                Button { isImporterPresented = true } label: { Label("Import…", systemSymbol: .docViewfinder) }
+                    .help("Crop questions out of a PDF or image, or pick several images to add one question per file")
             }
             HStack(spacing: 8) {
                 Menu {
-                    Button("All topics") { topicFilter = "" }
+                    Button("All strands") { strandFilter = "" }
                     Divider()
-                    ForEach(allTopics, id: \.self) { topic in
-                        Button(topic) { topicFilter = topic }
+                    ForEach(container.strands) { strand in
+                        Button("\(strand.subject.rawValue) · \(strand.level?.rawValue ?? "") · \(strand.name)") { strandFilter = strand.id }
                     }
                 } label: {
-                    Text(topicFilter.isEmpty ? "All topics" : topicFilter)
+                    Text(strandFilter.isEmpty ? "All strands" : container.topicName(strandFilter))
                 }
                 .fixedSize()
                 Spacer()
                 if let student = currentStudent {
-                    Toggle("Hide used by \(student)", isOn: $hideUsedByCurrentStudent)
-                        .toggleStyle(.checkbox)
-                        .font(.callout)
+                    Toggle("Hide used by \(student)", isOn: $hideUsedByCurrentStudent).toggleStyle(.checkbox).font(.callout)
                 } else {
-                    Text("Open a student's file to filter by usage")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text("Open a student's file to filter by usage").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Text("\(filtered.count) of \(store.entries.count) questions")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text("\(filtered.count) of \(container.questions.count) questions")
+                .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(12)
@@ -175,21 +148,20 @@ struct QuestionBankInspectorContent: View {
                 Image(systemSymbol: .archivebox).font(.largeTitle).foregroundStyle(.secondary)
                 Text("No questions yet").font(.headline)
                 Text("Select a frame or elements on the canvas and use Tools › Add Selection to Question Bank, or press Import… to crop questions out of a PDF or image.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
             .padding(24)
         }
     }
 
     @ViewBuilder
-    private func card(_ entry: QuestionBankEntry) -> some View {
-        let usedByCurrent = currentStudent.map { entry.hasBeenUsed(by: $0) } ?? false
+    private func card(_ question: Question) -> some View {
+        let uses = container.outcomes[question.id] ?? []
+        let usedByCurrent = currentStudent.map { container.hasBeenShown(question.id, to: $0) } ?? false
         VStack(alignment: .leading, spacing: 8) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8).fill(Color.white)
-                if let png = store.thumbnailPNG(for: entry.id), let image = PlatformImage(data: png) {
+                if let png = container.thumbnailPNG(for: question.id), let image = PlatformImage(data: png) {
                     Image(platformImage: image).resizable().scaledToFit().padding(6)
                 } else {
                     Text("No preview").foregroundStyle(.secondary)
@@ -198,56 +170,47 @@ struct QuestionBankInspectorContent: View {
             .frame(height: 140)
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(.separator, lineWidth: 1))
 
-            Text(entry.title).font(.headline).lineLimit(2)
-            if !entry.source.isEmpty {
-                Text(entry.source).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-            }
+            Text(question.title).font(.headline).lineLimit(2)
+            if !question.source.isEmpty { Text(question.source).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
             HStack(spacing: 6) {
-                if !entry.board.isEmpty { tagPill(entry.board) }
-                if !entry.tier.isEmpty { tagPill(entry.tier) }
-                if let marks = entry.marks { tagPill("\(marks) marks") }
+                if let level = question.level { tagPill(level.rawValue) }
+                if let board = question.board { tagPill(board.rawValue) }
+                if let tier = question.tier, tier != .notApplicable { tagPill(tier.rawValue) }
+                if let marks = question.marks { tagPill("\(marks) marks") }
+                if let d = question.difficulty { tagPill(String(repeating: "●", count: d)) }
             }
-            if !entry.topics.isEmpty {
-                FlowTags(tags: entry.topics)
+            if !question.topicIDs.isEmpty || !question.freeTags.isEmpty {
+                FlowTags(tags: question.topicIDs.map(container.topicName) + question.freeTags.map { "#\($0)" })
             }
-            if let last = entry.lastUse {
+            if let last = uses.first {
                 Label(
-                    "Used \(entry.uses.count)× · last with \(last.student), \(last.date.formatted(date: .abbreviated, time: .omitted))",
+                    "Shown \(uses.count)× · last to \(last.studentName), \(last.shownAt.formatted(date: .abbreviated, time: .omitted))",
                     systemSymbol: usedByCurrent ? .exclamationmarkTriangle : .clock
                 )
-                .font(.caption)
-                .foregroundStyle(usedByCurrent ? .orange : .secondary)
+                .font(.caption).foregroundStyle(usedByCurrent ? .orange : .secondary)
             } else {
                 Label("Never used", systemSymbol: .circleDashed).font(.caption).foregroundStyle(.secondary)
             }
             HStack {
-                Button {
-                    Task { await insert(entry) }
-                } label: {
-                    if insertingID == entry.id {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Label("Insert", systemSymbol: .plusSquareOnSquare)
-                    }
+                Button { Task { await insert(question) } } label: {
+                    if insertingID == question.id { ProgressView().controlSize(.small) } else { Label("Insert", systemSymbol: .plusSquareOnSquare) }
                 }
                 .disabled(fileState.currentActiveFile == nil || insertingID != nil)
                 Spacer()
                 Menu {
-                    Button("Edit…") { editingEntry = entry }
-                    if !entry.uses.isEmpty {
+                    Button("Edit…") { editingQuestion = question }
+                    if !uses.isEmpty {
                         Menu("Remove use") {
-                            ForEach(entry.uses) { use in
-                                Button("\(use.student) · \(use.date.formatted(date: .abbreviated, time: .omitted))") {
-                                    do { try store.removeUse(use, from: entry.id) } catch { alertToast(error) }
+                            ForEach(uses) { use in
+                                Button("\(use.studentName) · \(use.shownAt.formatted(date: .abbreviated, time: .omitted))") {
+                                    do { try container.deleteOutcome(id: use.id) } catch { alertToast(error) }
                                 }
                             }
                         }
                     }
                     Divider()
-                    Button("Delete…", role: .destructive) { deletingEntry = entry }
-                } label: {
-                    Image(systemSymbol: .ellipsisCircle)
-                }
+                    Button("Delete…", role: .destructive) { deletingQuestion = question }
+                } label: { Image(systemSymbol: .ellipsisCircle) }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
             }
@@ -259,10 +222,7 @@ struct QuestionBankInspectorContent: View {
 
     @ViewBuilder
     private func tagPill(_ text: String) -> some View {
-        Text(text)
-            .font(.caption2)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+        Text(text).font(.caption2).padding(.horizontal, 6).padding(.vertical, 2)
             .background(Color.secondary.opacity(0.15), in: Capsule())
     }
 
@@ -274,14 +234,14 @@ struct QuestionBankInspectorContent: View {
         }
     }
 
-    private func insert(_ entry: QuestionBankEntry) async {
+    private func insert(_ question: Question) async {
         guard let coordinator = activeCanvasCoordinator else { return }
-        insertingID = entry.id
+        insertingID = question.id
         defer { insertingID = nil }
         do {
-            try await QuestionBankCanvasBridge.insert(entry, from: store, into: coordinator)
-            try store.recordUse(of: entry.id, student: currentStudent ?? "Unknown", lessonFileID: currentFileID)
-            alertToast(.init(displayMode: .hud, type: .complete(.green), title: "Inserted “\(entry.title)”"))
+            try await QuestionBankCanvasBridge.insert(question, from: container, into: coordinator)
+            try container.recordUse(of: question.id, studentName: currentStudent ?? "Unknown", lessonFileID: currentFileID)
+            alertToast(.init(displayMode: .hud, type: .complete(.green), title: "Inserted “\(question.title)”"))
         } catch {
             alertToast(error)
         }

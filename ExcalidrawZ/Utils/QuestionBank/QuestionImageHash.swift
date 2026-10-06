@@ -9,9 +9,10 @@
 import Foundation
 import CoreGraphics
 import ImageIO
+import TutorStore
 
 enum QuestionImageHash {
-    static let duplicateThreshold = 10
+    static var duplicateThreshold: Int { ImageHashDistance.duplicateThreshold }
 
     static func hash(png: Data) -> String? {
         guard let source = CGImageSourceCreateWithData(png as CFData, nil),
@@ -40,8 +41,5 @@ enum QuestionImageHash {
         return String(format: "%016llx", bits)
     }
 
-    static func distance(_ a: String, _ b: String) -> Int {
-        guard let x = UInt64(a, radix: 16), let y = UInt64(b, radix: 16) else { return Int.max }
-        return (x ^ y).nonzeroBitCount
-    }
+    static func distance(_ a: String, _ b: String) -> Int { ImageHashDistance.hamming(a, b) }
 }

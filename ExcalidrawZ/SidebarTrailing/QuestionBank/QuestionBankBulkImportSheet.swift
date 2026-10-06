@@ -2,25 +2,27 @@
 //  QuestionBankBulkImportSheet.swift
 //  ExcalidrawZ
 //
-//  Bulk import: one question per image file, with shared metadata and
-//  optional AI tagging per file.
+//  Bulk import: one question per image file, shared metadata, optional AI
+//  tagging per file.
 //
 
 import SwiftUI
 import ChocofordUI
 import UniformTypeIdentifiers
+import TutorModels
 
 struct QuestionBankBulkImportSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var store = QuestionBankStore.shared
+    @ObservedObject private var container = TutorKitContainer.shared
 
     let urls: [URL]
 
     @State private var source = ""
-    @State private var board = ""
-    @State private var tier = ""
-    @State private var topics: [String] = []
-    @State private var topicInput = ""
+    @State private var subject: Subject = .maths
+    @State private var level: QualificationLevel? = .gcse
+    @State private var board: ExamBoard?
+    @State private var tier: Tier?
+    @State private var topicIDs: [String] = []
     @State private var useAI = false
     @State private var skipDuplicates = true
     @State private var isRunning = false
@@ -35,25 +37,36 @@ struct QuestionBankBulkImportSheet: View {
 
             Form {
                 TextField("Source (shared)", text: $source)
+                Picker("Subject", selection: $subject) { ForEach(Subject.allCases) { Text($0.rawValue).tag($0) } }
+                Picker("Level", selection: $level) {
+                    Text("—").tag(QualificationLevel?.none)
+                    ForEach(QualificationLevel.allCases) { Text($0.rawValue).tag(QualificationLevel?.some($0)) }
+                }
                 Picker("Board", selection: $board) {
-                    Text("—").tag("")
-                    ForEach(QuestionBankTaxonomy.boards, id: \.self) { Text($0).tag($0) }
+                    Text("—").tag(ExamBoard?.none)
+                    ForEach(ExamBoard.allCases) { Text($0.rawValue).tag(ExamBoard?.some($0)) }
                 }
                 Picker("Tier", selection: $tier) {
-                    Text("—").tag("")
-                    ForEach(QuestionBankTaxonomy.tiers, id: \.self) { Text($0).tag($0) }
+                    Text("—").tag(Tier?.none)
+                    ForEach(Tier.allCases) { Text($0.rawValue).tag(Tier?.some($0)) }
                 }
                 HStack {
-                    TextField("Shared topic…", text: $topicInput).onSubmit(addTopic)
+                    Text("Shared topics")
                     Menu("Choose") {
-                        ForEach(QuestionBankTaxonomy.topics, id: \.self) { topic in
-                            Button(topic) { topicInput = topic; addTopic() }
+                        ForEach(container.strands.filter { $0.subject == subject }) { strand in
+                            Menu(strand.name) {
+                                ForEach(container.children(of: strand.id)) { topic in
+                                    Button(topic.name) { if !topicIDs.contains(topic.id) { topicIDs.append(topic.id) } }
+                                }
+                            }
                         }
                     }.fixedSize()
                 }
-                FlowTags(tags: topics) { tag in topics.removeAll { $0 == tag } }
+                FlowTags(tags: topicIDs.map(container.topicName)) { name in
+                    topicIDs.removeAll { container.topicName($0) == name }
+                }
                 Toggle("Suggest title and tags with AI for each file", isOn: $useAI)
-                    .disabled(!AnthropicAPIKeyStore().hasKey())
+                    .disabled(!AnthropicAPIKeyStore.hasKey())
                 Toggle("Skip files that look like existing questions", isOn: $skipDuplicates)
             }
             .formStyle(.columns)
@@ -73,9 +86,7 @@ struct QuestionBankBulkImportSheet: View {
 
             HStack {
                 Spacer()
-                Button(isRunning ? "Close" : "Cancel") { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                    .disabled(isRunning)
+                Button(isRunning ? "Close" : "Cancel") { dismiss() }.keyboardShortcut(.cancelAction).disabled(isRunning)
                 Button(isRunning ? "Importing…" : "Import all") { Task { await run() } }
                     .keyboardShortcut(.defaultAction)
                     .disabled(isRunning || progress == urls.count)
@@ -83,32 +94,23 @@ struct QuestionBankBulkImportSheet: View {
         }
         .padding(20)
         .frame(width: 560)
-    }
-
-    private func addTopic() {
-        let value = topicInput.trimmingCharacters(in: .whitespaces)
-        if !value.isEmpty, !topics.contains(value) { topics.append(value) }
-        topicInput = ""
+        .onAppear { container.openIfNeeded() }
     }
 
     private func run() async {
         isRunning = true
         defer { isRunning = false }
-        let suggester = useAI ? try? QuestionTagSuggester.make() : nil
+        let suggester = useAI ? try? QuestionTagSuggester.make(topics: container.topics) : nil
         for url in urls {
             let name = url.deletingPathExtension().lastPathComponent
             do {
                 let document = try QuestionBankImportDocument(url: url)
                 guard let page = document.renderPage(0) else { throw QuestionBankImportDocument.ImportError.unreadable }
-                let draft = try QuestionBankImportDocument.makeDraft(
-                    from: page,
-                    crop: CGRect(x: 0, y: 0, width: page.width, height: page.height),
-                    pixelsPerPoint: 2
-                )
-                var entry = QuestionBankEntry(title: name, source: source, topics: topics, board: board, tier: tier)
+                let draft = try QuestionBankImportDocument.makeDraft(from: page, crop: CGRect(x: 0, y: 0, width: page.width, height: page.height), pixelsPerPoint: 2)
+                var question = Question(title: name, source: source, subject: subject, level: level, board: board, tier: tier, topicIDs: topicIDs)
                 if let png = draft.thumbnailPNG, let hash = QuestionImageHash.hash(png: png) {
-                    entry.imageHash = hash
-                    if skipDuplicates, let dup = store.likelyDuplicates(ofHash: hash).first {
+                    question.imageHash = hash
+                    if skipDuplicates, let dup = container.likelyDuplicates(ofHash: hash).first {
                         log.append("Skipped \(name): looks like “\(dup.title)”")
                         progress += 1
                         continue
@@ -117,18 +119,13 @@ struct QuestionBankBulkImportSheet: View {
                 if let suggester {
                     do {
                         let suggestion = try await suggester.suggest(thumbnailPNG: draft.thumbnailPNG, texts: [])
-                        if let title = suggestion.title, !title.isEmpty { entry.title = title }
-                        for topic in suggestion.topics ?? [] where !entry.topics.contains(topic) { entry.topics.append(topic) }
-                        if entry.board.isEmpty, let value = suggestion.board { entry.board = value }
-                        if entry.tier.isEmpty, let value = suggestion.tier { entry.tier = value }
-                        if entry.marks == nil { entry.marks = suggestion.marks }
-                        if entry.source.isEmpty, let value = suggestion.source { entry.source = value }
+                        QuestionTagSuggester.apply(suggestion, to: &question, topics: container.topics, overwriteTitle: true)
                     } catch {
                         log.append("AI tagging failed for \(name): \(error.localizedDescription)")
                     }
                 }
-                try store.add(entry, elementsJSON: draft.elementsJSON, filesJSON: draft.filesJSON, thumbnailPNG: draft.thumbnailPNG)
-                log.append("Added “\(entry.title)”")
+                try container.add(question, payload: draft.payload)
+                log.append("Added “\(question.title)”")
             } catch {
                 log.append("Failed \(name): \(error.localizedDescription)")
             }

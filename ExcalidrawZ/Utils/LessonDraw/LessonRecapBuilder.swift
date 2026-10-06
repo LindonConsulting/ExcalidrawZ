@@ -9,6 +9,7 @@
 //
 
 import Foundation
+import TutorAI
 
 struct LessonRecapBuilder {
     enum BuildError: LocalizedError {

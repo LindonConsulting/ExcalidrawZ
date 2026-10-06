@@ -63,6 +63,8 @@
 		398F14532CF738DB0061CCF9 /* SwiftyAlert in Frameworks */ = {isa = PBXBuildFile; productRef = 398F14522CF738DB0061CCF9 /* SwiftyAlert */; };
 		398F14552CF738ED0061CCF9 /* SwiftyAlert in Frameworks */ = {isa = PBXBuildFile; productRef = 398F14542CF738ED0061CCF9 /* SwiftyAlert */; };
 		398F14592CF738F70061CCF9 /* SwiftyAlert in Frameworks */ = {isa = PBXBuildFile; productRef = 398F14582CF738F70061CCF9 /* SwiftyAlert */; };
+		FAFB34109CFCF3ABAECFBC2B /* TutorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 54ECBED33A71B49CF2E62B8D /* TutorKit */; };
+		AA5BA1B0977E02D5DAA2ECE9 /* TutorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2B49D2D5934C3FAD6FB53028 /* TutorKit */; };
 		3990F82D2CA9C55100C94983 /* Store.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 3990F82B2CA9C55100C94983 /* Store.storekit */; };
 		3990F82E2CA9C55100C94983 /* Store.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 3990F82B2CA9C55100C94983 /* Store.storekit */; };
 		3990F8362CACF4C500C94983 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3990F8352CACF4C500C94983 /* StoreKit.framework */; };
@@ -403,6 +405,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FAFB34109CFCF3ABAECFBC2B /* TutorKit in Frameworks */,
 				39FD00013012100000C10001 /* MSAL in Frameworks */,
 				39704EDF2E7990BC00B98F7A /* Vortex in Frameworks */,
 				3998125E2E73EBF400B7AAC9 /* ChocofordUI in Frameworks */,
@@ -429,6 +432,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA5BA1B0977E02D5DAA2ECE9 /* TutorKit in Frameworks */,
 				39FD00013012100000C10002 /* MSAL in Frameworks */,
 				394BBCDF2FDDEB0300E25D8F /* ChocofordUI in Frameworks */,
 				399812642E73EBF400B7AAC9 /* ChocofordUI in Frameworks */,
@@ -633,6 +637,7 @@
 			);
 			name = "ExcalidrawZ (AppStore)";
 			packageProductDependencies = (
+				54ECBED33A71B49CF2E62B8D /* TutorKit */,
 				39FD00013012100000C10004 /* MSAL */,
 				3963A0392C6C7EAA00472AE7 /* ChocofordEssentials */,
 				3963A03A2C6C7EAA00472AE7 /* ChocofordUI */,
@@ -690,6 +695,7 @@
 			);
 			name = ExcalidrawZ;
 			packageProductDependencies = (
+				2B49D2D5934C3FAD6FB53028 /* TutorKit */,
 				39FD00013012100000C10005 /* MSAL */,
 				3914876C2960AFD10042927A /* Sparkle */,
 				3930B2F72C512E7B00F14E88 /* ChocofordEssentials */,
@@ -836,6 +842,7 @@
 			);
 			mainGroup = 397E464A295838CF003B824B;
 			packageReferences = (
+				3B0FE4FE653A7AA45459C2D8 /* XCLocalSwiftPackageReference "Packages/TutorKit" */,
 				39FD00013012100000C10003 /* XCRemoteSwiftPackageReference "microsoft-authentication-library-for-objc" */,
 				3914876B2960AFD00042927A /* XCRemoteSwiftPackageReference "Sparkle" */,
 				3966623D2C666EC600F863BC /* XCRemoteSwiftPackageReference "FlyingFox" */,
@@ -1851,6 +1858,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		3B0FE4FE653A7AA45459C2D8 /* XCLocalSwiftPackageReference "Packages/TutorKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/TutorKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		390716CF2C6E82CF002D7834 /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1983,6 +1997,14 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		54ECBED33A71B49CF2E62B8D /* TutorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TutorKit;
+		};
+		2B49D2D5934C3FAD6FB53028 /* TutorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TutorKit;
+		};
 		390716E12C6F15DE002D7834 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 390716CF2C6E82CF002D7834 /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;

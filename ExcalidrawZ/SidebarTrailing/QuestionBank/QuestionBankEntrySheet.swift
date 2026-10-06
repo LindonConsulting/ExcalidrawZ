@@ -2,24 +2,24 @@
 //  QuestionBankEntrySheet.swift
 //  ExcalidrawZ
 //
-//  Metadata form for a captured (new) or existing question, with AI tag
-//  suggestions.
+//  Metadata form for a captured (new) or existing question, with taxonomy
+//  topic picking and AI tag suggestions.
 //
 
 import SwiftUI
 import ChocofordUI
-import os
-
-private let qbLogger = os.Logger(subsystem: "com.lindon.questionbank", category: "sheet")
+import TutorModels
+import TutorStore
 
 struct QuestionBankEntrySheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.alertToast) private var alertToast
-    @ObservedObject private var store = QuestionBankStore.shared
+    @ObservedObject private var container = TutorKitContainer.shared
 
-    /// Present for a new capture; nil when editing an existing entry.
+    /// Present for a new capture; nil when editing an existing question.
     private let draft: QuestionBankCaptureDraft?
-    @State private var entry: QuestionBankEntry
+    private let onAdded: (() -> Void)?
+    @State private var question: Question
     @State private var thumbnail: PlatformImage?
     @State private var topicInput = ""
     @State private var marksText = ""
@@ -28,52 +28,54 @@ struct QuestionBankEntrySheet: View {
     @State private var suggestionError: String?
     @State private var duplicateWarning: String?
 
-    private let onAdded: (() -> Void)?
-
     init(draft: QuestionBankCaptureDraft, defaultSource: String = "", onAdded: (() -> Void)? = nil) {
         self.draft = draft
         self.onAdded = onAdded
-        _entry = State(initialValue: QuestionBankEntry(
+        _question = State(initialValue: Question(
             title: draft.textContent.first.map { String($0.prefix(60)) } ?? "",
             source: defaultSource
         ))
-        if let png = draft.thumbnailPNG {
-            _thumbnail = State(initialValue: PlatformImage(data: png))
-        }
+        if let png = draft.thumbnailPNG { _thumbnail = State(initialValue: PlatformImage(data: png)) }
     }
 
-    init(entry: QuestionBankEntry) {
+    init(question: Question) {
         self.draft = nil
         self.onAdded = nil
-        _entry = State(initialValue: entry)
-        _marksText = State(initialValue: entry.marks.map(String.init) ?? "")
-        if let png = QuestionBankStore.shared.thumbnailPNG(for: entry.id) {
-            _thumbnail = State(initialValue: PlatformImage(data: png))
-        }
+        _question = State(initialValue: question)
+        _marksText = State(initialValue: question.marks.map(String.init) ?? "")
+        if let png = TutorKitContainer.shared.thumbnailPNG(for: question.id) { _thumbnail = State(initialValue: PlatformImage(data: png)) }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(draft == nil ? "Edit Question" : "Add to Question Bank")
-                .font(.title2.bold())
+            Text(draft == nil ? "Edit Question" : "Add to Question Bank").font(.title2.bold())
 
             HStack(alignment: .top, spacing: 16) {
-                thumbnailView
-                    .frame(width: 180, height: 180)
-
+                thumbnailView.frame(width: 180, height: 180)
                 Form {
-                    TextField("Title", text: $entry.title)
-                    TextField("Source (paper / book / page)", text: $entry.source)
-                    Picker("Board", selection: $entry.board) {
-                        Text("—").tag("")
-                        ForEach(QuestionBankTaxonomy.boards, id: \.self) { Text($0).tag($0) }
+                    TextField("Title", text: $question.title)
+                    TextField("Source (paper / book / page)", text: $question.source)
+                    Picker("Subject", selection: $question.subject) {
+                        ForEach(Subject.allCases) { Text($0.rawValue).tag($0) }
                     }
-                    Picker("Tier", selection: $entry.tier) {
-                        Text("—").tag("")
-                        ForEach(QuestionBankTaxonomy.tiers, id: \.self) { Text($0).tag($0) }
+                    Picker("Level", selection: $question.level) {
+                        Text("—").tag(QualificationLevel?.none)
+                        ForEach(QualificationLevel.allCases) { Text($0.rawValue).tag(QualificationLevel?.some($0)) }
+                    }
+                    Picker("Board", selection: $question.board) {
+                        Text("—").tag(ExamBoard?.none)
+                        ForEach(ExamBoard.allCases) { Text($0.rawValue).tag(ExamBoard?.some($0)) }
+                    }
+                    Picker("Tier", selection: $question.tier) {
+                        Text("—").tag(Tier?.none)
+                        ForEach(Tier.allCases) { Text($0.rawValue).tag(Tier?.some($0)) }
                     }
                     TextField("Marks", text: $marksText)
-                    TextField("Notes", text: $entry.notes)
+                    Picker("Difficulty", selection: $question.difficulty) {
+                        Text("—").tag(Int?.none)
+                        ForEach(1...5, id: \.self) { Text(String(repeating: "●", count: $0)).tag(Int?.some($0)) }
+                    }
+                    TextField("Notes", text: $question.notes)
                 }
                 .formStyle(.columns)
             }
@@ -82,22 +84,14 @@ struct QuestionBankEntrySheet: View {
 
             if let duplicateWarning {
                 Label(duplicateWarning, systemSymbol: .exclamationmarkTriangle)
-                    .font(.callout)
-                    .foregroundStyle(.orange)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .font(.callout).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
             }
-
             if let suggestionError {
-                Text(suggestionError)
-                    .font(.callout)
-                    .foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(suggestionError).font(.callout).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
             }
 
             HStack {
-                Button {
-                    Task { await suggestTags() }
-                } label: {
+                Button { Task { await suggestTags() } } label: {
                     if isSuggesting {
                         HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Suggesting…") }
                     } else {
@@ -109,23 +103,12 @@ struct QuestionBankEntrySheet: View {
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
                 Button(draft == nil ? "Save" : "Add") { save() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(entry.title.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)
+                    .disabled(question.title.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)
             }
         }
         .padding(20)
-        .frame(width: 560)
-        .onAppear(perform: checkForDuplicates)
-    }
-
-    private func checkForDuplicates() {
-        guard let draft, let png = draft.thumbnailPNG, let hash = QuestionImageHash.hash(png: png) else { return }
-        entry.imageHash = hash
-        let matches = store.likelyDuplicates(ofHash: hash)
-        guard let first = matches.first else { return }
-        let when = first.createdAt.formatted(date: .abbreviated, time: .omitted)
-        duplicateWarning = matches.count == 1
-            ? "Looks like a duplicate of “\(first.title)” (added \(when))."
-            : "Looks like a duplicate of “\(first.title)” and \(matches.count - 1) other\(matches.count == 2 ? "" : "s")."
+        .frame(width: 600)
+        .onAppear { container.openIfNeeded(); checkForDuplicates() }
     }
 
     @ViewBuilder
@@ -134,10 +117,7 @@ struct QuestionBankEntrySheet: View {
             RoundedRectangle(cornerRadius: 8).fill(Color.white)
             RoundedRectangle(cornerRadius: 8).stroke(.separator, lineWidth: 1)
             if let thumbnail {
-                Image(platformImage: thumbnail)
-                    .resizable()
-                    .scaledToFit()
-                    .padding(6)
+                Image(platformImage: thumbnail).resizable().scaledToFit().padding(6)
             } else {
                 Text("No preview").foregroundStyle(.secondary)
             }
@@ -148,18 +128,24 @@ struct QuestionBankEntrySheet: View {
     private var topicsEditor: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Topics").font(.callout).foregroundStyle(.secondary)
-            FlowTags(tags: entry.topics) { tag in
-                entry.topics.removeAll { $0 == tag }
+            FlowTags(tags: question.topicIDs.map(container.topicName) + question.freeTags.map { "#\($0)" }) { tag in
+                if tag.hasPrefix("#") {
+                    question.freeTags.removeAll { "#\($0)" == tag }
+                } else if let id = question.topicIDs.first(where: { container.topicName($0) == tag }) {
+                    question.topicIDs.removeAll { $0 == id }
+                }
             }
             HStack {
-                TextField("Add topic…", text: $topicInput)
+                TextField("Add topic (matches the taxonomy, otherwise a free tag)…", text: $topicInput)
                     .onSubmit(addTopicFromInput)
-                Menu {
-                    ForEach(QuestionBankTaxonomy.topics, id: \.self) { topic in
-                        Button(topic) { addTopic(topic) }
+                Menu("Choose") {
+                    ForEach(container.strands.filter { $0.subject == question.subject }) { strand in
+                        Menu(strand.name) {
+                            ForEach(container.children(of: strand.id)) { topic in
+                                Button(topic.name) { addTopic(topic.id) }
+                            }
+                        }
                     }
-                } label: {
-                    Text("Choose")
                 }
                 .fixedSize()
             }
@@ -167,14 +153,29 @@ struct QuestionBankEntrySheet: View {
     }
 
     private func addTopicFromInput() {
-        addTopic(topicInput)
+        let raw = topicInput.trimmingCharacters(in: .whitespaces)
         topicInput = ""
+        guard !raw.isEmpty else { return }
+        if let topic = container.resolveTopic(raw), topic.parentID != nil {
+            addTopic(topic.id)
+        } else if !question.freeTags.contains(where: { $0.caseInsensitiveCompare(raw) == .orderedSame }) {
+            question.freeTags.append(raw)
+        }
     }
 
-    private func addTopic(_ raw: String) {
-        let topic = raw.trimmingCharacters(in: .whitespaces)
-        guard !topic.isEmpty, !entry.topics.contains(where: { $0.caseInsensitiveCompare(topic) == .orderedSame }) else { return }
-        entry.topics.append(topic)
+    private func addTopic(_ id: String) {
+        if !question.topicIDs.contains(id) { question.topicIDs.append(id) }
+    }
+
+    private func checkForDuplicates() {
+        guard let draft, let png = draft.thumbnailPNG, let hash = QuestionImageHash.hash(png: png) else { return }
+        question.imageHash = hash
+        let matches = container.likelyDuplicates(ofHash: hash)
+        guard let first = matches.first else { return }
+        let when = first.createdAt.formatted(date: .abbreviated, time: .omitted)
+        duplicateWarning = matches.count == 1
+            ? "Looks like a duplicate of “\(first.title)” (added \(when))."
+            : "Looks like a duplicate of “\(first.title)” and \(matches.count - 1) other\(matches.count == 2 ? "" : "s")."
     }
 
     private func suggestTags() async {
@@ -182,18 +183,12 @@ struct QuestionBankEntrySheet: View {
         suggestionError = nil
         defer { isSuggesting = false }
         do {
-            let suggester = try QuestionTagSuggester.make()
-            let png = draft?.thumbnailPNG ?? store.thumbnailPNG(for: entry.id)
+            let suggester = try QuestionTagSuggester.make(topics: container.topics)
+            let png = draft?.thumbnailPNG ?? container.thumbnailPNG(for: question.id)
             let suggestion = try await suggester.suggest(thumbnailPNG: png, texts: draft?.textContent ?? [])
-            if entry.title.trimmingCharacters(in: .whitespaces).isEmpty, let title = suggestion.title { entry.title = title }
-            if let title = suggestion.title, draft != nil { entry.title = title }
-            for topic in suggestion.topics ?? [] { addTopic(topic) }
-            if entry.board.isEmpty, let board = suggestion.board, QuestionBankTaxonomy.boards.contains(board) { entry.board = board }
-            if entry.tier.isEmpty, let tier = suggestion.tier, QuestionBankTaxonomy.tiers.contains(tier) { entry.tier = tier }
-            if marksText.isEmpty, let marks = suggestion.marks { marksText = String(marks) }
-            if entry.source.isEmpty, let source = suggestion.source { entry.source = source }
+            QuestionTagSuggester.apply(suggestion, to: &question, topics: container.topics, overwriteTitle: draft != nil)
+            if marksText.isEmpty, let marks = question.marks { marksText = String(marks) }
         } catch {
-            qbLogger.error("suggest failed: \(error.localizedDescription, privacy: .public)")
             suggestionError = error.localizedDescription
         }
     }
@@ -201,15 +196,15 @@ struct QuestionBankEntrySheet: View {
     private func save() {
         isSaving = true
         defer { isSaving = false }
-        entry.marks = Int(marksText.trimmingCharacters(in: .whitespaces))
-        entry.title = entry.title.trimmingCharacters(in: .whitespaces)
+        question.marks = Int(marksText.trimmingCharacters(in: .whitespaces))
+        question.title = question.title.trimmingCharacters(in: .whitespaces)
         do {
             if let draft {
-                try store.add(entry, elementsJSON: draft.elementsJSON, filesJSON: draft.filesJSON, thumbnailPNG: draft.thumbnailPNG)
+                try container.add(question, payload: draft.payload)
                 alertToast(.init(displayMode: .hud, type: .complete(.green), title: "Added to Question Bank"))
                 onAdded?()
             } else {
-                try store.update(entry)
+                try container.update(question)
             }
             dismiss()
         } catch {
@@ -236,8 +231,7 @@ struct FlowTags: View {
                                 .buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
                     .background(Color.accentColor.opacity(0.15), in: Capsule())
                 }
             }

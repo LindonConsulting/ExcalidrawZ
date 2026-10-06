@@ -8,6 +8,7 @@
 
 import Foundation
 import CoreData
+import TutorAI
 
 struct LessonDrawPlan: @unchecked Sendable {
     var event: LessonCalendarEvent
