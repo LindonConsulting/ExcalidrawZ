@@ -90,7 +90,19 @@ public struct SpecificationDraft: Codable, Sendable, Equatable {
 
     public var pointCount: Int { sections.reduce(0) { $0 + $1.points.count } }
 
-    /// Merges another chunk's sections into this draft (same section code → append points, de-duplicated by point code).
+    /// Normalised tier label used for de-duplication ("Higher", "Foundation" or "").
+    static func tierKey(_ tier: String?) -> String {
+        let lowered = (tier ?? "").lowercased()
+        if lowered.contains("higher") { return "Higher" }
+        if lowered.contains("foundation") { return "Foundation" }
+        return ""
+    }
+
+    /// Merges another chunk's sections into this draft. Sections match on code
+    /// (so "Number (Foundation)" and "Number (Higher)" join); points are
+    /// de-duplicated by code **and tier**, so a Higher-only version of N1 is
+    /// kept alongside the Foundation one. When the same code+tier appears
+    /// twice, the longer statement wins (chunk boundaries can truncate).
     public mutating func merge(_ other: SpecificationDraft) {
         if title.isEmpty { title = other.title }
         if code.isEmpty { code = other.code }
@@ -98,12 +110,28 @@ public struct SpecificationDraft: Codable, Sendable, Equatable {
         if level.isEmpty { level = other.level }
         if board.isEmpty { board = other.board }
         for section in other.sections {
-            if let index = sections.firstIndex(where: { $0.code == section.code && !section.code.isEmpty }) {
-                let existing = Set(sections[index].points.map(\.code))
-                sections[index].points += section.points.filter { !existing.contains($0.code) || $0.code.isEmpty }
-            } else {
+            guard let index = sections.firstIndex(where: { $0.code == section.code && !section.code.isEmpty }) else {
                 sections.append(section)
+                continue
             }
+            if sections[index].title.count < section.title.count, Self.tierKey(section.title) == "" {
+                sections[index].title = section.title
+            }
+            for point in section.points {
+                let key = (point.code, Self.tierKey(point.tier))
+                if let existing = sections[index].points.firstIndex(where: { ($0.code, Self.tierKey($0.tier)) == key && !point.code.isEmpty }) {
+                    if sections[index].points[existing].text.count < point.text.count {
+                        sections[index].points[existing].text = point.text
+                    }
+                } else {
+                    sections[index].points.append(point)
+                }
+            }
+        }
+        // Strip tier suffixes from section titles once both tiers are merged.
+        for index in sections.indices {
+            sections[index].title = sections[index].title
+                .replacingOccurrences(of: #"\s*\((Foundation|Higher) tier\)"#, with: "", options: .regularExpression)
         }
     }
 }

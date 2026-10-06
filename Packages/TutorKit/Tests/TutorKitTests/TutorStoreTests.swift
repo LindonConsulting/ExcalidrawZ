@@ -108,12 +108,12 @@ final class SpecificationTests: XCTestCase {
             .init(code: "N", title: "Number", points: [.init(code: "N1", text: "order")]),
         ]))
         XCTAssertEqual(draft.sections.count, 2)
-        XCTAssertEqual(draft.pointCount, 4)
+        XCTAssertEqual(draft.pointCount, 5)   // A18 Higher and untiered A18 are distinct points
 
         let tree = try db.saveSpecification(from: draft, sourceFileName: "spec.pdf")
         XCTAssertEqual(tree.specification.board, .edexcel)
         XCTAssertEqual(tree.points.first { $0.code == "A18" }?.tier, .higher)
-        XCTAssertEqual(try db.specificationTree(id: tree.specification.id)?.points.count, 4)
+        XCTAssertEqual(try db.specificationTree(id: tree.specification.id)?.points.count, 5)
 
         let student = try db.save(Student(name: "Frankie", specificationID: tree.specification.id))
         let q = Question(title: "q")
@@ -158,5 +158,59 @@ final class CoveragePickerTests: XCTestCase {
         XCTAssertEqual(Set(picks.map(\.question.title)), ["wrong-point", "focus", "new-point"])
         XCTAssertEqual(picks[0].reason, "got this wrong before")
         XCTAssertFalse(picks.contains { $0.question.title == "seen" || $0.question.title == "foundation-only" })
+    }
+}
+
+final class BackupAndMergeTests: XCTestCase {
+    func testTierAwareMergeKeepsBothTiers() {
+        var draft = SpecificationDraft(title: "", code: "", subject: "", level: "", board: "", sections: [
+            .init(code: "1", title: "Number (Foundation tier)", points: [
+                .init(code: "N1", text: "order integers", tier: "Foundation"),
+                .init(code: "N2", text: "four operations", tier: "Foundation"),
+            ]),
+        ])
+        draft.merge(SpecificationDraft(title: "", code: "", subject: "", level: "", board: "", sections: [
+            .init(code: "1", title: "Number (Higher tier)", points: [
+                .init(code: "N1", text: "order integers", tier: "Higher"),
+                .init(code: "N2", text: "four operations including fractional indices", tier: "Higher"),
+                .init(code: "N2", text: "four operations incl", tier: "Higher"),
+            ]),
+        ]))
+        XCTAssertEqual(draft.sections.count, 1)
+        XCTAssertEqual(draft.sections[0].title, "Number")
+        XCTAssertEqual(draft.pointCount, 4)
+        let n2h = draft.sections[0].points.filter { $0.code == "N2" && $0.tier == "Higher" }
+        XCTAssertEqual(n2h.count, 1)
+        XCTAssertEqual(n2h.first?.text, "four operations including fractional indices")
+    }
+
+    func testExportAndRestore() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("backup-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let db = try TutorDatabase(directory: root.appendingPathComponent("live"))
+        let q = Question(title: "keep me")
+        try db.add(q, payload: QuestionPayload(elementsJSON: Data("[]".utf8), thumbnailPNG: Data([7])))
+        try db.save(Student(name: "Sam"))
+
+        let manager = TutorBackupManager(database: db)
+        let backup = try manager.exportBackup(to: root.appendingPathComponent("exports"))
+        XCTAssertEqual(TutorBackupManager.manifest(of: backup)?.questionCount, 1)
+
+        // Mutate, then restore.
+        try db.deleteQuestion(id: q.id)
+        try db.save(Student(name: "Extra"))
+        XCTAssertEqual(try db.questions().count, 0)
+        try manager.restoreBackup(from: backup, safetyDirectory: root.appendingPathComponent("safety"))
+        XCTAssertEqual(try db.questions().map(\.title), ["keep me"])
+        XCTAssertEqual(try db.students().map(\.name), ["Sam"])
+        XCTAssertEqual(db.media.thumbnailPNG(for: q.id), Data([7]))
+        XCTAssertEqual(try TutorBackupManager.backups(in: root.appendingPathComponent("safety")).count, 1)
+
+        // Automatic: once per day.
+        let auto = root.appendingPathComponent("auto")
+        XCTAssertNotNil(try manager.runAutomaticBackupIfDue(in: auto))
+        XCTAssertNil(try manager.runAutomaticBackupIfDue(in: auto))
+        XCTAssertNotNil(try manager.runAutomaticBackupIfDue(in: auto, now: .now.addingTimeInterval(86_400 * 2)))
+        XCTAssertEqual(try TutorBackupManager.backups(in: auto).count, 2)
     }
 }

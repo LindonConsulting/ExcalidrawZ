@@ -24,6 +24,10 @@ public struct SpecificationImporter: Sendable {
     Rules: one point per numbered/lettered statement exactly as the specification numbers them (e.g. "N1", "A4", "3.1.1", "1.2.3"). \
     Keep the statement text verbatim but trimmed, without the bold/underline markers and without repeated headers or page furniture. \
     If content is marked higher-tier only (bold text in Edexcel/AQA GCSE Maths, "Higher only", "H"), set "tier":"Higher". \
+    GCSE Maths specifications often list the Foundation tier content and then the Higher tier content again under the same codes with extra statements: \
+    emit Foundation-section statements with "tier":"Foundation" and Higher-section statements with "tier":"Higher" (same codes are fine); \
+    when a Higher statement merely repeats the Foundation one, still include it so each tier has its full list. \
+    Use the section code without the tier (e.g. "1", "A") and a tier-free section title. \
     Ignore assessment objectives, introductions, formulae sheets, guidance for teachers and appendices. \
     If this chunk contains no assessable content, return {"title":"","code":"","subject":"","level":"","board":"","sections":[]}.
     """

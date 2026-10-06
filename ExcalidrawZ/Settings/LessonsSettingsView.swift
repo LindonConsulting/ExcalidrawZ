@@ -7,6 +7,8 @@
 
 import SwiftUI
 import TutorAI
+import TutorStore
+import UniformTypeIdentifiers
 import ChocofordUI
 
 struct LessonsSettingsView: View {
@@ -18,6 +20,12 @@ struct LessonsSettingsView: View {
     @State private var hasStoredKey = false
     @State private var patternSample = "Frankie (CMT) - Maths GCSE"
     @State private var appleAvailability = "Checking…"
+    @ObservedObject private var tutorKit = TutorKitContainer.shared
+    @State private var isBackupDestinationPresented = false
+    @State private var isRestoreSourcePresented = false
+    @State private var isRestoreConfirmPresented = false
+    @State private var pendingRestoreURL: URL?
+    @State private var backupMessage: String?
     @State private var isTestingKey = false
     @State private var keyTestResult: String?
 
@@ -25,7 +33,35 @@ struct LessonsSettingsView: View {
         SettingsFormContainer(legacyAlignment: .leading, legacySpacing: 18) {
             content()
         }
+        .fileImporterWithAlert(isPresented: $isBackupDestinationPresented, allowedContentTypes: [.folder], allowsMultipleSelection: false) { urls in
+            guard let url = urls.first else { return }
+            let accessed = url.startAccessingSecurityScopedResource()
+            defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+            let created = try await MainActor.run { try tutorKit.exportBackup(to: url) }
+            await MainActor.run { backupMessage = "Backed up to \(created.path)" }
+        }
+        .fileImporterWithAlert(isPresented: $isRestoreSourcePresented, allowedContentTypes: [.folder], allowsMultipleSelection: false) { urls in
+            guard let url = urls.first else { return }
+            await MainActor.run { pendingRestoreURL = url; isRestoreConfirmPresented = true }
+        }
+        .confirmationDialog(
+            "Replace all tutor data with the backup\(pendingRestoreURL.flatMap { TutorBackupManager.manifest(of: $0) }.map { " from \($0.createdAt.formatted(date: .abbreviated, time: .shortened)) (\($0.questionCount) questions, \($0.studentCount) students)" } ?? "")?",
+            isPresented: $isRestoreConfirmPresented, titleVisibility: .visible
+        ) {
+            Button("Restore", role: .destructive) {
+                guard let url = pendingRestoreURL else { return }
+                let accessed = url.startAccessingSecurityScopedResource()
+                defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+                do {
+                    try tutorKit.restoreBackup(from: url)
+                    backupMessage = "Restored from \(url.lastPathComponent). A safety copy of the previous data was added to the automatic backups."
+                } catch {
+                    alertToast(error)
+                }
+            }
+        }
         .onAppear {
+            tutorKit.openIfNeeded()
             hasStoredKey = AnthropicAPIKeyStore.hasKey()
             appleAvailability = Self.appleAvailabilityDescription()
         }
@@ -58,6 +94,31 @@ struct LessonsSettingsView: View {
             Text("Recap")
         } footer: {
             Text("Automatic prefers the on-device Apple model when available, then the Anthropic API. The file is still created when no backend is available.")
+                .foregroundStyle(.secondary)
+        }
+
+        Section {
+            Toggle("Automatic daily backup (keeps the last 7)", isOn: Binding(
+                get: { tutorKit.automaticBackupsEnabled },
+                set: { tutorKit.automaticBackupsEnabled = $0 }
+            ))
+            LabeledContent("Last automatic backup", value: tutorKit.automaticBackups.first.map { $0.manifest.createdAt.formatted(date: .abbreviated, time: .shortened) } ?? "None yet")
+            HStack {
+                Button("Back up to folder…") { isBackupDestinationPresented = true }
+                Button("Restore from backup…") { isRestoreSourcePresented = true }
+#if os(macOS)
+                if let dir = tutorKit.backupsDirectory {
+                    Button("Show backups in Finder") { NSWorkspace.shared.activateFileViewerSelecting([dir]) }
+                }
+#endif
+            }
+            if let backupMessage {
+                Text(backupMessage).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        } header: {
+            Text("Tutor data (students, questions, specifications, results)")
+        } footer: {
+            Text("A backup is a folder named TutorKit-Backup-<date> holding the database and question images. To move to another Mac, back up to a shared folder or drive there, then Restore on the other machine. Restoring replaces the current data (a safety copy is kept in the automatic backups).")
                 .foregroundStyle(.secondary)
         }
 

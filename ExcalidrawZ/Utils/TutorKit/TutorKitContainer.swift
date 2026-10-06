@@ -33,6 +33,9 @@ final class TutorKitContainer: ObservableObject {
 
     private(set) var database: TutorDatabase?
     private var didOpen = false
+    private(set) var directory: URL?
+    @Published private(set) var lastAutomaticBackup: Date?
+    static let automaticBackupsEnabledKey = "TutorKit.automaticBackups"
 
     enum ContainerError: LocalizedError {
         case notOpen
@@ -49,7 +52,9 @@ final class TutorKitContainer: ObservableObject {
             let directory = support.appendingPathComponent("TutorKit", isDirectory: true)
             let db = try TutorDatabase(directory: directory)
             database = db
+            self.directory = directory
             try db.upsertTopics(TopicTaxonomy.builtin)
+            runAutomaticBackupIfEnabled()
 
             let legacy = LegacyQuestionBankImporter(legacyDirectory: support.appendingPathComponent("QuestionBank", isDirectory: true), database: db)
             if legacy.hasLegacyData {
@@ -82,6 +87,41 @@ final class TutorKitContainer: ObservableObject {
     private func db() throws -> TutorDatabase {
         guard let database else { throw ContainerError.notOpen }
         return database
+    }
+
+    // MARK: - Backups
+
+    var backupsDirectory: URL? { directory?.appendingPathComponent("backups", isDirectory: true) }
+
+    var automaticBackupsEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: Self.automaticBackupsEnabledKey) as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: Self.automaticBackupsEnabledKey); objectWillChange.send(); runAutomaticBackupIfEnabled() }
+    }
+
+    func runAutomaticBackupIfEnabled() {
+        guard automaticBackupsEnabled, let database, let backupsDirectory else { return }
+        do {
+            _ = try TutorBackupManager(database: database).runAutomaticBackupIfDue(in: backupsDirectory)
+            lastAutomaticBackup = try TutorBackupManager.backups(in: backupsDirectory).first?.manifest.createdAt
+        } catch {
+            Self.logger.error("automatic backup failed: \(error.localizedDescription)")
+        }
+    }
+
+    var automaticBackups: [TutorBackupManager.BackupEntry] {
+        guard let backupsDirectory else { return [] }
+        return (try? TutorBackupManager.backups(in: backupsDirectory)) ?? []
+    }
+
+    @discardableResult
+    func exportBackup(to destination: URL) throws -> URL {
+        try TutorBackupManager(database: try db()).exportBackup(to: destination)
+    }
+
+    func restoreBackup(from folder: URL) throws {
+        try TutorBackupManager(database: try db()).restoreBackup(from: folder, safetyDirectory: backupsDirectory)
+        treeCache = [:]
+        refresh()
     }
 
     // MARK: - Topics
