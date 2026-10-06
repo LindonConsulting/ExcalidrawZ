@@ -102,6 +102,9 @@ struct StudentCard: View {
                 if let last = stats.lastLesson {
                     Label(last.formatted(date: .abbreviated, time: .omitted), systemSymbol: .clock)
                 }
+                if stats.pendingOutcomes > 0 {
+                    Label("\(stats.pendingOutcomes) to record", systemSymbol: .checklist).foregroundStyle(.orange)
+                }
             }
             .font(.caption).foregroundStyle(.secondary)
         }

@@ -145,6 +145,24 @@ final class TutorKitContainer: ObservableObject {
         refresh()
     }
 
+    /// Outcomes still waiting for a result, optionally limited to one lesson file or student.
+    func pendingOutcomes(lessonFileID: String? = nil, studentName: String? = nil) -> [Outcome] {
+        outcomes.values.flatMap { $0 }
+            .filter { $0.result == .unknown }
+            .filter { lessonFileID == nil || $0.lessonFileID == lessonFileID }
+            .filter { studentName == nil || $0.studentName.caseInsensitiveCompare(studentName!) == .orderedSame }
+            .sorted { $0.shownAt > $1.shownAt }
+    }
+
+    func setResult(_ result: OutcomeResult, difficulty: Int? = nil, note: String? = nil, for outcomeID: UUID) throws {
+        guard var outcome = outcomes.values.flatMap({ $0 }).first(where: { $0.id == outcomeID }) else { return }
+        outcome.result = result
+        if let difficulty { outcome.perceivedDifficulty = difficulty }
+        if let note { outcome.note = note }
+        try db().record(outcome)
+        refresh()
+    }
+
     func hasBeenShown(_ questionID: UUID, to studentName: String) -> Bool {
         let needle = studentName.trimmingCharacters(in: .whitespaces).lowercased()
         guard !needle.isEmpty else { return false }
@@ -217,6 +235,7 @@ final class TutorKitContainer: ObservableObject {
         var questionsShown: Int
         var lastLesson: Date?
         var coverage: CoverageSummary?
+        var pendingOutcomes: Int
     }
 
     func stats(for student: Student) -> StudentStats {
@@ -230,7 +249,8 @@ final class TutorKitContainer: ObservableObject {
             for point in points { counts[coverage[point.id] ?? .notCovered, default: 0] += 1 }
             summary = CoverageSummary(total: points.count, counts: counts)
         }
-        return StudentStats(lessons: sessions.count, questionsShown: shown.count, lastLesson: sessions.first?.date, coverage: summary)
+        return StudentStats(lessons: sessions.count, questionsShown: shown.count, lastLesson: sessions.first?.date, coverage: summary,
+                            pendingOutcomes: shown.filter { $0.result == .unknown }.count)
     }
 
     /// Finds the student by name or creates a minimal record (used by Lesson Draw).

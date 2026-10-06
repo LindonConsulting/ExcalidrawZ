@@ -28,6 +28,7 @@ struct QuestionBankInspectorContent: View {
     @State private var isImporterPresented = false
     @State private var importDocument: QuestionBankImportDocument?
     @State private var bulkImportURLs: [URL]?
+    @State private var isReviewPresented = false
 
     private var currentStudent: String? {
         if case .file(let file) = fileState.currentActiveFile, let name = file.group?.name, !name.isEmpty { return name }
@@ -82,6 +83,9 @@ struct QuestionBankInspectorContent: View {
             QuestionBankBulkImportSheet(urls: bulkImportURLs ?? [])
         }
         .sheet(item: $editingQuestion) { question in QuestionBankEntrySheet(question: question) }
+        .sheet(isPresented: $isReviewPresented) {
+            LessonReviewSheet(lessonFileID: currentFileID, title: "Lesson review\(currentStudent.map { " · \($0)" } ?? "")")
+        }
         .confirmationDialog(
             "Delete “\(deletingQuestion?.title ?? "")” from the question bank?",
             isPresented: Binding(get: { deletingQuestion != nil }, set: { if !$0 { deletingQuestion = nil } }),
@@ -134,9 +138,21 @@ struct QuestionBankInspectorContent: View {
                     Text("Open a student's file to filter by usage").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Text("\(filtered.count) of \(container.questions.count) questions")
-                .font(.caption).foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                Text("\(filtered.count) of \(container.questions.count) questions")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                let pending = container.pendingOutcomes(lessonFileID: currentFileID).count
+                if currentFileID != nil {
+                    Button {
+                        isReviewPresented = true
+                    } label: {
+                        Label(pending == 0 ? "Review lesson" : "Review lesson (\(pending))", systemSymbol: .checklist)
+                    }
+                    .controlSize(.small)
+                    .help("Record how each question shown in this lesson went")
+                }
+            }
         }
         .padding(12)
     }
@@ -182,6 +198,12 @@ struct QuestionBankInspectorContent: View {
             let specCodes = container.specPoints(forQuestion: question.id).map(\.code)
             if !question.topicIDs.isEmpty || !question.freeTags.isEmpty || !specCodes.isEmpty {
                 FlowTags(tags: specCodes + question.topicIDs.map(container.topicName) + question.freeTags.map { "#\($0)" })
+            }
+            if let pendingHere = uses.first(where: { $0.result == .unknown && $0.lessonFileID == currentFileID && currentFileID != nil }) {
+                HStack(spacing: 8) {
+                    Text("How did it go?").font(.caption).foregroundStyle(.secondary)
+                    OutcomeQuickButtons(outcome: pendingHere)
+                }
             }
             if let last = uses.first {
                 Label(

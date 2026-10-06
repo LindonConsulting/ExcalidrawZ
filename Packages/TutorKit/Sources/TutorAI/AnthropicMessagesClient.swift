@@ -29,6 +29,8 @@ public struct AnthropicMessagesClient: Sendable {
     public var endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
     public var maxTokens = 1024
     public var effort = "low"
+    /// Seconds before URLSession gives up. Long extractions need minutes.
+    public var timeout: TimeInterval = 60
 
     public init(apiKey: String, model: String = AnthropicMessagesClient.defaultModel) {
         self.apiKey = apiKey
@@ -53,7 +55,7 @@ public struct AnthropicMessagesClient: Sendable {
     public func complete(system: String?, user: [ContentPart], session: URLSession = .shared) async throws -> String {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        request.timeoutInterval = 60
+        request.timeoutInterval = timeout
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")

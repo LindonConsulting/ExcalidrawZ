@@ -5,12 +5,13 @@ import TutorModels
 /// the Messages API, chunk by chunk, merging the results.
 public struct SpecificationImporter: Sendable {
     public var client: AnthropicMessagesClient
-    public var chunkCharacters = 24_000
+    public var chunkCharacters = 12_000
 
     public init(client: AnthropicMessagesClient) {
         var client = client
         client.maxTokens = 16_000
         client.effort = "medium"
+        client.timeout = 600
         self.client = client
     }
 

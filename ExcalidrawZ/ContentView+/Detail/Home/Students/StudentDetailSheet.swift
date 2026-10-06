@@ -17,6 +17,7 @@ struct StudentDetailSheet: View {
 
     let studentID: UUID
     @State private var isEditing = false
+    @State private var isReviewPresented = false
     @State private var filter: Filter = .all
     @State private var expandedSections: Set<UUID> = []
 
@@ -55,6 +56,9 @@ struct StudentDetailSheet: View {
         .sheet(isPresented: $isEditing) {
             if let student { StudentEditSheet(student: student) }
         }
+        .sheet(isPresented: $isReviewPresented) {
+            if let student { LessonReviewSheet(studentName: student.name, title: "Results for \(student.name)") }
+        }
     }
 
     @ViewBuilder
@@ -78,7 +82,13 @@ struct StudentDetailSheet: View {
                 if let coverage = stats.coverage { CoverageBar(coverage: coverage).frame(maxWidth: 420) }
             }
             Spacer()
-            Button("Edit…") { isEditing = true }
+            VStack(alignment: .trailing, spacing: 8) {
+                Button("Edit…") { isEditing = true }
+                let pending = container.pendingOutcomes(studentName: student.name).count
+                if pending > 0 {
+                    Button { isReviewPresented = true } label: { Label("Record \(pending) result\(pending == 1 ? "" : "s")", systemSymbol: .checklist) }
+                }
+            }
         }
     }
 
