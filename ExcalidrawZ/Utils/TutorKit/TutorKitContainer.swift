@@ -23,6 +23,10 @@ final class TutorKitContainer: ObservableObject {
     @Published private(set) var outcomes: [UUID: [Outcome]] = [:]
     @Published private(set) var topics: [Topic] = []
     @Published private(set) var students: [Student] = []
+    @Published private(set) var specifications: [Specification] = []
+    /// question id → linked spec point ids
+    @Published private(set) var specPointsByQuestion: [UUID: [UUID]] = [:]
+    private var treeCache: [UUID: SpecificationTree] = [:]
     @Published private(set) var openError: Error?
     @Published private(set) var legacyImportReport: LegacyQuestionBankImporter.Report?
 
@@ -66,6 +70,9 @@ final class TutorKitContainer: ObservableObject {
             outcomes = try database.outcomesByQuestion()
             topics = try database.topics()
             students = try database.students()
+            specifications = try database.specifications()
+            specPointsByQuestion = try database.specPointIDsByQuestion()
+            treeCache = [:]
         } catch {
             openError = error
         }
@@ -144,18 +151,86 @@ final class TutorKitContainer: ObservableObject {
         return (outcomes[questionID] ?? []).contains { $0.studentName.lowercased() == needle }
     }
 
+    // MARK: - Specifications
+
+    func specificationTree(id: UUID) -> SpecificationTree? {
+        if let cached = treeCache[id] { return cached }
+        guard let tree = try? database?.specificationTree(id: id) else { return nil }
+        treeCache[id] = tree
+        return tree
+    }
+
+    func specification(id: UUID?) -> Specification? {
+        guard let id else { return nil }
+        return specifications.first { $0.id == id }
+    }
+
+    @discardableResult
+    func saveSpecification(from draft: SpecificationDraft, sourceFileName: String) throws -> SpecificationTree {
+        let tree = try db().saveSpecification(from: draft, sourceFileName: sourceFileName)
+        refresh()
+        return tree
+    }
+
+    func deleteSpecification(id: UUID) throws {
+        try db().deleteSpecification(id: id)
+        refresh()
+    }
+
+    func specPoints(forQuestion id: UUID) -> [SpecPoint] {
+        let ids = Set(specPointsByQuestion[id] ?? [])
+        guard !ids.isEmpty else { return [] }
+        return specifications.compactMap { specificationTree(id: $0.id) }.flatMap(\.points).filter { ids.contains($0.id) }
+    }
+
+    func setSpecPoints(_ pointIDs: [UUID], forQuestion id: UUID) throws {
+        try db().setSpecPoints(pointIDs, forQuestion: id)
+        refresh()
+    }
+
+    func coverage(for student: Student) -> [UUID: CoverageStatus] {
+        guard let specID = student.specificationID else { return [:] }
+        return (try? db().coverage(specificationID: specID, studentID: student.id, studentName: student.name)) ?? [:]
+    }
+
+    /// Questions linked to a spec point, split into unused / used for the student.
+    func questions(forSpecPoint pointID: UUID) -> [Question] {
+        questions.filter { (specPointsByQuestion[$0.id] ?? []).contains(pointID) }
+    }
+
+    /// The specification for a student name (used when capturing from a lesson file).
+    func specificationID(forStudentNamed name: String?) -> UUID? {
+        guard let name else { return nil }
+        return students.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }?.specificationID
+    }
+
     // MARK: - Students
+
+    struct CoverageSummary {
+        var total: Int
+        var counts: [CoverageStatus: Int]
+        func count(_ status: CoverageStatus) -> Int { counts[status] ?? 0 }
+    }
 
     struct StudentStats {
         var lessons: Int
         var questionsShown: Int
         var lastLesson: Date?
+        var coverage: CoverageSummary?
     }
 
     func stats(for student: Student) -> StudentStats {
         let sessions = (try? database?.lessonSessions(forStudent: student.id)) ?? []
         let shown = outcomes.values.flatMap { $0 }.filter { $0.studentID == student.id || $0.studentName.lowercased() == student.name.lowercased() }
-        return StudentStats(lessons: sessions.count, questionsShown: shown.count, lastLesson: sessions.first?.date)
+        var summary: CoverageSummary?
+        if let specID = student.specificationID, let tree = specificationTree(id: specID) {
+            let coverage = coverage(for: student)
+            let points = tree.points.filter { $0.tier == nil || student.tier == nil || $0.tier == student.tier }
+            var counts: [CoverageStatus: Int] = [:]
+            for point in points { counts[coverage[point.id] ?? .notCovered, default: 0] += 1 }
+            summary = CoverageSummary(total: points.count, counts: counts)
+        }
+        return StudentStats(lessons: sessions.count, questionsShown: shown.count, lastLesson: sessions.first?.date, coverage: summary)
     }
 
     /// Finds the student by name or creates a minimal record (used by Lesson Draw).

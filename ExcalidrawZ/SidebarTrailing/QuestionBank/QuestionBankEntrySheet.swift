@@ -27,10 +27,14 @@ struct QuestionBankEntrySheet: View {
     @State private var isSaving = false
     @State private var suggestionError: String?
     @State private var duplicateWarning: String?
+    @State private var specificationID: UUID?
+    @State private var specPointIDs: [UUID] = []
+    private let defaultSpecificationID: UUID?
 
-    init(draft: QuestionBankCaptureDraft, defaultSource: String = "", onAdded: (() -> Void)? = nil) {
+    init(draft: QuestionBankCaptureDraft, defaultSource: String = "", defaultSpecificationID: UUID? = nil, onAdded: (() -> Void)? = nil) {
         self.draft = draft
         self.onAdded = onAdded
+        self.defaultSpecificationID = defaultSpecificationID
         _question = State(initialValue: Question(
             title: draft.textContent.first.map { String($0.prefix(60)) } ?? "",
             source: defaultSource
@@ -41,6 +45,7 @@ struct QuestionBankEntrySheet: View {
     init(question: Question) {
         self.draft = nil
         self.onAdded = nil
+        self.defaultSpecificationID = nil
         _question = State(initialValue: question)
         _marksText = State(initialValue: question.marks.map(String.init) ?? "")
         if let png = TutorKitContainer.shared.thumbnailPNG(for: question.id) { _thumbnail = State(initialValue: PlatformImage(data: png)) }
@@ -81,6 +86,7 @@ struct QuestionBankEntrySheet: View {
             }
 
             topicsEditor
+            specPointsEditor
 
             if let duplicateWarning {
                 Label(duplicateWarning, systemSymbol: .exclamationmarkTriangle)
@@ -108,7 +114,50 @@ struct QuestionBankEntrySheet: View {
         }
         .padding(20)
         .frame(width: 600)
-        .onAppear { container.openIfNeeded(); checkForDuplicates() }
+        .onAppear {
+            container.openIfNeeded()
+            checkForDuplicates()
+            if draft == nil {
+                let linked = container.specPoints(forQuestion: question.id)
+                specPointIDs = linked.map(\.id)
+                specificationID = linked.first?.specificationID
+            } else {
+                specificationID = defaultSpecificationID ?? (container.specifications.count == 1 ? container.specifications.first?.id : nil)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var specPointsEditor: some View {
+        if !container.specifications.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Specification points").font(.callout).foregroundStyle(.secondary)
+                    Spacer()
+                    Picker("", selection: $specificationID) {
+                        Text("No specification").tag(UUID?.none)
+                        ForEach(container.specifications) { Text($0.displayName).tag(UUID?.some($0.id)) }
+                    }
+                    .labelsHidden().fixedSize()
+                }
+                if let specificationID, let tree = container.specificationTree(id: specificationID) {
+                    let selected = tree.points.filter { specPointIDs.contains($0.id) }
+                    FlowTags(tags: selected.map { "\($0.code) \($0.text.prefix(40))\($0.text.count > 40 ? "…" : "")" }) { label in
+                        if let point = selected.first(where: { label.hasPrefix($0.code + " ") }) { specPointIDs.removeAll { $0 == point.id } }
+                    }
+                    Menu("Add spec point") {
+                        ForEach(tree.sections) { section in
+                            Menu(section.code.isEmpty ? section.title : "\(section.code) · \(section.title)") {
+                                ForEach(tree.points(in: section)) { point in
+                                    Button("\(point.code) \(point.text.prefix(70))") { if !specPointIDs.contains(point.id) { specPointIDs.append(point.id) } }
+                                }
+                            }
+                        }
+                    }
+                    .fixedSize()
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -183,10 +232,18 @@ struct QuestionBankEntrySheet: View {
         suggestionError = nil
         defer { isSuggesting = false }
         do {
-            let suggester = try QuestionTagSuggester.make(topics: container.topics)
+            let tree = specificationID.flatMap { container.specificationTree(id: $0) }
+            let suggester = try QuestionTagSuggester.make(topics: container.topics, specPoints: tree?.points ?? [])
             let png = draft?.thumbnailPNG ?? container.thumbnailPNG(for: question.id)
             let suggestion = try await suggester.suggest(thumbnailPNG: png, texts: draft?.textContent ?? [])
             QuestionTagSuggester.apply(suggestion, to: &question, topics: container.topics, overwriteTitle: draft != nil)
+            if let tree {
+                for code in suggestion.specPoints ?? [] {
+                    if let point = tree.points.first(where: { $0.code.caseInsensitiveCompare(code) == .orderedSame }), !specPointIDs.contains(point.id) {
+                        specPointIDs.append(point.id)
+                    }
+                }
+            }
             if marksText.isEmpty, let marks = question.marks { marksText = String(marks) }
         } catch {
             suggestionError = error.localizedDescription
@@ -201,10 +258,12 @@ struct QuestionBankEntrySheet: View {
         do {
             if let draft {
                 try container.add(question, payload: draft.payload)
+                try container.setSpecPoints(specPointIDs, forQuestion: question.id)
                 alertToast(.init(displayMode: .hud, type: .complete(.green), title: "Added to Question Bank"))
                 onAdded?()
             } else {
                 try container.update(question)
+                try container.setSpecPoints(specPointIDs, forQuestion: question.id)
             }
             dismiss()
         } catch {

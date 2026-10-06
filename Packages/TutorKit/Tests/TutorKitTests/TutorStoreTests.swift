@@ -93,3 +93,46 @@ final class TutorStoreTests: XCTestCase {
         XCTAssertEqual(s.title, "Hi"); XCTAssertEqual(s.marks, 3)
     }
 }
+
+final class SpecificationTests: XCTestCase {
+    func testDraftMergeSaveAndCoverage() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("spec-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let db = try TutorDatabase(directory: dir)
+
+        var draft = SpecificationDraft(title: "GCSE Maths", code: "1MA1", subject: "Maths", level: "GCSE", board: "Edexcel", sections: [
+            .init(code: "A", title: "Algebra", points: [.init(code: "A4", text: "simplify"), .init(code: "A18", text: "quadratics", tier: "Higher")]),
+        ])
+        draft.merge(SpecificationDraft(title: "", code: "", subject: "", level: "", board: "", sections: [
+            .init(code: "A", title: "Algebra", points: [.init(code: "A18", text: "dup"), .init(code: "A19", text: "simultaneous")]),
+            .init(code: "N", title: "Number", points: [.init(code: "N1", text: "order")]),
+        ]))
+        XCTAssertEqual(draft.sections.count, 2)
+        XCTAssertEqual(draft.pointCount, 4)
+
+        let tree = try db.saveSpecification(from: draft, sourceFileName: "spec.pdf")
+        XCTAssertEqual(tree.specification.board, .edexcel)
+        XCTAssertEqual(tree.points.first { $0.code == "A18" }?.tier, .higher)
+        XCTAssertEqual(try db.specificationTree(id: tree.specification.id)?.points.count, 4)
+
+        let student = try db.save(Student(name: "Frankie", specificationID: tree.specification.id))
+        let q = Question(title: "q")
+        try db.add(q, payload: QuestionPayload(elementsJSON: Data("[]".utf8)))
+        let a18 = tree.points.first { $0.code == "A18" }!
+        try db.setSpecPoints([a18.id], forQuestion: q.id)
+        XCTAssertEqual(try db.specPointIDs(forQuestion: q.id), [a18.id])
+
+        var coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id, studentName: student.name)
+        XCTAssertEqual(coverage[a18.id], .notCovered)
+        try db.record(Outcome(questionID: q.id, studentID: student.id, studentName: "Frankie", result: .unknown))
+        coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id, studentName: student.name)
+        XCTAssertEqual(coverage[a18.id], .shown)
+        try db.record(Outcome(questionID: q.id, studentID: nil, studentName: "frankie", shownAt: .now.addingTimeInterval(60), result: .wrong))
+        coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id, studentName: student.name)
+        XCTAssertEqual(coverage[a18.id], .wrong)
+
+        try db.deleteSpecification(id: tree.specification.id)
+        XCTAssertTrue(try db.specPointIDs(forQuestion: q.id).isEmpty)
+        XCTAssertNil(try db.student(id: student.id)?.specificationID)
+    }
+}

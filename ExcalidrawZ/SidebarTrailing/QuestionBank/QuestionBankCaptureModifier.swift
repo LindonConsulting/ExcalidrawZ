@@ -27,7 +27,7 @@ struct QuestionBankCaptureModifier: ViewModifier {
                 Task { await capture() }
             }
             .sheet(item: $draft) { draft in
-                QuestionBankEntrySheet(draft: draft)
+                QuestionBankEntrySheet(draft: draft, defaultSpecificationID: TutorKitContainer.shared.specificationID(forStudentNamed: currentStudentName))
             }
     }
 
@@ -43,6 +43,11 @@ struct QuestionBankCaptureModifier: ViewModifier {
 #else
         return activeCanvasCoordinator?.webView.window?.isKeyWindow == true
 #endif
+    }
+
+    private var currentStudentName: String? {
+        if case .file(let file) = fileState.currentActiveFile { return file.group?.name }
+        return nil
     }
 
     private var activeCanvasCoordinator: ExcalidrawCanvasView.Coordinator? {

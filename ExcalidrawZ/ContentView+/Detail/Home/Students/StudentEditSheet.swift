@@ -49,6 +49,12 @@ struct StudentEditSheet: View {
                         ForEach([Tier.foundation, .higher]) { Text($0.rawValue).tag(Tier?.some($0)) }
                     }
                 }
+                Picker("Specification", selection: $student.specificationID) {
+                    Text("—").tag(UUID?.none)
+                    ForEach(container.specifications.filter { $0.subject == student.subject && $0.level == student.level }) { spec in
+                        Text(spec.displayName).tag(UUID?.some(spec.id))
+                    }
+                }
                 TextField("Target grade", text: $student.targetGrade)
                 TextField("Notes", text: $student.notes, axis: .vertical).lineLimit(2...5)
             }

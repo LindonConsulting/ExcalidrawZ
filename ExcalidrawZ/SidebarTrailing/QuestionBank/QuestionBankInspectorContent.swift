@@ -179,8 +179,9 @@ struct QuestionBankInspectorContent: View {
                 if let marks = question.marks { tagPill("\(marks) marks") }
                 if let d = question.difficulty { tagPill(String(repeating: "●", count: d)) }
             }
-            if !question.topicIDs.isEmpty || !question.freeTags.isEmpty {
-                FlowTags(tags: question.topicIDs.map(container.topicName) + question.freeTags.map { "#\($0)" })
+            let specCodes = container.specPoints(forQuestion: question.id).map(\.code)
+            if !question.topicIDs.isEmpty || !question.freeTags.isEmpty || !specCodes.isEmpty {
+                FlowTags(tags: specCodes + question.topicIDs.map(container.topicName) + question.freeTags.map { "#\($0)" })
             }
             if let last = uses.first {
                 Label(

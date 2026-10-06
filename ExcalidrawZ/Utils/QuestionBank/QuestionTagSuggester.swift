@@ -14,17 +14,18 @@ typealias QuestionTagSuggestion = TutorPrompts.TagSuggestion
 struct QuestionTagSuggester {
     let client: AnthropicMessagesClient
     let topics: [Topic]
+    var specPoints: [SpecPoint] = []
 
     @MainActor
-    static func make(topics: [Topic]) throws -> QuestionTagSuggester {
+    static func make(topics: [Topic], specPoints: [SpecPoint] = []) throws -> QuestionTagSuggester {
         guard let client = try AnthropicAPIKeyStore.makeClient() else { throw TutorAIError.noAPIKey }
-        return QuestionTagSuggester(client: client, topics: topics)
+        return QuestionTagSuggester(client: client, topics: topics, specPoints: specPoints)
     }
 
     func suggest(thumbnailPNG: Data?, texts: [String]) async throws -> QuestionTagSuggestion {
         var parts: [AnthropicMessagesClient.ContentPart] = []
         if let thumbnailPNG { parts.append(.imagePNG(thumbnailPNG)) }
-        parts.append(.text(TutorPrompts.taggingUser(texts: texts, topics: topics)))
+        parts.append(.text(TutorPrompts.taggingUser(texts: texts, topics: topics, specPoints: specPoints.map { (code: $0.code, text: $0.text) })))
         let reply = try await client.complete(system: nil, user: parts)
         return try AnthropicMessagesClient.decodeJSONObject(QuestionTagSuggestion.self, from: reply)
     }

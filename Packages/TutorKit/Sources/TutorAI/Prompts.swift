@@ -55,9 +55,12 @@ public enum TutorPrompts {
         public var marks: Int?
         public var difficulty: Int?
         public var source: String?
+        /// Spec point codes from the supplied specification, when one was given.
+        public var specPoints: [String]?
     }
 
-    public static func taggingUser(texts: [String], topics: [Topic]) -> String {
+    /// `specPoints` are "code: text" lines of the chosen specification (may be empty).
+    public static func taggingUser(texts: [String], topics: [Topic], specPoints: [(code: String, text: String)] = []) -> String {
         var prompt = "Classify this tutoring question (GCSE or A-Level Maths or Computer Science) for a question bank."
         if !texts.isEmpty {
             prompt += "\n\nText on the canvas:\n" + texts.map { "- \($0)" }.joined(separator: "\n")
@@ -75,8 +78,12 @@ public enum TutorPrompts {
          "tier": "Foundation", "Higher" or "" if unknown or not GCSE,
          "marks": integer total marks if printed on the question, else null,
          "difficulty": integer 1 (easy) to 5 (hard),
-         "source": paper/year/question reference if visible, else ""}
+         "source": paper/year/question reference if visible, else "",
+         "specPoints": \(specPoints.isEmpty ? "[]" : "1-4 matching codes from the specification list below")}
         """
+        if !specPoints.isEmpty {
+            prompt += "\n\nSpecification points (code: statement):\n" + specPoints.map { "\($0.code): \($0.text)" }.joined(separator: "\n")
+        }
         return prompt
     }
 }

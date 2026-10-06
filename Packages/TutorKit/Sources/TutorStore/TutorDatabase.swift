@@ -104,8 +104,58 @@ public final class TutorDatabase: Sendable {
             }
             try db.create(index: "lessonSession_file", on: "lessonSession", columns: ["lessonFileID"])
         }
+        migrator.registerMigration("v2-specifications") { db in
+            try db.create(table: "specification") { t in
+                t.primaryKey("id", .blob)
+                t.column("subject", .text).notNull()
+                t.column("level", .text).notNull()
+                t.column("board", .text).notNull()
+                t.column("title", .text).notNull()
+                t.column("code", .text).notNull().defaults(to: "")
+                t.column("sourceFileName", .text).notNull().defaults(to: "")
+                t.column("importedAt", .datetime).notNull()
+            }
+            try db.create(table: "specSection") { t in
+                t.primaryKey("id", .blob)
+                t.column("specificationID", .blob).notNull().references("specification", onDelete: .cascade)
+                t.column("code", .text).notNull().defaults(to: "")
+                t.column("title", .text).notNull()
+                t.column("sortOrder", .integer).notNull().defaults(to: 0)
+            }
+            try db.create(table: "specPoint") { t in
+                t.primaryKey("id", .blob)
+                t.column("specificationID", .blob).notNull().references("specification", onDelete: .cascade)
+                t.column("sectionID", .blob).notNull().references("specSection", onDelete: .cascade)
+                t.column("code", .text).notNull().defaults(to: "")
+                t.column("text", .text).notNull()
+                t.column("tier", .text)
+                t.column("sortOrder", .integer).notNull().defaults(to: 0)
+            }
+            try db.create(index: "specPoint_spec", on: "specPoint", columns: ["specificationID", "sortOrder"])
+            try db.create(table: "questionSpecPoint") { t in
+                t.column("questionID", .blob).notNull().references("question", onDelete: .cascade)
+                t.column("specPointID", .blob).notNull().references("specPoint", onDelete: .cascade)
+                t.primaryKey(["questionID", "specPointID"])
+            }
+            try db.alter(table: "student") { t in
+                t.add(column: "specificationID", .blob).references("specification", onDelete: .setNull)
+            }
+        }
         return migrator
     }
+}
+
+extension Specification: FetchableRecord, PersistableRecord {
+    public static let databaseTableName = "specification"
+}
+extension SpecSection: FetchableRecord, PersistableRecord {
+    public static let databaseTableName = "specSection"
+}
+extension SpecPoint: FetchableRecord, PersistableRecord {
+    public static let databaseTableName = "specPoint"
+}
+extension QuestionSpecPoint: FetchableRecord, PersistableRecord {
+    public static let databaseTableName = "questionSpecPoint"
 }
 
 // MARK: - GRDB conformances
