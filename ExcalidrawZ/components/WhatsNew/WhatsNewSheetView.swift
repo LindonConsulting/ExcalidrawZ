@@ -54,9 +54,6 @@ struct WhatsNewSheetViewModifier: ViewModifier {
             .bindWindow($window)
             .watch(value: migrationState.phase) { newValue in
                 if newValue == .closed {
-#if DEBUG
-                    isPresented = true
-#endif
                     if let buildString = Bundle.main.infoDictionary!["CFBundleVersion"] as? String,
                        lastBuild < (Int(buildString) ?? 0) {
                         isPresented = true
