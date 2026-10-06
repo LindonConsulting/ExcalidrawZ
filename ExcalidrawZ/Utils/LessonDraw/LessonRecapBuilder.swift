@@ -10,6 +10,7 @@
 
 import Foundation
 import TutorAI
+import TutorModels
 
 struct LessonRecapBuilder {
     enum BuildError: LocalizedError {
@@ -89,7 +90,8 @@ struct LessonRecapBuilder {
     static func buildFileContent(
         previousElements: [[String: Any]],
         previousLessonDate: Date?,
-        summary: String?
+        summary: String?,
+        warmUp: [(title: String, payload: QuestionPayload)] = []
     ) throws -> Data {
         guard let templateData = ExcalidrawFile().content,
               var document = try JSONSerialization.jsonObject(with: templateData) as? [String: Any]
@@ -128,9 +130,58 @@ struct LessonRecapBuilder {
             frameRight = frameWidth
         }
 
+        var cursorX = frameRight > 0 ? frameRight + summaryGap : 0
         if let summary, !summary.trimmingCharacters(in: .whitespaces).isEmpty {
-            let x = frameRight > 0 ? frameRight + summaryGap : 0
-            newElements.append(makeTextElement(text: summary, x: x, y: 0))
+            let text = makeTextElement(text: summary, x: cursorX, y: 0)
+            newElements.append(text)
+            cursorX += (text["width"] as? Double ?? 0) + summaryGap
+        }
+
+        // Warm-up questions: one frame, questions stacked vertically.
+        if !warmUp.isEmpty {
+            var files = document["files"] as? [String: Any] ?? [:]
+            let frameID = randomID()
+            var y = framePadding
+            var maxWidth: Double = 0
+            var children: [[String: Any]] = []
+            for (index, item) in warmUp.enumerated() {
+                guard let elements = try? JSONSerialization.jsonObject(with: item.payload.elementsJSON) as? [[String: Any]] else { continue }
+                let live = liveElements(elements)
+                guard !live.isEmpty else { continue }
+                if let filesJSON = item.payload.filesJSON,
+                   let payloadFiles = try? JSONSerialization.jsonObject(with: filesJSON) as? [String: Any] {
+                    files.merge(payloadFiles) { current, _ in current }
+                }
+                let bounds = boundingBox(of: live)
+                var label = makeTextElement(text: "Q\(index + 1) · \(item.title)", x: cursorX + framePadding, y: y)
+                label["fontSize"] = 16
+                newElements.append(label.merging(["frameId": frameID]) { _, new in new })
+                y += 16 * summaryLineHeight + 12
+                let dx = cursorX + framePadding - bounds.minX
+                let dy = y - bounds.minY
+                for var element in live {
+                    element["id"] = randomID()
+                    element["x"] = (element["x"] as? Double ?? 0) + dx
+                    element["y"] = (element["y"] as? Double ?? 0) + dy
+                    element["frameId"] = frameID
+                    element["index"] = nil
+                    element["groupIds"] = []
+                    element["boundElements"] = NSNull()
+                    element["containerId"] = NSNull()
+                    children.append(element)
+                }
+                maxWidth = max(maxWidth, bounds.width)
+                y += bounds.height + summaryGap
+            }
+            if !children.isEmpty {
+                let frame = makeElement(type: "frame", id: frameID, x: cursorX, y: 0,
+                                        width: maxWidth + framePadding * 2, height: y, extra: [
+                    "name": "Warm-up", "strokeColor": "#bbb", "backgroundColor": "transparent", "roughness": 0,
+                ])
+                newElements.append(frame)
+                newElements += children
+                document["files"] = files
+            }
         }
 
         document["elements"] = newElements

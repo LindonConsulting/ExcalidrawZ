@@ -9,6 +9,7 @@
 import Foundation
 import CoreData
 import TutorAI
+import TutorModels
 
 struct LessonDrawPlan: @unchecked Sendable {
     var event: LessonCalendarEvent
@@ -25,6 +26,8 @@ struct LessonDrawPlan: @unchecked Sendable {
     var lessonDate: Date
     /// `true` when no lesson is happening now and this is the next one.
     var isUpcoming: Bool
+    /// Warm-up questions chosen for this student (editable in the sheet).
+    var warmUp: [TutorKitContainer.WarmUpPick] = []
 
     var fileName: String {
         let formatter = DateFormatter()
@@ -112,6 +115,7 @@ enum LessonDrawCoordinator {
                 plan.previousElements = try LessonRecapBuilder.elements(from: data)
             }
         }
+        plan.warmUp = TutorKitContainer.shared.warmUpPicks(forStudentNamed: match.student)
         return plan
     }
 
@@ -149,10 +153,15 @@ enum LessonDrawCoordinator {
             groupObjectID = try await fileState.createNewGroup(name: plan.student, activate: false, context: context)
         }
 
+        let container = TutorKitContainer.shared
+        let warmUpPayloads: [(title: String, payload: QuestionPayload)] = plan.warmUp.compactMap { pick in
+            (try? container.payload(for: pick.question.id)).map { (pick.question.title, $0) }
+        }
         let content = try LessonRecapBuilder.buildFileContent(
             previousElements: plan.previousElements,
             previousLessonDate: plan.previousLessonDate,
-            summary: summary
+            summary: summary,
+            warmUp: warmUpPayloads
         )
         let fileObjectID = try await PersistenceController.shared.fileRepository.createFile(
             name: plan.fileName,
@@ -165,7 +174,10 @@ enum LessonDrawCoordinator {
         try? context.save()
         if let student = try? TutorKitContainer.shared.ensureStudent(named: plan.student, subjectHint: plan.subject),
            let fileID = file.id?.uuidString {
-            try? TutorKitContainer.shared.recordLessonSession(student: student, lessonFileID: fileID, date: plan.lessonDate, subjectLine: plan.subject ?? "", recap: summary)
+            try? container.recordLessonSession(student: student, lessonFileID: fileID, date: plan.lessonDate, subjectLine: plan.subject ?? "", recap: summary)
+            for pick in plan.warmUp {
+                try? container.recordUse(of: pick.question.id, studentName: student.name, lessonFileID: fileID)
+            }
         }
         if let group = file.group {
             fileState.currentActiveGroup = .group(group)

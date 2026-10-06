@@ -134,7 +134,36 @@ struct NewLessonDrawSheet: View {
                 Text("Recap").foregroundStyle(.secondary).gridColumnAlignment(.trailing)
                 summaryView
             }
+            GridRow {
+                Text("Warm-up").foregroundStyle(.secondary).gridColumnAlignment(.trailing)
+                warmUpView(plan)
+            }
         }
+    }
+
+    @ViewBuilder
+    private func warmUpView(_ plan: LessonDrawPlan) -> some View {
+        if plan.warmUp.isEmpty {
+            Text("No unused questions in the bank for this student.").foregroundStyle(.secondary)
+        } else {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(plan.warmUp) { pick in
+                    HStack(spacing: 6) {
+                        Text(pick.question.title).lineLimit(1)
+                        Text("· \(pick.reason)").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        Spacer()
+                        Button { removeWarmUp(pick) } label: { Image(systemSymbol: .xmarkCircle) }
+                            .buttonStyle(.plain).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+
+    private func removeWarmUp(_ pick: TutorKitContainer.WarmUpPick) {
+        guard case .ready(var plan) = phase else { return }
+        plan.warmUp.removeAll { $0.id == pick.id }
+        phase = .ready(plan)
     }
 
     @ViewBuilder

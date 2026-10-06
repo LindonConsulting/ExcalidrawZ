@@ -136,3 +136,27 @@ final class SpecificationTests: XCTestCase {
         XCTAssertNil(try db.student(id: student.id)?.specificationID)
     }
 }
+
+final class CoveragePickerTests: XCTestCase {
+    func testPrefersWrongThenUncoveredAndNeverRepeats() {
+        let student = Student(name: "Frankie", subject: .maths, level: .gcse, tier: .higher, focusTopicIDs: ["maths.algebra.quadratics"])
+        let pWrong = UUID(), pNew = UUID(), pRight = UUID()
+        let qWrong = Question(title: "wrong-point", subject: .maths, level: .gcse, difficulty: 3)
+        let qNew = Question(title: "new-point", subject: .maths, level: .gcse, difficulty: 2)
+        let qRight = Question(title: "right-point", subject: .maths, level: .gcse)
+        let qSeen = Question(title: "seen", subject: .maths, level: .gcse)
+        let qFocus = Question(title: "focus", subject: .maths, level: .gcse, topicIDs: ["maths.algebra.quadratics"])
+        let qFoundation = Question(title: "foundation-only", subject: .maths, level: .gcse, tier: .foundation)
+        let context = PickerContext(
+            student: student,
+            coverage: [pWrong: .wrong, pNew: .notCovered, pRight: .right],
+            specPointsByQuestion: [qWrong.id: [pWrong], qNew.id: [pNew], qRight.id: [pRight]],
+            outcomes: [qSeen.id: [Outcome(questionID: qSeen.id, studentID: student.id, studentName: "Frankie")]]
+        )
+        let picks = CoveragePicker(count: 3).pick([qRight, qSeen, qFoundation, qNew, qFocus, qWrong], context: context)
+        XCTAssertEqual(picks.first?.question.title, "wrong-point")
+        XCTAssertEqual(Set(picks.map(\.question.title)), ["wrong-point", "focus", "new-point"])
+        XCTAssertEqual(picks[0].reason, "got this wrong before")
+        XCTAssertFalse(picks.contains { $0.question.title == "seen" || $0.question.title == "foundation-only" })
+    }
+}

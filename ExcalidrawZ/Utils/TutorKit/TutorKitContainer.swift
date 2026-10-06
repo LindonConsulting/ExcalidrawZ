@@ -12,6 +12,7 @@ import Combine
 import os
 import TutorModels
 import TutorStore
+import TutorRanking
 
 @MainActor
 final class TutorKitContainer: ObservableObject {
@@ -220,6 +221,30 @@ final class TutorKitContainer: ObservableObject {
     func specificationID(forStudentNamed name: String?) -> UUID? {
         guard let name else { return nil }
         return students.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }?.specificationID
+    }
+
+    // MARK: - Warm-up picks
+
+    struct WarmUpPick: Identifiable, Equatable {
+        var question: Question
+        var reason: String
+        var id: UUID { question.id }
+        static func == (lhs: WarmUpPick, rhs: WarmUpPick) -> Bool { lhs.id == rhs.id }
+    }
+
+    /// Picks warm-up questions for a student name (creates no records).
+    func warmUpPicks(forStudentNamed name: String, count: Int = 3) -> [WarmUpPick] {
+        openIfNeeded()
+        let student = students.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
+        var tiers: [UUID: Tier?] = [:]
+        var coverage: [UUID: CoverageStatus] = [:]
+        if let student, let specID = student.specificationID, let tree = specificationTree(id: specID) {
+            for point in tree.points { tiers[point.id] = point.tier }
+            coverage = self.coverage(for: student)
+        }
+        let context = PickerContext(student: student, coverage: coverage, specPointsByQuestion: specPointsByQuestion,
+                                    specPointTiers: tiers, outcomes: outcomes)
+        return CoveragePicker(count: count).pick(questions, context: context).map { WarmUpPick(question: $0.question, reason: $0.reason) }
     }
 
     // MARK: - Students
