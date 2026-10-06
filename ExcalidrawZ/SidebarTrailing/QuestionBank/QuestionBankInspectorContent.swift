@@ -29,6 +29,7 @@ struct QuestionBankInspectorContent: View {
     @State private var importDocument: QuestionBankImportDocument?
     @State private var bulkImportURLs: [URL]?
     @State private var isReviewPresented = false
+    @State private var isAutoTagPresented = false
 
     private var currentStudent: String? {
         if case .file(let file) = fileState.currentActiveFile, let name = file.group?.name, !name.isEmpty { return name }
@@ -83,6 +84,7 @@ struct QuestionBankInspectorContent: View {
             QuestionBankBulkImportSheet(urls: bulkImportURLs ?? [])
         }
         .sheet(item: $editingQuestion) { question in QuestionBankEntrySheet(question: question) }
+        .sheet(isPresented: $isAutoTagPresented) { QuestionBankAutoTagSheet() }
         .sheet(isPresented: $isReviewPresented) {
             LessonReviewSheet(lessonFileID: currentFileID, title: "Lesson review\(currentStudent.map { " · \($0)" } ?? "")")
         }
@@ -117,8 +119,15 @@ struct QuestionBankInspectorContent: View {
                 } label: { Label("Add selection", systemSymbol: .plus) }
                 .help("Add the selected frame or elements to the question bank (Tools › Add Selection to Question Bank)")
                 .disabled(fileState.currentActiveFile == nil)
-                Button { isImporterPresented = true } label: { Label("Import…", systemSymbol: .docViewfinder) }
-                    .help("Crop questions out of a PDF or image, or pick several images to add one question per file")
+                Menu {
+                    Button { isImporterPresented = true } label: { Label("Import PDF or images…", systemSymbol: .docViewfinder) }
+                    Button { isAutoTagPresented = true } label: { Label("Auto-tag with AI…", systemSymbol: .sparkles) }
+                } label: {
+                    Image(systemSymbol: .ellipsisCircle)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .help("Import questions from a PDF or images, or tag questions with AI")
             }
             HStack(spacing: 8) {
                 Menu {
