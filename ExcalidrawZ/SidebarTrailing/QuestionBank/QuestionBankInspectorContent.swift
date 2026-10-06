@@ -30,6 +30,8 @@ struct QuestionBankInspectorContent: View {
     @State private var bulkImportURLs: [URL]?
     @State private var isReviewPresented = false
     @State private var isAutoTagPresented = false
+    @State private var isPaperImporterPresented = false
+    @State private var paperImportURLs: [URL]?
 
     private var currentStudent: String? {
         if case .file(let file) = fileState.currentActiveFile, let name = file.group?.name, !name.isEmpty { return name }
@@ -85,6 +87,12 @@ struct QuestionBankInspectorContent: View {
         }
         .sheet(item: $editingQuestion) { question in QuestionBankEntrySheet(question: question) }
         .sheet(isPresented: $isAutoTagPresented) { QuestionBankAutoTagSheet() }
+        .fileImporterWithAlert(isPresented: $isPaperImporterPresented, allowedContentTypes: [.pdf], allowsMultipleSelection: true) { urls in
+            await MainActor.run { paperImportURLs = urls }
+        }
+        .sheet(isPresented: Binding(get: { paperImportURLs != nil }, set: { if !$0 { paperImportURLs = nil } })) {
+            QuestionBankPastPaperImportSheet(urls: paperImportURLs ?? [])
+        }
         .sheet(isPresented: $isReviewPresented) {
             LessonReviewSheet(lessonFileID: currentFileID, title: "Lesson review\(currentStudent.map { " · \($0)" } ?? "")")
         }
@@ -120,7 +128,8 @@ struct QuestionBankInspectorContent: View {
                 .help("Add the selected frame or elements to the question bank (Tools › Add Selection to Question Bank)")
                 .disabled(fileState.currentActiveFile == nil)
                 Menu {
-                    Button { isImporterPresented = true } label: { Label("Import PDF or images…", systemSymbol: .docViewfinder) }
+                    Button { isPaperImporterPresented = true } label: { Label("Import past papers…", systemSymbol: .docTextMagnifyingglass) }
+                    Button { isImporterPresented = true } label: { Label("Crop from PDF or images…", systemSymbol: .docViewfinder) }
                     Button { isAutoTagPresented = true } label: { Label("Auto-tag with AI…", systemSymbol: .sparkles) }
                 } label: {
                     Image(systemSymbol: .ellipsisCircle)

@@ -97,10 +97,15 @@ struct QuestionBankImportDocument: Identifiable {
         guard clamped.width >= 8, clamped.height >= 8, let cropped = page.cropping(to: clamped),
               let png = pngData(from: cropped)
         else { throw ImportError.emptyCrop }
+        return try makeDraft(png: png, pointSize: CGSize(width: Double(cropped.width) / Double(pixelsPerPoint),
+                                                         height: Double(cropped.height) / Double(pixelsPerPoint)))
+    }
 
+    /// Builds a one-image draft from PNG data shown at `pointSize` on the canvas.
+    static func makeDraft(png: Data, pointSize: CGSize) throws -> QuestionBankCaptureDraft {
         let fileID = Insecure.SHA1.hash(data: png).map { String(format: "%02x", $0) }.joined()
-        let width = Double(cropped.width) / Double(pixelsPerPoint)
-        let height = Double(cropped.height) / Double(pixelsPerPoint)
+        let width = Double(pointSize.width)
+        let height = Double(pointSize.height)
         let now = Date().timeIntervalSince1970 * 1000
 
         let element: [String: Any] = [
