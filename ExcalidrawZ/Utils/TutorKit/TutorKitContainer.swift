@@ -55,6 +55,8 @@ final class TutorKitContainer: ObservableObject {
             self.directory = directory
             try db.upsertTopics(TopicTaxonomy.builtin)
             runAutomaticBackupIfEnabled()
+            let merged = try SpecificationConsolidation.consolidateAll(in: db)
+            if merged > 0 { Self.logger.info("consolidated \(merged) specification sections") }
 
             let legacy = LegacyQuestionBankImporter(legacyDirectory: support.appendingPathComponent("QuestionBank", isDirectory: true), database: db)
             if legacy.hasLegacyData {
@@ -227,8 +229,9 @@ final class TutorKitContainer: ObservableObject {
     @discardableResult
     func saveSpecification(from draft: SpecificationDraft, sourceFileName: String) throws -> SpecificationTree {
         let tree = try db().saveSpecification(from: draft, sourceFileName: sourceFileName)
+        _ = try SpecificationConsolidation.consolidate(specificationID: tree.specification.id, in: try db().writer)
         refresh()
-        return tree
+        return specificationTree(id: tree.specification.id) ?? tree
     }
 
     func deleteSpecification(id: UUID) throws {

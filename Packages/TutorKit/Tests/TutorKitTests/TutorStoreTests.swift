@@ -214,3 +214,32 @@ final class BackupAndMergeTests: XCTestCase {
         XCTAssertEqual(try TutorBackupManager.backups(in: auto).count, 2)
     }
 }
+
+final class ConsolidationTests: XCTestCase {
+    func testMergesStrandSections() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("cons-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let db = try TutorDatabase(directory: dir)
+        let draft = SpecificationDraft(title: "WJEC", code: "3300", subject: "Maths", level: "GCSE", board: "WJEC", sections: [
+            .init(code: "N", title: "Number", points: [.init(code: "1", text: "a")]),
+            .init(code: "", title: "Number – Understanding number and place value", points: [.init(code: "2", text: "b")]),
+            .init(code: "A", title: "Algebra", points: [.init(code: "3", text: "c")]),
+            .init(code: "GM", title: "Geometry and Measure", points: [.init(code: "4", text: "d")]),
+            .init(code: "", title: "Geometry and Measure – Shape", points: [.init(code: "5", text: "e")]),
+            .init(code: "S", title: "Statistics", points: [.init(code: "6", text: "f")]),
+        ])
+        let tree = try db.saveSpecification(from: draft, sourceFileName: "x.pdf")
+        let q = Question(title: "q")
+        try db.add(q, payload: QuestionPayload(elementsJSON: Data("[]".utf8)))
+        let p2 = tree.points.first { $0.code == "2" }!
+        try db.setSpecPoints([p2.id], forQuestion: q.id)
+
+        XCTAssertEqual(try SpecificationConsolidation.consolidateAll(in: db), 2)
+        let after = try XCTUnwrap(db.specificationTree(id: tree.specification.id))
+        XCTAssertEqual(after.sections.map(\.title), ["Number", "Algebra", "Geometry and measures", "Statistics"])
+        XCTAssertEqual(after.points.count, 6)
+        XCTAssertEqual(after.points(in: after.sections[0]).map(\.code), ["1", "2"])
+        XCTAssertEqual(try db.specPointIDs(forQuestion: q.id), [p2.id])
+        XCTAssertEqual(try SpecificationConsolidation.consolidateAll(in: db), 0)   // idempotent
+    }
+}
