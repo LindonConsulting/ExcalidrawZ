@@ -87,7 +87,7 @@ struct QuestionBankInspectorContent: View {
         }
         .sheet(item: $editingQuestion) { question in QuestionBankEntrySheet(question: question) }
         .sheet(isPresented: $isAutoTagPresented) { QuestionBankAutoTagSheet() }
-        .fileImporterWithAlert(isPresented: $isPaperImporterPresented, allowedContentTypes: [.pdf], allowsMultipleSelection: true) { urls in
+        .fileImporterWithAlert(isPresented: $isPaperImporterPresented, allowedContentTypes: [.pdf, .folder], allowsMultipleSelection: true) { urls in
             await MainActor.run { paperImportURLs = urls }
         }
         .sheet(isPresented: Binding(get: { paperImportURLs != nil }, set: { if !$0 { paperImportURLs = nil } })) {
@@ -128,7 +128,7 @@ struct QuestionBankInspectorContent: View {
                 .help("Add the selected frame or elements to the question bank (Tools › Add Selection to Question Bank)")
                 .disabled(fileState.currentActiveFile == nil)
                 Menu {
-                    Button { isPaperImporterPresented = true } label: { Label("Import past papers…", systemSymbol: .docTextMagnifyingglass) }
+                    Button { isPaperImporterPresented = true } label: { Label("Import past papers (files or folders)…", systemSymbol: .docTextMagnifyingglass) }
                     Button { isImporterPresented = true } label: { Label("Crop from PDF or images…", systemSymbol: .docViewfinder) }
                     Button { isAutoTagPresented = true } label: { Label("Auto-tag with AI…", systemSymbol: .sparkles) }
                 } label: {

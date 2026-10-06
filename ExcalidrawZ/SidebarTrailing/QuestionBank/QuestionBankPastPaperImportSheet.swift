@@ -19,6 +19,30 @@ struct QuestionBankPastPaperImportSheet: View {
 
     let urls: [URL]
 
+    /// Question papers found in `urls` (folders are searched recursively; mark schemes skipped).
+    private var papers: [URL] {
+        var result: [URL] = []
+        let fm = FileManager.default
+        for url in urls {
+            var isDirectory: ObjCBool = false
+            if fm.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue {
+                let accessed = url.startAccessingSecurityScopedResource()
+                defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+                if let enumerator = fm.enumerator(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) {
+                    for case let file as URL in enumerator where file.pathExtension.lowercased() == "pdf" {
+                        let name = file.deletingPathExtension().lastPathComponent.lowercased()
+                        let isMarkScheme = name.contains(" ms") || name.hasSuffix("ms") || name.contains("mark scheme") || name.contains("markscheme")
+                        let isSpec = file.path.lowercased().contains("_specs") || name.contains("spec")
+                        if !isMarkScheme, !isSpec { result.append(file) }
+                    }
+                }
+            } else if url.pathExtension.lowercased() == "pdf" {
+                result.append(url)
+            }
+        }
+        return result.sorted { $0.path < $1.path }
+    }
+
     @State private var subject: Subject = .maths
     @State private var level: QualificationLevel? = .gcse
     @State private var board: ExamBoard?
@@ -34,12 +58,19 @@ struct QuestionBankPastPaperImportSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Import \(urls.count) past paper\(urls.count == 1 ? "" : "s")").font(.title2.bold())
-            Text("Each paper is split into questions (one image each, answer space trimmed). The file name becomes the source; the question number becomes the title.")
+            Text("Import \(papers.count) past paper\(papers.count == 1 ? "" : "s")").font(.title2.bold())
+            Text("Each paper is split into questions (one image each, answer space trimmed). The file name becomes the source; the question number becomes the title. Folders are searched for question papers; mark schemes are skipped. Board and tier are guessed per file from the path (e.g. Unit-1H → Higher).")
                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            ForEach(urls, id: \.self) { url in
-                Text(url.deletingPathExtension().lastPathComponent).font(.caption).foregroundStyle(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 1) {
+                    ForEach(papers, id: \.self) { url in
+                        Text(url.deletingLastPathComponent().lastPathComponent + " / " + url.deletingPathExtension().lastPathComponent)
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(maxHeight: 90)
 
             Form {
                 Picker("Subject", selection: $subject) { ForEach(Subject.allCases) { Text($0.rawValue).tag($0) } }
@@ -51,7 +82,7 @@ struct QuestionBankPastPaperImportSheet: View {
                     Text("—").tag(ExamBoard?.none)
                     ForEach(ExamBoard.allCases) { Text($0.rawValue).tag(ExamBoard?.some($0)) }
                 }
-                Picker("Tier", selection: $tier) {
+                Picker(papers.count > 1 ? "Tier (fallback when not in the path)" : "Tier", selection: $tier) {
                     Text("—").tag(Tier?.none)
                     ForEach([Tier.foundation, .higher]) { Text($0.rawValue).tag(Tier?.some($0)) }
                 }
@@ -96,14 +127,29 @@ struct QuestionBankPastPaperImportSheet: View {
         }
     }
 
-    /// Board/tier from the path ("wjec_gcse/Unit-1H/June 2022 QP.pdf").
+    private struct PathGuess { var board: ExamBoard?; var tier: Tier?; var level: QualificationLevel?; var subject: Subject? }
+
+    /// Board/tier/level/subject from a path ("wjec_gcse/Unit-1H/June 2022 QP.pdf").
+    private static func guess(path rawPath: String) -> PathGuess {
+        let path = rawPath.lowercased()
+        var g = PathGuess()
+        for candidate in ExamBoard.allCases where path.contains(candidate.rawValue.lowercased()) { g.board = candidate }
+        if path.contains("higher") || path.range(of: #"[-_ ]?[0-9]h\b"#, options: .regularExpression) != nil { g.tier = .higher }
+        if path.contains("foundation") || path.range(of: #"[-_ ]?[0-9]f\b"#, options: .regularExpression) != nil { g.tier = .foundation }
+        if path.contains("intermediate") || path.range(of: #"[-_ ]?[0-9]i\b"#, options: .regularExpression) != nil { g.tier = nil }
+        if path.contains("a-level") || path.contains("alevel") || path.contains("a_level") { g.level = .aLevel }
+        if path.contains("gcse") { g.level = .gcse }
+        if path.contains("computer") || path.contains("comp-sci") || path.contains("/cs/") { g.subject = .computerScience }
+        return g
+    }
+
     private func guess() {
-        let path = urls.first?.path.lowercased() ?? ""
-        for candidate in ExamBoard.allCases where path.contains(candidate.rawValue.lowercased()) { board = candidate }
-        if path.contains("higher") || path.range(of: #"-[0-9]h\b"#, options: .regularExpression) != nil || path.range(of: #"[0-9]h[/ ]"#, options: .regularExpression) != nil { tier = .higher }
-        if path.contains("foundation") || path.range(of: #"-[0-9]f\b"#, options: .regularExpression) != nil || path.range(of: #"[0-9]f[/ ]"#, options: .regularExpression) != nil { tier = .foundation }
-        if path.contains("a-level") || path.contains("alevel") || path.contains("a_level") { level = .aLevel }
-        if path.contains("computer") || path.contains("comp-sci") || path.contains("/cs/") { subject = .computerScience }
+        guard let first = papers.first else { return }
+        let g = Self.guess(path: first.path)
+        if let b = g.board { board = b }
+        tier = g.tier
+        if let l = g.level { level = l }
+        if let s = g.subject { subject = s }
     }
 
     private func run() async {
@@ -113,9 +159,9 @@ struct QuestionBankPastPaperImportSheet: View {
         var added: [Question] = []
 
         // Split and render on a background thread.
-        struct Rendered { var question: PastPaperQuestion; var png: Data; var size: CGSize; var paper: String }
+        struct Rendered { var question: PastPaperQuestion; var png: Data; var size: CGSize; var paper: String; var tier: Tier? }
         var rendered: [Rendered] = []
-        for url in urls {
+        for url in papers {
             let paper = url.deletingPathExtension().lastPathComponent
             let accessed = url.startAccessingSecurityScopedResource()
             defer { if accessed { url.stopAccessingSecurityScopedResource() } }
@@ -125,7 +171,8 @@ struct QuestionBankPastPaperImportSheet: View {
             for question in analysis.questions {
                 do {
                     let image = try PastPaperRenderer.render(question, in: document)
-                    rendered.append(Rendered(question: question, png: image.pngData, size: image.pointSize, paper: paper))
+                    rendered.append(Rendered(question: question, png: image.pngData, size: image.pointSize, paper: paper,
+                                             tier: papers.count > 1 ? Self.guess(path: url.path).tier ?? tier : tier))
                 } catch {
                     log.append("\(paper) \(question.label): \(error.localizedDescription)")
                 }
@@ -139,7 +186,7 @@ struct QuestionBankPastPaperImportSheet: View {
             if Task.isCancelled { log.append("Stopped."); break }
             do {
                 let draft = try QuestionBankImportDocument.makeDraft(png: item.png, pointSize: item.size)
-                var question = Question(title: "\(item.paper) \(item.question.label)", source: item.paper, subject: subject, level: level, board: board, tier: tier)
+                var question = Question(title: "\(item.paper) \(item.question.label)", source: item.paper, subject: subject, level: level, board: board, tier: item.tier)
                 if let hash = QuestionImageHash.hash(png: item.png) {
                     question.imageHash = hash
                     if skipDuplicates, let dup = container.likelyDuplicates(ofHash: hash).first {
