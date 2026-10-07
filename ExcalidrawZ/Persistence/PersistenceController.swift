@@ -83,11 +83,9 @@ class PersistenceController {
         let cloudStoreDescription: NSPersistentStoreDescription = if inMemory {
             NSPersistentStoreDescription(url: URL(fileURLWithPath: "/dev/null"))
         } else {
-            // Historical reason
-            NSPersistentStoreDescription(
-                url: container.persistentStoreDescriptions.first?.url ??
-                storeDir.appendingPathComponent("Model.sqlite")
-            )
+            // Always the ExcalidrawZ folder: Core Data's default location is
+            // named after the executable, which is "Lindon Academy" now.
+            NSPersistentStoreDescription(url: storeDir.appendingPathComponent("Model.sqlite"))
         }
         cloudStoreDescription.type = NSSQLiteStoreType
         cloudStoreDescription.configuration = "Cloud"
