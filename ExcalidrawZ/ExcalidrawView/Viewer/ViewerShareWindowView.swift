@@ -68,13 +68,6 @@ struct ViewerShareWindowView: View {
                             Text(.localizable(.viewerShareConnectedCount(controller.networkClientCount)))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Button {
-                                controller.resetNetworkLink()
-                            } label: {
-                                Text(.localizable(.viewerShareResetLink))
-                            }
-                            .controlSize(.small)
-                            .help(Text(.localizable(.viewerShareResetLinkHelp)))
                         }
                     }
                 } else {

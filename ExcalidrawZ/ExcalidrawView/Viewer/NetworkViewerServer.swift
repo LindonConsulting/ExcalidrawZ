@@ -92,7 +92,6 @@ final class NetworkViewerServer {
 #endif
 
     let port: UInt16
-    let token: String
 
     private let server: HTTPServer
     private let broadcaster: NetworkViewerBroadcaster
@@ -100,11 +99,9 @@ final class NetworkViewerServer {
 
     init(
         port: UInt16 = NetworkViewerServer.defaultPort,
-        token: String,
         broadcaster: NetworkViewerBroadcaster
     ) {
         self.port = port
-        self.token = token
         self.broadcaster = broadcaster
         self.server = HTTPServer(port: port, logger: ExcalidrawServerLogger())
     }
@@ -123,12 +120,10 @@ final class NetworkViewerServer {
         guard !didInstallRoutes else { return }
         didInstallRoutes = true
 
-        let token = token
-        await server.appendRoute("GET /viewer/:token") { request in
-            guard request.routeParameters["token"] == token else {
-                return HTTPResponse(statusCode: .notFound)
-            }
-            guard let page = Self.viewerPageHTML(token: token) else {
+        // No access control beyond the LAN itself: the server only runs while
+        // sharing is switched on, and the page is read-only.
+        await server.appendRoute("GET /viewer") { _ in
+            guard let page = Self.viewerPageHTML() else {
                 return HTTPResponse(statusCode: .internalServerError)
             }
             return HTTPResponse(
@@ -146,11 +141,8 @@ final class NetworkViewerServer {
                 handler: NetworkViewerMessageHandler(broadcaster: broadcaster)
             )
         )
-        await server.appendRoute("GET /viewer/:token/ws") { request in
-            guard request.routeParameters["token"] == token else {
-                return HTTPResponse(statusCode: .notFound)
-            }
-            return try await socketHandler.handleRequest(request)
+        await server.appendRoute("GET /viewer/ws") { request in
+            try await socketHandler.handleRequest(request)
         }
 
         // Same bundle the local WebViews load, served from this origin so the
@@ -170,7 +162,7 @@ final class NetworkViewerServer {
     /// The browser page is the bundle's own `index.html` with the viewer
     /// bootstrap appended, so Excalidraw runs top-level (it refuses to run
     /// inside an iframe) and the same JS the local Viewer uses can drive it.
-    static func viewerPageHTML(token: String) -> String? {
+    static func viewerPageHTML() -> String? {
         guard let indexURL = Bundle.main.url(
             forResource: "index",
             withExtension: "html",
@@ -186,7 +178,6 @@ final class NetworkViewerServer {
             "apply": ViewerMirrorScripts.viewerApplyDelta,
             "laser": ViewerMirrorScripts.viewerApplyLaserPath,
         ])
-        let tokenLiteral = Self.jsLiteral(token)
         let bootstrap = """
         <style>
           #excalidrawz-viewer-status { position: fixed; left: 50%; top: 12px; transform: translateX(-50%);
@@ -198,7 +189,6 @@ final class NetworkViewerServer {
         <script>
         (() => {
           const scripts = \(scripts);
-          const token = \(tokenLiteral);
           const status = document.getElementById("excalidrawz-viewer-status");
           let fns = null;
 
@@ -230,7 +220,7 @@ final class NetworkViewerServer {
 
           const connect = () => {
             const protocol = location.protocol === "https:" ? "wss" : "ws";
-            const socket = new WebSocket(`${protocol}://${location.host}/viewer/${token}/ws`);
+            const socket = new WebSocket(`${protocol}://${location.host}/viewer/ws`);
             socket.onopen = () => setStatus("");
             // Refit after the browser window changes size.
             let resizeTimer = null;

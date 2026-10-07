@@ -53,7 +53,6 @@ final class ViewerMirrorController: ObservableObject {
 
     private static let followDefaultsKey = "ViewerFollowsEditorCamera"
     private static let autoStartDefaultsKey = "ViewerNetworkSharingStartsAtLaunch"
-    private static let tokenDefaultsKey = "ViewerNetworkToken"
     private let logger = Logger(label: "ViewerMirrorController")
     /// Registered editor cores, most recently key (or registered) first.
     private var editors: [WeakEditor] = []
@@ -61,20 +60,9 @@ final class ViewerMirrorController: ObservableObject {
     private var isViewerWindowOpen = false
     private var networkServer: NetworkViewerServer?
     private var networkServerTask: Task<Void, Never>?
-    /// The only access control on the shared page. Generated once and kept
-    /// across launches so the link stays the same; `resetNetworkLink()`
-    /// replaces it.
-    private var networkToken: String
-
     private init() {
         isFollowingCamera = UserDefaults.standard.object(forKey: Self.followDefaultsKey) as? Bool ?? true
         startsNetworkSharingAtLaunch = UserDefaults.standard.bool(forKey: Self.autoStartDefaultsKey)
-        if let stored = UserDefaults.standard.string(forKey: Self.tokenDefaultsKey), !stored.isEmpty {
-            networkToken = stored
-        } else {
-            networkToken = Self.makeToken()
-            UserDefaults.standard.set(networkToken, forKey: Self.tokenDefaultsKey)
-        }
         keyWindowCancellable = NotificationCenter.default
             .publisher(for: NSWindow.didBecomeKeyNotification)
             .compactMap { $0.object as? NSWindow }
@@ -124,24 +112,17 @@ final class ViewerMirrorController: ObservableObject {
         }
     }
 
-    /// Issue a new link; browsers holding the old one lose access.
-    func resetNetworkLink() {
-        networkToken = Self.makeToken()
-        UserDefaults.standard.set(networkToken, forKey: Self.tokenDefaultsKey)
-        guard isNetworkSharingEnabled else { return }
-        stopNetworkServer()
-        startNetworkServer()
-    }
-
     /// Every address the link works at: the Bonjour hostname first (stable
     /// even when DHCP hands out a new address), then each IPv4 address.
+    /// No token: the LAN is the boundary, and the server only runs while
+    /// sharing is on.
     private func shareURLs(port: UInt16) -> [URL] {
         var hosts = NetworkViewerAddresses.localIPv4Addresses()
         if let name = NetworkViewerAddresses.bonjourHostName() {
             hosts.insert(name, at: 0)
         }
         return hosts.compactMap { host in
-            URL(string: "http://\(host):\(port)/viewer/\(networkToken)")
+            URL(string: "http://\(host):\(port)/viewer")
         }
     }
 
@@ -160,7 +141,7 @@ final class ViewerMirrorController: ObservableObject {
                 }
             }
         )
-        let server = NetworkViewerServer(token: networkToken, broadcaster: broadcaster)
+        let server = NetworkViewerServer(broadcaster: broadcaster)
         networkServer = server
         networkSharingState = .starting
         networkShareURLs = shareURLs(port: server.port)
@@ -202,12 +183,6 @@ final class ViewerMirrorController: ObservableObject {
         session?.networkBroadcaster = nil
         Task { await server.stop() }
         closeSessionIfUnused()
-    }
-
-    private static func makeToken() -> String {
-        // Short enough to type into a kiosk's config by hand.
-        let alphabet = Array("abcdefghijklmnopqrstuvwxyz0123456789")
-        return String((0..<12).map { _ in alphabet.randomElement()! })
     }
 
     // MARK: - Session lifecycle

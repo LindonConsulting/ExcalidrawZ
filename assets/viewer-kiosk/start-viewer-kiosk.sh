@@ -1,8 +1,8 @@
 #!/bin/sh
 # Opens the ExcalidrawZ shared Viewer full-screen on a kiosk PC.
 #
-# Set VIEWER_URL to the link shown in ExcalidrawZ › Viewer › Share Viewer on
-# Network… It stays the same across launches, so set it once here.
+# VIEWER_URL is the link shown in ExcalidrawZ › Viewer › Share Viewer on
+# Network… It is always http://<mac>:8488/viewer, so set the host once here.
 # Prefer the <name>.local form (needs avahi-daemon on the kiosk); fall back
 # to the IP if the kiosk has no mDNS, and give the Mac a DHCP reservation.
 #
@@ -10,7 +10,7 @@
 # so the kiosk can boot before ExcalidrawZ is running. Once the page is open
 # it reconnects on its own whenever sharing stops and starts again.
 
-VIEWER_URL="${VIEWER_URL:-http://Johnnys-MacBook-Air.local:8488/viewer/CHANGE-ME}"
+VIEWER_URL="${VIEWER_URL:-http://Johnnys-MacBook-Air.local:8488/viewer}"
 
 until curl -fsS -o /dev/null --max-time 3 "$VIEWER_URL"; do
     sleep 2
