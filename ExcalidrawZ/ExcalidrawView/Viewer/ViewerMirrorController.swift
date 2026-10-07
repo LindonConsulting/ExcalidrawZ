@@ -36,14 +36,24 @@ final class ViewerMirrorController: ObservableObject {
         }
     }
 
-    /// Sharing to browsers on the local network. Deliberately not persisted:
-    /// the canvas leaves the machine, so it is opt-in per launch.
+    /// Sharing to browsers on the local network. Off at launch unless
+    /// `startsNetworkSharingAtLaunch` is on: the canvas leaves the machine,
+    /// so it stays opt-in.
     @Published private(set) var isNetworkSharingEnabled = false
+    /// Turn sharing on as soon as the app starts, so a kiosk pointed at the
+    /// link comes up without a visit to this window.
+    @Published var startsNetworkSharingAtLaunch: Bool {
+        didSet {
+            UserDefaults.standard.set(startsNetworkSharingAtLaunch, forKey: Self.autoStartDefaultsKey)
+        }
+    }
     @Published private(set) var networkSharingState: NetworkSharingState = .off
     @Published private(set) var networkClientCount = 0
     @Published private(set) var networkShareURLs: [URL] = []
 
     private static let followDefaultsKey = "ViewerFollowsEditorCamera"
+    private static let autoStartDefaultsKey = "ViewerNetworkSharingStartsAtLaunch"
+    private static let tokenDefaultsKey = "ViewerNetworkToken"
     private let logger = Logger(label: "ViewerMirrorController")
     /// Registered editor cores, most recently key (or registered) first.
     private var editors: [WeakEditor] = []
@@ -51,11 +61,20 @@ final class ViewerMirrorController: ObservableObject {
     private var isViewerWindowOpen = false
     private var networkServer: NetworkViewerServer?
     private var networkServerTask: Task<Void, Never>?
-    /// Random per launch; the only access control on the shared page.
-    private let networkToken = ViewerMirrorController.makeToken()
+    /// The only access control on the shared page. Generated once and kept
+    /// across launches so the link stays the same; `resetNetworkLink()`
+    /// replaces it.
+    private var networkToken: String
 
     private init() {
         isFollowingCamera = UserDefaults.standard.object(forKey: Self.followDefaultsKey) as? Bool ?? true
+        startsNetworkSharingAtLaunch = UserDefaults.standard.bool(forKey: Self.autoStartDefaultsKey)
+        if let stored = UserDefaults.standard.string(forKey: Self.tokenDefaultsKey), !stored.isEmpty {
+            networkToken = stored
+        } else {
+            networkToken = Self.makeToken()
+            UserDefaults.standard.set(networkToken, forKey: Self.tokenDefaultsKey)
+        }
         keyWindowCancellable = NotificationCenter.default
             .publisher(for: NSWindow.didBecomeKeyNotification)
             .compactMap { $0.object as? NSWindow }
@@ -74,6 +93,13 @@ final class ViewerMirrorController: ObservableObject {
     func unregister(editor: ExcalidrawCore) {
         editors.removeAll { $0.core === editor || $0.core == nil }
         session?.refreshEditorBinding()
+    }
+
+    /// Called once the app has finished launching.
+    func applicationDidLaunch() {
+        if startsNetworkSharingAtLaunch {
+            setNetworkSharing(true)
+        }
     }
 
     func viewerDidAppear() {
@@ -98,6 +124,27 @@ final class ViewerMirrorController: ObservableObject {
         }
     }
 
+    /// Issue a new link; browsers holding the old one lose access.
+    func resetNetworkLink() {
+        networkToken = Self.makeToken()
+        UserDefaults.standard.set(networkToken, forKey: Self.tokenDefaultsKey)
+        guard isNetworkSharingEnabled else { return }
+        stopNetworkServer()
+        startNetworkServer()
+    }
+
+    /// Every address the link works at: the Bonjour hostname first (stable
+    /// even when DHCP hands out a new address), then each IPv4 address.
+    private func shareURLs(port: UInt16) -> [URL] {
+        var hosts = NetworkViewerAddresses.localIPv4Addresses()
+        if let name = NetworkViewerAddresses.bonjourHostName() {
+            hosts.insert(name, at: 0)
+        }
+        return hosts.compactMap { host in
+            URL(string: "http://\(host):\(port)/viewer/\(networkToken)")
+        }
+    }
+
     private func startNetworkServer() {
         guard networkServer == nil else { return }
 
@@ -116,9 +163,7 @@ final class ViewerMirrorController: ObservableObject {
         let server = NetworkViewerServer(token: networkToken, broadcaster: broadcaster)
         networkServer = server
         networkSharingState = .starting
-        networkShareURLs = NetworkViewerAddresses.localIPv4Addresses().compactMap { address in
-            URL(string: "http://\(address):\(server.port)/viewer/\(networkToken)")
-        }
+        networkShareURLs = shareURLs(port: server.port)
 
         let session = ensureSession()
         session.networkBroadcaster = broadcaster
@@ -160,8 +205,9 @@ final class ViewerMirrorController: ObservableObject {
     }
 
     private static func makeToken() -> String {
+        // Short enough to type into a kiosk's config by hand.
         let alphabet = Array("abcdefghijklmnopqrstuvwxyz0123456789")
-        return String((0..<20).map { _ in alphabet.randomElement()! })
+        return String((0..<12).map { _ in alphabet.randomElement()! })
     }
 
     // MARK: - Session lifecycle

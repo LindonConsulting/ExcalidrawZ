@@ -25,6 +25,15 @@ struct ViewerShareWindowView: View {
                 }
             }
 
+            Toggle(isOn: $controller.startsNetworkSharingAtLaunch) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(.localizable(.viewerShareAutoStartTitle))
+                    Text(.localizable(.viewerShareAutoStartHelp))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             if case .failed(let message) = controller.networkSharingState {
                 Text(message)
                     .font(.caption)
@@ -59,6 +68,13 @@ struct ViewerShareWindowView: View {
                             Text(.localizable(.viewerShareConnectedCount(controller.networkClientCount)))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            Button {
+                                controller.resetNetworkLink()
+                            } label: {
+                                Text(.localizable(.viewerShareResetLink))
+                            }
+                            .controlSize(.small)
+                            .help(Text(.localizable(.viewerShareResetLinkHelp)))
                         }
                     }
                 } else {

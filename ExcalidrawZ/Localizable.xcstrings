@@ -150670,7 +150670,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anyone on this network with the link can watch the canvas. The link changes each time the app starts."
+            "value": "Anyone on this network with the link can watch the canvas. The link stays the same across launches until you reset it."
           }
         }
       }
@@ -150695,6 +150695,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "No network connection found. Join a Wi‑Fi network and try again."
+          }
+        }
+      }
+    },
+    "viewerShareAutoStartTitle": {
+      "comment": "Toggle that starts network sharing when the app launches",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start sharing when the app launches"
+          }
+        }
+      }
+    },
+    "viewerShareAutoStartHelp": {
+      "comment": "Help text under the auto-start toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a kiosk or second PC that is always pointed at the link."
+          }
+        }
+      }
+    },
+    "viewerShareResetLink": {
+      "comment": "Button that issues a new viewer link",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Link"
+          }
+        }
+      }
+    },
+    "viewerShareResetLinkHelp": {
+      "comment": "Tooltip for the reset-link button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issue a new link. Anything using the old one stops receiving the canvas."
           }
         }
       }

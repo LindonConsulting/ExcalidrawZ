@@ -311,6 +311,14 @@ struct NetworkViewerMessage: Encodable {
 // MARK: - Local addresses
 
 enum NetworkViewerAddresses {
+    /// The Mac's `<name>.local` hostname, reachable from any machine on the
+    /// LAN that resolves mDNS (Avahi on Linux).
+    static func bonjourHostName() -> String? {
+        let name = ProcessInfo.processInfo.hostName
+        guard !name.isEmpty, name != "localhost" else { return nil }
+        return name.hasSuffix(".local") ? name : name + ".local"
+    }
+
     /// IPv4 addresses of the active, non-loopback interfaces (Wi-Fi/Ethernet first).
     static func localIPv4Addresses() -> [String] {
         var addresses: [(name: String, address: String)] = []

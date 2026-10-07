@@ -213,6 +213,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // disable auto capitalization
         UserDefaults.standard.set(false, forKey: "NSAutomaticCapitalizationEnabled")
+#if os(macOS)
+        ViewerMirrorController.shared.applicationDidLaunch()
+#endif
     }
 
     func application(
