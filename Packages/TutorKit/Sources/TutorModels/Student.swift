@@ -12,8 +12,10 @@ public struct Student: Codable, Hashable, Identifiable, Sendable {
     public var notes: String
     /// Topic ids the tutor has flagged as weak.
     public var focusTopicIDs: [String]
-    /// Specification this student is being taught to (Phase 3).
+    /// Primary specification (kept for compatibility); see `specificationIDs` for all.
     public var specificationID: UUID?
+    /// Every specification the student is studying with you (several subjects).
+    public var specificationIDs: [UUID]
     /// ConwyMaths Supabase `students.id`, once matched.
     public var remoteID: UUID?
     public var yearGroup: String
@@ -28,15 +30,23 @@ public struct Student: Codable, Hashable, Identifiable, Sendable {
 
     public init(id: UUID = UUID(), name: String, subject: Subject = .maths, level: QualificationLevel = .gcse,
                 board: ExamBoard? = nil, tier: Tier? = nil, targetGrade: String = "", notes: String = "",
-                focusTopicIDs: [String] = [], specificationID: UUID? = nil, remoteID: UUID? = nil, yearGroup: String = "",
+                focusTopicIDs: [String] = [], specificationID: UUID? = nil, specificationIDs: [UUID] = [], remoteID: UUID? = nil, yearGroup: String = "",
                 management: String = "", parentName: String = "", parentContact: String = "", rapportNotes: String = "",
                 remoteSyncedAt: Date? = nil, createdAt: Date = .now, archivedAt: Date? = nil) {
         self.id = id; self.name = name; self.subject = subject; self.level = level; self.board = board
         self.tier = tier; self.targetGrade = targetGrade; self.notes = notes; self.focusTopicIDs = focusTopicIDs
         self.specificationID = specificationID
+        self.specificationIDs = specificationIDs
         self.remoteID = remoteID; self.yearGroup = yearGroup; self.management = management
         self.parentName = parentName; self.parentContact = parentContact; self.rapportNotes = rapportNotes
         self.remoteSyncedAt = remoteSyncedAt
         self.createdAt = createdAt; self.archivedAt = archivedAt
+    }
+
+    /// All linked specs, primary first, de-duplicated.
+    public var allSpecificationIDs: [UUID] {
+        var result: [UUID] = []
+        for id in [specificationID].compactMap({ $0 }) + specificationIDs where !result.contains(id) { result.append(id) }
+        return result
     }
 }

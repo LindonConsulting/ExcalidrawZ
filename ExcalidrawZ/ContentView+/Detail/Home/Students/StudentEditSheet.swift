@@ -49,9 +49,9 @@ struct StudentEditSheet: View {
                         ForEach([Tier.foundation, .higher]) { Text($0.rawValue).tag(Tier?.some($0)) }
                     }
                 }
-                Picker("Specification", selection: $student.specificationID) {
+                Picker("Main specification", selection: $student.specificationID) {
                     Text("—").tag(UUID?.none)
-                    ForEach(container.specifications.filter { $0.subject == student.subject && $0.level == student.level }) { spec in
+                    ForEach(container.specifications.filter { $0.level == student.level }) { spec in
                         Text(spec.displayName).tag(UUID?.some(spec.id))
                     }
                 }
@@ -59,6 +59,20 @@ struct StudentEditSheet: View {
                 TextField("Notes", text: $student.notes, axis: .vertical).lineLimit(2...5)
             }
             .formStyle(.columns)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Also studying (other specifications)").font(.callout).foregroundStyle(.secondary)
+                ForEach(container.specifications.filter { $0.id != student.specificationID }) { spec in
+                    Toggle(spec.displayName, isOn: Binding(
+                        get: { student.specificationIDs.contains(spec.id) },
+                        set: { on in
+                            if on { if !student.specificationIDs.contains(spec.id) { student.specificationIDs.append(spec.id) } }
+                            else { student.specificationIDs.removeAll { $0 == spec.id } }
+                        }
+                    ))
+                    .toggleStyle(.checkbox)
+                }
+            }
 
             focusTopics
 

@@ -29,7 +29,15 @@ public extension TutorDatabase {
     /// Saves an importer draft as a new specification. Returns the tree.
     @discardableResult
     func saveSpecification(from draft: SpecificationDraft, sourceFileName: String) throws -> SpecificationTree {
-        let subject = Subject(rawValue: draft.subject) ?? (draft.subject.lowercased().contains("comput") ? .computerScience : .maths)
+        let subject = Subject(rawValue: draft.subject) ?? {
+            let s = draft.subject.lowercased()
+            if s.contains("comput") { return .computerScience }
+            if s.contains("biol") { return .biology }
+            if s.contains("chem") { return .chemistry }
+            if s.contains("phys") { return .physics }
+            if s.contains("science") { return .combinedScience }
+            return .maths
+        }()
         let level = QualificationLevel(rawValue: draft.level) ?? (draft.level.lowercased().contains("a") ? .aLevel : .gcse)
         let board = ExamBoard.allCases.first { draft.board.lowercased().contains($0.rawValue.lowercased()) } ?? .other
         let spec = Specification(subject: subject, level: level, board: board, title: draft.title.isEmpty ? "\(board.rawValue) \(level.rawValue) \(subject.rawValue)" : draft.title,

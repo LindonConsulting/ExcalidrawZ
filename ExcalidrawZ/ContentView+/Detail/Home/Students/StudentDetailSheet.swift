@@ -33,8 +33,9 @@ struct StudentDetailSheet: View {
             if let student {
                 header(student)
                 Divider()
-                if let specID = student.specificationID, let tree = container.specificationTree(id: specID) {
-                    checklist(student: student, tree: tree)
+                let trees = student.allSpecificationIDs.compactMap { container.specificationTree(id: $0) }
+                if !trees.isEmpty {
+                    checklists(student: student, trees: trees)
                 } else {
                     VStack(spacing: 8) {
                         Text("No specification linked.").font(.headline)
@@ -70,8 +71,9 @@ struct StudentDetailSheet: View {
                 Text([student.level.rawValue, student.subject.rawValue, student.board?.rawValue, student.tier?.rawValue, student.targetGrade.isEmpty ? nil : "Target \(student.targetGrade)"]
                     .compactMap { $0 }.joined(separator: " · "))
                     .foregroundStyle(.secondary)
-                if let spec = container.specification(id: student.specificationID) {
-                    Text(spec.title).font(.callout).foregroundStyle(.secondary)
+                let specs = container.specifications(for: student)
+                if !specs.isEmpty {
+                    Text(specs.map(\.title).joined(separator: " · ")).font(.callout).foregroundStyle(.secondary)
                 }
                 HStack(spacing: 14) {
                     Label("\(stats.lessons) lessons", systemSymbol: .calendar)
@@ -93,7 +95,7 @@ struct StudentDetailSheet: View {
     }
 
     @ViewBuilder
-    private func checklist(student: Student, tree: SpecificationTree) -> some View {
+    private func checklists(student: Student, trees: [SpecificationTree]) -> some View {
         let coverage = container.coverage(for: student)
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -107,6 +109,20 @@ struct StudentDetailSheet: View {
             }
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 6) {
+                    ForEach(trees, id: \.specification.id) { tree in
+                        if trees.count > 1 {
+                            Text(tree.specification.title).font(.subheadline.bold()).padding(.top, 8)
+                        }
+                        checklistSections(student: student, tree: tree, coverage: coverage)
+                    }
+                }
+                .padding(.trailing, 8)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func checklistSections(student: Student, tree: SpecificationTree, coverage: [UUID: CoverageStatus]) -> some View {
                     ForEach(tree.sections) { section in
                         let points = visiblePoints(tree.points(in: section), student: student, coverage: coverage)
                         if !points.isEmpty {
@@ -124,10 +140,6 @@ struct StudentDetailSheet: View {
                             }
                         }
                     }
-                }
-                .padding(.trailing, 8)
-            }
-        }
     }
 
     private func visiblePoints(_ points: [SpecPoint], student: Student, coverage: [UUID: CoverageStatus]) -> [SpecPoint] {

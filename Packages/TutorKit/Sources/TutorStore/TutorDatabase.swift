@@ -153,6 +153,11 @@ public final class TutorDatabase: Sendable {
             }
             try db.create(index: "student_remote", on: "student", columns: ["remoteID"])
         }
+        migrator.registerMigration("v4-multi-spec") { db in
+            try db.alter(table: "student") { t in
+                t.add(column: "specificationIDs", .text).notNull().defaults(to: "[]")
+            }
+        }
         return migrator
     }
 }

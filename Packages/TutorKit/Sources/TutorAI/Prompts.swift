@@ -70,7 +70,7 @@ public enum TutorPrompts {
 
     /// Per-question prompt; expects `taggingContext` to be sent as a cached system block.
     public static func taggingUser(texts: [String], hasSpecPoints: Bool) -> String {
-        var prompt = "Classify this tutoring question (GCSE or A-Level Maths or Computer Science) for a question bank, using the topic ids and specification points given in the system context."
+        var prompt = "Classify this tutoring question (GCSE or A-Level: Maths, Computer Science, Biology, Chemistry, Physics) for a question bank, using the topic ids and specification points given in the system context."
         if !texts.isEmpty {
             prompt += "\n\nText on the canvas:\n" + texts.map { "- \($0)" }.joined(separator: "\n")
         }
@@ -80,7 +80,7 @@ public enum TutorPrompts {
         Reply with JSON only, no prose, with these keys:
         {"title": short descriptive title (max 60 chars),
          "topics": 1-3 topic ids from the list,
-         "subject": "Maths" or "Computer Science",
+         "subject": one of \(Subject.allCases.map(\.rawValue).joined(separator: ", ")),
          "level": one of \(QualificationLevel.allCases.map(\.rawValue).joined(separator: ", ")) or "" if unknown,
          "board": one of \(ExamBoard.allCases.map(\.rawValue).joined(separator: ", ")) or "" if unknown,
          "tier": "Foundation", "Higher" or "" if unknown or not GCSE,

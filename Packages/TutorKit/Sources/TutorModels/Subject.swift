@@ -14,6 +14,10 @@ public enum QualificationLevel: String, Codable, CaseIterable, Sendable, Identif
 public enum Subject: String, Codable, CaseIterable, Sendable, Identifiable {
     case maths = "Maths"
     case computerScience = "Computer Science"
+    case biology = "Biology"
+    case chemistry = "Chemistry"
+    case physics = "Physics"
+    case combinedScience = "Combined Science"
     case other = "Other"
 
     public var id: String { rawValue }

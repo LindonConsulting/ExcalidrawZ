@@ -47,7 +47,8 @@ public struct CoveragePicker: Sendable {
             if seen { continue }
             // Subject/level/tier fit.
             if let student {
-                if question.subject != student.subject { continue }
+                let linkedToStudentSpec = (context.specPointsByQuestion[question.id] ?? []).contains { context.coverage[$0] != nil }
+                if question.subject != student.subject && !linkedToStudentSpec { continue }
                 if let level = question.level, level != student.level { continue }
                 if student.level == .gcse, let tier = question.tier, let studentTier = student.tier, tier != .notApplicable, tier != studentTier { continue }
             }

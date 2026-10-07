@@ -324,9 +324,20 @@ final class TutorKitContainer: ObservableObject {
         refresh()
     }
 
+    /// Coverage across every specification linked to the student.
     func coverage(for student: Student) -> [UUID: CoverageStatus] {
-        guard let specID = student.specificationID else { return [:] }
-        return (try? db().coverage(specificationID: specID, studentID: student.id, studentName: student.name)) ?? [:]
+        var result: [UUID: CoverageStatus] = [:]
+        for specID in student.allSpecificationIDs {
+            if let partial = try? db().coverage(specificationID: specID, studentID: student.id, studentName: student.name) {
+                result.merge(partial) { current, _ in current }
+            }
+        }
+        return result
+    }
+
+    /// Specifications linked to a student, primary first.
+    func specifications(for student: Student) -> [Specification] {
+        student.allSpecificationIDs.compactMap { specification(id: $0) }
     }
 
     /// Questions linked to a spec point, split into unused / used for the student.
@@ -355,8 +366,10 @@ final class TutorKitContainer: ObservableObject {
         let student = students.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
         var tiers: [UUID: Tier?] = [:]
         var coverage: [UUID: CoverageStatus] = [:]
-        if let student, let specID = student.specificationID, let tree = specificationTree(id: specID) {
-            for point in tree.points { tiers[point.id] = point.tier }
+        if let student {
+            for tree in student.allSpecificationIDs.compactMap({ specificationTree(id: $0) }) {
+                for point in tree.points { tiers[point.id] = point.tier }
+            }
             coverage = self.coverage(for: student)
         }
         let context = PickerContext(student: student, coverage: coverage, specPointsByQuestion: specPointsByQuestion,
@@ -384,12 +397,17 @@ final class TutorKitContainer: ObservableObject {
         let sessions = (try? database?.lessonSessions(forStudent: student.id)) ?? []
         let shown = outcomes.values.flatMap { $0 }.filter { $0.studentID == student.id || $0.studentName.lowercased() == student.name.lowercased() }
         var summary: CoverageSummary?
-        if let specID = student.specificationID, let tree = specificationTree(id: specID) {
+        let trees = student.allSpecificationIDs.compactMap { specificationTree(id: $0) }
+        if !trees.isEmpty {
             let coverage = coverage(for: student)
-            let points = tree.points.filter { $0.tier == nil || student.tier == nil || $0.tier == student.tier }
             var counts: [CoverageStatus: Int] = [:]
-            for point in points { counts[coverage[point.id] ?? .notCovered, default: 0] += 1 }
-            summary = CoverageSummary(total: points.count, counts: counts)
+            var total = 0
+            for tree in trees {
+                let points = tree.points.filter { $0.tier == nil || student.tier == nil || $0.tier == student.tier }
+                for point in points { counts[coverage[point.id] ?? .notCovered, default: 0] += 1 }
+                total += points.count
+            }
+            summary = CoverageSummary(total: total, counts: counts)
         }
         return StudentStats(lessons: sessions.count, questionsShown: shown.count, lastLesson: sessions.first?.date, coverage: summary,
                             pendingOutcomes: shown.filter { $0.result == .unknown }.count)

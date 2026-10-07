@@ -16,12 +16,13 @@ public struct SpecificationImporter: Sendable {
     }
 
     public static let system = """
-    You extract the assessable content from UK exam specifications (GCSE / A-Level Maths and Computer Science, boards AQA, Edexcel/Pearson, OCR, WJEC/Eduqas, CCEA). \
+    You extract the assessable content from UK exam specifications (GCSE / A-Level Maths, Computer Science, Biology, Chemistry, Physics and Combined Science; boards AQA, Edexcel/Pearson, OCR, WJEC/Eduqas, CCEA). \
     Return JSON only, no prose, matching exactly:
     {"title": string, "code": string (board qualification code such as "1MA1", "8300", "J560", "H240", "8525"; "" if unknown),
-     "subject": "Maths" | "Computer Science", "level": "GCSE" | "A-Level" | "KS3" | "Other", "board": string,
+     "subject": "Maths" | "Computer Science" | "Biology" | "Chemistry" | "Physics" | "Combined Science", "level": "GCSE" | "A-Level" | "KS3" | "Other", "board": string,
      "sections": [{"code": string, "title": string, "points": [{"code": string, "text": string, "tier": "Higher" | "Foundation" | null}]}]}
-    Rules: one point per numbered/lettered statement exactly as the specification numbers them (e.g. "N1", "A4", "3.1.1", "1.2.3"). \
+    Rules: one point per numbered/lettered statement exactly as the specification numbers them (e.g. "N1", "A4", "3.1.1", "1.2.3", "1.5B", "SP1.3"). \
+    For science specifications a section is a topic (e.g. "Topic 1 – Key concepts in biology") and the points are the numbered statements in it; mark "Higher Tier only" statements (often printed in bold or flagged) with "tier":"Higher". \
     Keep the statement text verbatim but trimmed, without the bold/underline markers and without repeated headers or page furniture. \
     If content is marked higher-tier only (bold text in Edexcel/AQA GCSE Maths, "Higher only", "H"), set "tier":"Higher". \
     GCSE Maths specifications often list the Foundation tier content and then the Higher tier content again under the same codes with extra statements: \
