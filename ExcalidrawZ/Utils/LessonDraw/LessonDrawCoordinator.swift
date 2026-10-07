@@ -68,10 +68,16 @@ enum LessonDrawCoordinator {
         context: NSManagedObjectContext,
         preferences: LessonDrawPreferences? = nil,
         overrideMatch: LessonTitleMatch? = nil,
+        specificEvent: LessonCalendarEvent? = nil,
         now: Date = .now
     ) async throws -> LessonDrawPlan {
         let preferences = preferences ?? LessonDrawPreferences.shared
-        let lookup = try await LessonCalendarService.shared.lessonEvents(now: now, lookbackMinutes: preferences.lookbackMinutes)
+        let lookup: LessonCalendarLookup
+        if let specificEvent {
+            lookup = LessonCalendarLookup(events: [specificEvent], isUpcoming: specificEvent.startDate > now)
+        } else {
+            lookup = try await LessonCalendarService.shared.lessonEvents(now: now, lookbackMinutes: preferences.lookbackMinutes)
+        }
         let events = lookup.events
         let parser = LessonTitleParser(pattern: preferences.titlePattern)
 

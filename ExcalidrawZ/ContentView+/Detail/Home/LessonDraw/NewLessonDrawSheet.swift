@@ -30,6 +30,9 @@ struct NewLessonDrawSheet: View {
         case failed(Error)
     }
 
+    /// When set, the sheet prepares this lesson instead of looking for the current one.
+    var event: LessonCalendarEvent? = nil
+
     @State private var phase: Phase = .detecting
     @State private var summaryState: SummaryState = .idle
     @State private var summaryTask: Task<String?, Error>?
@@ -232,7 +235,7 @@ struct NewLessonDrawSheet: View {
         summaryTask?.cancel()
         summaryState = .idle
         do {
-            let plan = try await LessonDrawCoordinator.detect(context: viewContext, overrideMatch: overrideMatch)
+            let plan = try await LessonDrawCoordinator.detect(context: viewContext, overrideMatch: overrideMatch, specificEvent: event)
             phase = .ready(plan)
             startSummary(for: plan)
         } catch {
