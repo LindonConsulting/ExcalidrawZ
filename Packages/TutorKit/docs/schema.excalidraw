@@ -1,0 +1,4329 @@
+{
+ "type": "excalidraw",
+ "version": 2,
+ "source": "TutorKit schema generator",
+ "elements": [
+  {
+   "id": "label-People",
+   "type": "text",
+   "x": 0,
+   "y": -50,
+   "width": 300,
+   "height": 30,
+   "angle": 0,
+   "strokeColor": "#495057",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 695425565,
+   "version": 1,
+   "versionNonce": 2035525363,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "People",
+   "originalText": "People",
+   "fontSize": 24,
+   "fontFamily": 1,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 21,
+   "containerId": null,
+   "lineHeight": 1.25,
+   "autoResize": true
+  },
+  {
+   "id": "box-student",
+   "type": "rectangle",
+   "x": 0,
+   "y": 0,
+   "width": 300,
+   "height": 304.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d0ebff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 323946140,
+   "version": 1,
+   "versionNonce": 847877000,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-student",
+     "type": "text"
+    },
+    {
+     "id": "arrow-0-studentContact-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-1-enrolment-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-4-lesson-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-9-outcome-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-11-topicProgress-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-13-coverageMark-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-22-assignment-student",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-student",
+   "type": "text",
+   "x": 12,
+   "y": 12,
+   "width": 276,
+   "height": 280.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1397871145,
+   "version": 1,
+   "versionNonce": 103694313,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "STUDENT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nname\nyearGroup\nschool\nmanagement\nnotes\nrapportNotes\nhobbies\ninterests\ncalendarIdentifier\nremoteID, remoteSyncedAt\ncreatedAt, updatedAt, deletedAt",
+   "originalText": "STUDENT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nname\nyearGroup\nschool\nmanagement\nnotes\nrapportNotes\nhobbies\ninterests\ncalendarIdentifier\nremoteID, remoteSyncedAt\ncreatedAt, updatedAt, deletedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-student",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-studentContact",
+   "type": "rectangle",
+   "x": 0,
+   "y": 354.0,
+   "width": 300,
+   "height": 224.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d0ebff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 155555738,
+   "version": 1,
+   "versionNonce": 1763673107,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-studentContact",
+     "type": "text"
+    },
+    {
+     "id": "arrow-0-studentContact-student",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-studentContact",
+   "type": "text",
+   "x": 12,
+   "y": 366.0,
+   "width": 276,
+   "height": 200.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1150797846,
+   "version": 1,
+   "versionNonce": 202142729,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "STUDENTCONTACT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nstudentID \u2192 student\nname\nrelationship\nphone\nemail\npreferredMethod\nisPrimary",
+   "originalText": "STUDENTCONTACT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nstudentID \u2192 student\nname\nrelationship\nphone\nemail\npreferredMethod\nisPrimary",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-studentContact",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-enrolment",
+   "type": "rectangle",
+   "x": 0,
+   "y": 628.0,
+   "width": 300,
+   "height": 304.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d0ebff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 785310973,
+   "version": 1,
+   "versionNonce": 1251527727,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-enrolment",
+     "type": "text"
+    },
+    {
+     "id": "arrow-1-enrolment-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-2-enrolment-course",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-3-enrolment-specification",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-5-lesson-enrolment",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-enrolment",
+   "type": "text",
+   "x": 12,
+   "y": 640.0,
+   "width": 276,
+   "height": 280.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 124551739,
+   "version": 1,
+   "versionNonce": 1953574603,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "ENROLMENT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nstudentID \u2192 student\ncourseID \u2192 course\nspecificationID \u2192 specification\nsubject, level\nboard, tier\ntargetGrade\nstartedAt, endedAt\nisPrimary\nnotes\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "originalText": "ENROLMENT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nstudentID \u2192 student\ncourseID \u2192 course\nspecificationID \u2192 specification\nsubject, level\nboard, tier\ntargetGrade\nstartedAt, endedAt\nisPrimary\nnotes\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-enrolment",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-course",
+   "type": "rectangle",
+   "x": 0,
+   "y": 982.0,
+   "width": 300,
+   "height": 144.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d0ebff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1089709947,
+   "version": 1,
+   "versionNonce": 461060839,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-course",
+     "type": "text"
+    },
+    {
+     "id": "arrow-2-enrolment-course",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-course",
+   "type": "text",
+   "x": 12,
+   "y": 994.0,
+   "width": 276,
+   "height": 120.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 80521325,
+   "version": 1,
+   "versionNonce": 184570286,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "COURSE\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK (slug)\nsubject, level\ndisplayName\nactive",
+   "originalText": "COURSE\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK (slug)\nsubject, level\ndisplayName\nactive",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-course",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "label-Teaching record",
+   "type": "text",
+   "x": 440,
+   "y": -50,
+   "width": 300,
+   "height": 30,
+   "angle": 0,
+   "strokeColor": "#495057",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 931247022,
+   "version": 1,
+   "versionNonce": 898017870,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "Teaching record",
+   "originalText": "Teaching record",
+   "fontSize": 24,
+   "fontFamily": 1,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 21,
+   "containerId": null,
+   "lineHeight": 1.25,
+   "autoResize": true
+  },
+  {
+   "id": "box-lesson",
+   "type": "rectangle",
+   "x": 440,
+   "y": 0,
+   "width": 300,
+   "height": 344.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d3f9d8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 150013384,
+   "version": 1,
+   "versionNonce": 516819859,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-lesson",
+     "type": "text"
+    },
+    {
+     "id": "arrow-4-lesson-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-5-lesson-enrolment",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-6-lessonTopic-lesson",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-10-outcome-lesson",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-15-coverageMark-lesson",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-23-assignment-lesson",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-lesson",
+   "type": "text",
+   "x": 452,
+   "y": 12,
+   "width": 276,
+   "height": 320.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 194804717,
+   "version": 1,
+   "versionNonce": 1183364968,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "LESSON\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nstudentID \u2192 student\nenrolmentID \u2192 enrolment\nfileID (Excalidraw file)\ncalendarEventID\nstartAt, endAt, durationMinutes\nstatus planned|done|cancelled|no-show\nsubjectLine\nplan, recap, recapJSON\nhomeworkSet, nextPlan\ntranscriptPath\nbillable\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "originalText": "LESSON\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nstudentID \u2192 student\nenrolmentID \u2192 enrolment\nfileID (Excalidraw file)\ncalendarEventID\nstartAt, endAt, durationMinutes\nstatus planned|done|cancelled|no-show\nsubjectLine\nplan, recap, recapJSON\nhomeworkSet, nextPlan\ntranscriptPath\nbillable\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-lesson",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-lessonTopic",
+   "type": "rectangle",
+   "x": 440,
+   "y": 394.0,
+   "width": 300,
+   "height": 144.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d3f9d8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 911648020,
+   "version": 1,
+   "versionNonce": 126938844,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-lessonTopic",
+     "type": "text"
+    },
+    {
+     "id": "arrow-6-lessonTopic-lesson",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-7-lessonTopic-topic",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-lessonTopic",
+   "type": "text",
+   "x": 452,
+   "y": 406.0,
+   "width": 276,
+   "height": 120.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1775651416,
+   "version": 1,
+   "versionNonce": 1214302568,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "LESSONTOPIC\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nlessonID \u2192 lesson PK\ntopicID \u2192 topic PK\nminutes\nnote",
+   "originalText": "LESSONTOPIC\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nlessonID \u2192 lesson PK\ntopicID \u2192 topic PK\nminutes\nnote",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-lessonTopic",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-outcome",
+   "type": "rectangle",
+   "x": 440,
+   "y": 588.0,
+   "width": 300,
+   "height": 304.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d3f9d8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 265862674,
+   "version": 1,
+   "versionNonce": 2034632751,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-outcome",
+     "type": "text"
+    },
+    {
+     "id": "arrow-8-outcome-question",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-9-outcome-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-10-outcome-lesson",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-outcome",
+   "type": "text",
+   "x": 452,
+   "y": 600.0,
+   "width": 276,
+   "height": 280.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 479402029,
+   "version": 1,
+   "versionNonce": 1354258845,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "OUTCOME\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nquestionID \u2192 question\nstudentID \u2192 student\nlessonID \u2192 lesson\nshownAt\nresult unknown|right|partial|wrong|skipped\nmarksAwarded\nperceivedDifficulty\ntimeSeconds\nnote\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "originalText": "OUTCOME\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nquestionID \u2192 question\nstudentID \u2192 student\nlessonID \u2192 lesson\nshownAt\nresult unknown|right|partial|wrong|skipped\nmarksAwarded\nperceivedDifficulty\ntimeSeconds\nnote\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-outcome",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-topicProgress",
+   "type": "rectangle",
+   "x": 440,
+   "y": 942.0,
+   "width": 300,
+   "height": 204.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d3f9d8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1347402587,
+   "version": 1,
+   "versionNonce": 1251976313,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-topicProgress",
+     "type": "text"
+    },
+    {
+     "id": "arrow-11-topicProgress-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-12-topicProgress-topic",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-topicProgress",
+   "type": "text",
+   "x": 452,
+   "y": 954.0,
+   "width": 276,
+   "height": 180.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 2035189461,
+   "version": 1,
+   "versionNonce": 132847737,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "TOPICPROGRESS\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nstudentID \u2192 student PK\ntopicID \u2192 topic PK\nunderstanding 1..5\nisFocus\nstartedAt, lastRevisedAt\nnotes\nremoteID, updatedAt",
+   "originalText": "TOPICPROGRESS\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nstudentID \u2192 student PK\ntopicID \u2192 topic PK\nunderstanding 1..5\nisFocus\nstartedAt, lastRevisedAt\nnotes\nremoteID, updatedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-topicProgress",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-coverageMark",
+   "type": "rectangle",
+   "x": 440,
+   "y": 1196.0,
+   "width": 300,
+   "height": 184.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d3f9d8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1239319144,
+   "version": 1,
+   "versionNonce": 1257440635,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-coverageMark",
+     "type": "text"
+    },
+    {
+     "id": "arrow-13-coverageMark-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-14-coverageMark-specPoint",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-15-coverageMark-lesson",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-coverageMark",
+   "type": "text",
+   "x": 452,
+   "y": 1208.0,
+   "width": 276,
+   "height": 160.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 851864843,
+   "version": 1,
+   "versionNonce": 106492239,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "COVERAGEMARK\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nstudentID \u2192 student PK\nspecPointID \u2192 specPoint PK\nstatus covered|secure|needs-work\nmarkedAt\nlessonID \u2192 lesson\nnote",
+   "originalText": "COVERAGEMARK\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nstudentID \u2192 student PK\nspecPointID \u2192 specPoint PK\nstatus covered|secure|needs-work\nmarkedAt\nlessonID \u2192 lesson\nnote",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-coverageMark",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "label-Question bank & homework",
+   "type": "text",
+   "x": 880,
+   "y": -50,
+   "width": 300,
+   "height": 30,
+   "angle": 0,
+   "strokeColor": "#495057",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 2096491879,
+   "version": 1,
+   "versionNonce": 474769609,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "Question bank & homework",
+   "originalText": "Question bank & homework",
+   "fontSize": 24,
+   "fontFamily": 1,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 21,
+   "containerId": null,
+   "lineHeight": 1.25,
+   "autoResize": true
+  },
+  {
+   "id": "box-question",
+   "type": "rectangle",
+   "x": 880,
+   "y": 0,
+   "width": 300,
+   "height": 304.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 100035545,
+   "version": 1,
+   "versionNonce": 1195428768,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-question",
+     "type": "text"
+    },
+    {
+     "id": "arrow-8-outcome-question",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-16-question-pastPaperQuestion",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-17-question-importBatch",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-18-questionTopic-question",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-20-questionSpecPoint-question",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-27-assignmentQuestion-question",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-question",
+   "type": "text",
+   "x": 892,
+   "y": 12,
+   "width": 276,
+   "height": 280.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1843546982,
+   "version": 1,
+   "versionNonce": 285990743,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "QUESTION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\ntitle, source\nsubject, level, board, tier\nmarks, difficulty\nnotes\nanswer, workedSolution\nimageHash (dHash)\npastPaperQuestionID \u2192 pastPaperQuestion\nimportBatchID \u2192 importBatch\nfreeTags JSON\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "originalText": "QUESTION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\ntitle, source\nsubject, level, board, tier\nmarks, difficulty\nnotes\nanswer, workedSolution\nimageHash (dHash)\npastPaperQuestionID \u2192 pastPaperQuestion\nimportBatchID \u2192 importBatch\nfreeTags JSON\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-question",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-questionTopic",
+   "type": "rectangle",
+   "x": 880,
+   "y": 354.0,
+   "width": 300,
+   "height": 104.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 621931212,
+   "version": 1,
+   "versionNonce": 900094242,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-questionTopic",
+     "type": "text"
+    },
+    {
+     "id": "arrow-18-questionTopic-question",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-19-questionTopic-topic",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-questionTopic",
+   "type": "text",
+   "x": 892,
+   "y": 366.0,
+   "width": 276,
+   "height": 80.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 309785427,
+   "version": 1,
+   "versionNonce": 1161114103,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "QUESTIONTOPIC\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nquestionID \u2192 question PK\ntopicID \u2192 topic PK",
+   "originalText": "QUESTIONTOPIC\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nquestionID \u2192 question PK\ntopicID \u2192 topic PK",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-questionTopic",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-questionSpecPoint",
+   "type": "rectangle",
+   "x": 880,
+   "y": 508.0,
+   "width": 300,
+   "height": 104.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 252956897,
+   "version": 1,
+   "versionNonce": 1226027821,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-questionSpecPoint",
+     "type": "text"
+    },
+    {
+     "id": "arrow-20-questionSpecPoint-question",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-21-questionSpecPoint-specPoint",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-questionSpecPoint",
+   "type": "text",
+   "x": 892,
+   "y": 520.0,
+   "width": 276,
+   "height": 80.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 662459677,
+   "version": 1,
+   "versionNonce": 1203143341,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "QUESTIONSPECPOINT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nquestionID \u2192 question PK\nspecPointID \u2192 specPoint PK",
+   "originalText": "QUESTIONSPECPOINT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nquestionID \u2192 question PK\nspecPointID \u2192 specPoint PK",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-questionSpecPoint",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-assignment",
+   "type": "rectangle",
+   "x": 880,
+   "y": 662.0,
+   "width": 300,
+   "height": 344.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1752618008,
+   "version": 1,
+   "versionNonce": 1464589643,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-assignment",
+     "type": "text"
+    },
+    {
+     "id": "arrow-22-assignment-student",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-23-assignment-lesson",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-24-assignment-deck",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-25-assignment-pastPaper",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-26-assignmentQuestion-assignment",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-assignment",
+   "type": "text",
+   "x": 892,
+   "y": 674.0,
+   "width": 276,
+   "height": 320.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 388106950,
+   "version": 1,
+   "versionNonce": 221310450,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "ASSIGNMENT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nstudentID \u2192 student\nlessonID \u2192 lesson\nkind deck|paper|questions|worksheet|other\ntitle\ndeckID \u2192 deck\npastPaperID \u2192 pastPaper\nresourcePath\nassignedAt, dueAt, completedAt\nstatus set|done|overdue|dropped\nscore, total, grade\nnotes\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "originalText": "ASSIGNMENT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nstudentID \u2192 student\nlessonID \u2192 lesson\nkind deck|paper|questions|worksheet|other\ntitle\ndeckID \u2192 deck\npastPaperID \u2192 pastPaper\nresourcePath\nassignedAt, dueAt, completedAt\nstatus set|done|overdue|dropped\nscore, total, grade\nnotes\nremoteID\ncreatedAt, updatedAt, deletedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-assignment",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-assignmentQuestion",
+   "type": "rectangle",
+   "x": 880,
+   "y": 1056.0,
+   "width": 300,
+   "height": 124.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1248976841,
+   "version": 1,
+   "versionNonce": 1226652085,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-assignmentQuestion",
+     "type": "text"
+    },
+    {
+     "id": "arrow-26-assignmentQuestion-assignment",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-27-assignmentQuestion-question",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-assignmentQuestion",
+   "type": "text",
+   "x": 892,
+   "y": 1068.0,
+   "width": 276,
+   "height": 100.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1372056228,
+   "version": 1,
+   "versionNonce": 403449955,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "ASSIGNMENTQUESTION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nassignmentID \u2192 assignment PK\nquestionID \u2192 question PK\nsortOrder",
+   "originalText": "ASSIGNMENTQUESTION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nassignmentID \u2192 assignment PK\nquestionID \u2192 question PK\nsortOrder",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-assignmentQuestion",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-deck",
+   "type": "rectangle",
+   "x": 880,
+   "y": 1230.0,
+   "width": 300,
+   "height": 204.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 799717634,
+   "version": 1,
+   "versionNonce": 209230570,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-deck",
+     "type": "text"
+    },
+    {
+     "id": "arrow-24-assignment-deck",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-deck",
+   "type": "text",
+   "x": 892,
+   "y": 1242.0,
+   "width": 276,
+   "height": 180.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1176272277,
+   "version": 1,
+   "versionNonce": 1529246226,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "DECK\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nslug UNIQUE\ntitle, deckType\ncardCount\nsubject, level, board\nlocalPath\nremoteID, updatedAt",
+   "originalText": "DECK\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nslug UNIQUE\ntitle, deckType\ncardCount\nsubject, level, board\nlocalPath\nremoteID, updatedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-deck",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "label-Curriculum reference",
+   "type": "text",
+   "x": 1320,
+   "y": -50,
+   "width": 300,
+   "height": 30,
+   "angle": 0,
+   "strokeColor": "#495057",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 134838300,
+   "version": 1,
+   "versionNonce": 1211971682,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "Curriculum reference",
+   "originalText": "Curriculum reference",
+   "fontSize": 24,
+   "fontFamily": 1,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 21,
+   "containerId": null,
+   "lineHeight": 1.25,
+   "autoResize": true
+  },
+  {
+   "id": "box-topic",
+   "type": "rectangle",
+   "x": 1320,
+   "y": 0,
+   "width": 300,
+   "height": 204.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#e5dbff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 127992539,
+   "version": 1,
+   "versionNonce": 1329312985,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-topic",
+     "type": "text"
+    },
+    {
+     "id": "arrow-7-lessonTopic-topic",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-12-topicProgress-topic",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-19-questionTopic-topic",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-28-topic-topic",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-28-topic-topic",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-34-specPointTopic-topic",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-topic",
+   "type": "text",
+   "x": 1332,
+   "y": 12,
+   "width": 276,
+   "height": 180.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 442292976,
+   "version": 1,
+   "versionNonce": 1066042003,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "TOPIC\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK (slug)\nparentID \u2192 topic\nsubject, level\nname\naliases JSON\nsortOrder\nisBuiltin",
+   "originalText": "TOPIC\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK (slug)\nparentID \u2192 topic\nsubject, level\nname\naliases JSON\nsortOrder\nisBuiltin",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-topic",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-specification",
+   "type": "rectangle",
+   "x": 1320,
+   "y": 254.0,
+   "width": 300,
+   "height": 184.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#e5dbff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1461147819,
+   "version": 1,
+   "versionNonce": 1141860530,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-specification",
+     "type": "text"
+    },
+    {
+     "id": "arrow-3-enrolment-specification",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-29-specification-importBatch",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-30-specSection-specification",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-31-specPoint-specification",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-specification",
+   "type": "text",
+   "x": 1332,
+   "y": 266.0,
+   "width": 276,
+   "height": 160.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 918247488,
+   "version": 1,
+   "versionNonce": 1669086093,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "SPECIFICATION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nsubject, level, board\ntitle, code\nsourceFileName\nimportedAt\nimportBatchID \u2192 importBatch",
+   "originalText": "SPECIFICATION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nsubject, level, board\ntitle, code\nsourceFileName\nimportedAt\nimportBatchID \u2192 importBatch",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-specification",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-specSection",
+   "type": "rectangle",
+   "x": 1320,
+   "y": 488.0,
+   "width": 300,
+   "height": 144.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#e5dbff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 674625912,
+   "version": 1,
+   "versionNonce": 999872393,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-specSection",
+     "type": "text"
+    },
+    {
+     "id": "arrow-30-specSection-specification",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-32-specPoint-specSection",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-specSection",
+   "type": "text",
+   "x": 1332,
+   "y": 500.0,
+   "width": 276,
+   "height": 120.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1257484521,
+   "version": 1,
+   "versionNonce": 1983075268,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "SPECSECTION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nspecificationID \u2192 specification\ncode, title\nsortOrder",
+   "originalText": "SPECSECTION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nspecificationID \u2192 specification\ncode, title\nsortOrder",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-specSection",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-specPoint",
+   "type": "rectangle",
+   "x": 1320,
+   "y": 682.0,
+   "width": 300,
+   "height": 184.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#e5dbff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 973206041,
+   "version": 1,
+   "versionNonce": 776492205,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-specPoint",
+     "type": "text"
+    },
+    {
+     "id": "arrow-14-coverageMark-specPoint",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-21-questionSpecPoint-specPoint",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-31-specPoint-specification",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-32-specPoint-specSection",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-33-specPointTopic-specPoint",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-specPoint",
+   "type": "text",
+   "x": 1332,
+   "y": 694.0,
+   "width": 276,
+   "height": 160.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 643744727,
+   "version": 1,
+   "versionNonce": 533492028,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "SPECPOINT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nspecificationID \u2192 specification\nsectionID \u2192 specSection\ncode, text\ntier\nsortOrder",
+   "originalText": "SPECPOINT\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nspecificationID \u2192 specification\nsectionID \u2192 specSection\ncode, text\ntier\nsortOrder",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-specPoint",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-specPointTopic",
+   "type": "rectangle",
+   "x": 1320,
+   "y": 916.0,
+   "width": 300,
+   "height": 104.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#e5dbff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1705916948,
+   "version": 1,
+   "versionNonce": 386046158,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-specPointTopic",
+     "type": "text"
+    },
+    {
+     "id": "arrow-33-specPointTopic-specPoint",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-34-specPointTopic-topic",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-specPointTopic",
+   "type": "text",
+   "x": 1332,
+   "y": 928.0,
+   "width": 276,
+   "height": 80.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1501079115,
+   "version": 1,
+   "versionNonce": 1674671377,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "SPECPOINTTOPIC\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nspecPointID \u2192 specPoint PK\ntopicID \u2192 topic PK",
+   "originalText": "SPECPOINTTOPIC\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nspecPointID \u2192 specPoint PK\ntopicID \u2192 topic PK",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-specPointTopic",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "label-Past papers & housekeeping",
+   "type": "text",
+   "x": 1760,
+   "y": -50,
+   "width": 300,
+   "height": 30,
+   "angle": 0,
+   "strokeColor": "#495057",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 524193278,
+   "version": 1,
+   "versionNonce": 175782304,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "Past papers & housekeeping",
+   "originalText": "Past papers & housekeeping",
+   "fontSize": 24,
+   "fontFamily": 1,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 21,
+   "containerId": null,
+   "lineHeight": 1.25,
+   "autoResize": true
+  },
+  {
+   "id": "box-pastPaper",
+   "type": "rectangle",
+   "x": 1760,
+   "y": 0,
+   "width": 300,
+   "height": 244.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffe8cc",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1233565528,
+   "version": 1,
+   "versionNonce": 644780075,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-pastPaper",
+     "type": "text"
+    },
+    {
+     "id": "arrow-25-assignment-pastPaper",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-35-pastPaperQuestion-pastPaper",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-36-pastPaper-importBatch",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-pastPaper",
+   "type": "text",
+   "x": 1772,
+   "y": 12,
+   "width": 276,
+   "height": 220.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1127850897,
+   "version": 1,
+   "versionNonce": 1063254276,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "PASTPAPER\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK (slug)\nboard, level, tier, subject\nseries\npaperName\ncalculator\ntotalMarks, timeMinutes\nquestionPaperPath\nmarkSchemePath\nimportBatchID \u2192 importBatch",
+   "originalText": "PASTPAPER\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK (slug)\nboard, level, tier, subject\nseries\npaperName\ncalculator\ntotalMarks, timeMinutes\nquestionPaperPath\nmarkSchemePath\nimportBatchID \u2192 importBatch",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-pastPaper",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-pastPaperQuestion",
+   "type": "rectangle",
+   "x": 1760,
+   "y": 294.0,
+   "width": 300,
+   "height": 224.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffe8cc",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1879343460,
+   "version": 1,
+   "versionNonce": 737608423,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-pastPaperQuestion",
+     "type": "text"
+    },
+    {
+     "id": "arrow-16-question-pastPaperQuestion",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-35-pastPaperQuestion-pastPaper",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-pastPaperQuestion",
+   "type": "text",
+   "x": 1772,
+   "y": 306.0,
+   "width": 276,
+   "height": 200.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 1566471825,
+   "version": 1,
+   "versionNonce": 963864094,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "PASTPAPERQUESTION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\npaperID \u2192 pastPaper\nnumber, part\nmarks\nquestionText\nanswer, markScheme\nmarkSchemeJSON\npageStart, pageEnd",
+   "originalText": "PASTPAPERQUESTION\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\npaperID \u2192 pastPaper\nnumber, part\nmarks\nquestionText\nanswer, markScheme\nmarkSchemeJSON\npageStart, pageEnd",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-pastPaperQuestion",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-importBatch",
+   "type": "rectangle",
+   "x": 1760,
+   "y": 568.0,
+   "width": 300,
+   "height": 184.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffe8cc",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 618341637,
+   "version": 1,
+   "versionNonce": 1307729535,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-importBatch",
+     "type": "text"
+    },
+    {
+     "id": "arrow-17-question-importBatch",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-29-specification-importBatch",
+     "type": "arrow"
+    },
+    {
+     "id": "arrow-36-pastPaper-importBatch",
+     "type": "arrow"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-importBatch",
+   "type": "text",
+   "x": 1772,
+   "y": 580.0,
+   "width": 276,
+   "height": 160.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 2104909469,
+   "version": 1,
+   "versionNonce": 157197672,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "IMPORTBATCH\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nkind spec|paper|questions|legacy|remote\nsourceName\nimportedAt\nitemCount\nnotes",
+   "originalText": "IMPORTBATCH\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nid PK\nkind spec|paper|questions|legacy|remote\nsourceName\nimportedAt\nitemCount\nnotes",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-importBatch",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-syncCursor",
+   "type": "rectangle",
+   "x": 1760,
+   "y": 802.0,
+   "width": 300,
+   "height": 124.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffe8cc",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 253544329,
+   "version": 1,
+   "versionNonce": 1099367391,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-syncCursor",
+     "type": "text"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-syncCursor",
+   "type": "text",
+   "x": 1772,
+   "y": 814.0,
+   "width": 276,
+   "height": 100.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 897911925,
+   "version": 1,
+   "versionNonce": 354253419,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "SYNCCURSOR\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nremoteTable PK\nlastPulledAt\nlastPushedAt",
+   "originalText": "SYNCCURSOR\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nremoteTable PK\nlastPulledAt\nlastPushedAt",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-syncCursor",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "box-meta",
+   "type": "rectangle",
+   "x": 1760,
+   "y": 976.0,
+   "width": 300,
+   "height": 104.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffe8cc",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1625947776,
+   "version": 1,
+   "versionNonce": 734559256,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "id": "txt-meta",
+     "type": "text"
+    }
+   ],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "txt-meta",
+   "type": "text",
+   "x": 1772,
+   "y": 988.0,
+   "width": 276,
+   "height": 80.0,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": null,
+   "seed": 326384299,
+   "version": 1,
+   "versionNonce": 2004182514,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "text": "META\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nkey PK\nvalue",
+   "originalText": "META\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nkey PK\nvalue",
+   "fontSize": 16,
+   "fontFamily": 3,
+   "textAlign": "left",
+   "verticalAlign": "top",
+   "baseline": 16,
+   "containerId": "box-meta",
+   "lineHeight": 1.25,
+   "autoResize": false
+  },
+  {
+   "id": "arrow-0-studentContact-student",
+   "type": "arrow",
+   "x": 126.0,
+   "y": 354.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1050040258,
+   "version": 1,
+   "versionNonce": 905590325,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-studentContact",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-student",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-1-enrolment-student",
+   "type": "arrow",
+   "x": 138.0,
+   "y": 628.0,
+   "width": 0.0,
+   "height": 324.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 84196940,
+   "version": 1,
+   "versionNonce": 2065920251,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -324.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-enrolment",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-student",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-2-enrolment-course",
+   "type": "arrow",
+   "x": 150.0,
+   "y": 932.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1434982633,
+   "version": 1,
+   "versionNonce": 166688708,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-enrolment",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-course",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-3-enrolment-specification",
+   "type": "arrow",
+   "x": 300,
+   "y": 792.0,
+   "width": 1020,
+   "height": 434.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1641903440,
+   "version": 1,
+   "versionNonce": 1198458558,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     1020,
+     -434.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-enrolment",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-specification",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-4-lesson-student",
+   "type": "arrow",
+   "x": 440,
+   "y": 196.0,
+   "width": 140,
+   "height": 20.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1230563834,
+   "version": 1,
+   "versionNonce": 1694566832,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -140,
+     -20.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-lesson",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-student",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-5-lesson-enrolment",
+   "type": "arrow",
+   "x": 440,
+   "y": 148.0,
+   "width": 140,
+   "height": 608.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1880074284,
+   "version": 1,
+   "versionNonce": 1757400422,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -140,
+     608.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-lesson",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-enrolment",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-6-lessonTopic-lesson",
+   "type": "arrow",
+   "x": 578.0,
+   "y": 394.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 673767655,
+   "version": 1,
+   "versionNonce": 730407202,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-lessonTopic",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-lesson",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-7-lessonTopic-topic",
+   "type": "arrow",
+   "x": 740,
+   "y": 466.0,
+   "width": 580,
+   "height": 364.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1493135432,
+   "version": 1,
+   "versionNonce": 752002366,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     580,
+     -364.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-lessonTopic",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-topic",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-8-outcome-question",
+   "type": "arrow",
+   "x": 740,
+   "y": 752.0,
+   "width": 140,
+   "height": 588.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1276399591,
+   "version": 1,
+   "versionNonce": 1066600998,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     140,
+     -588.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-outcome",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-question",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-9-outcome-student",
+   "type": "arrow",
+   "x": 440,
+   "y": 764.0,
+   "width": 140,
+   "height": 588.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1245315470,
+   "version": 1,
+   "versionNonce": 1711312495,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -140,
+     -588.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-outcome",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-student",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-10-outcome-lesson",
+   "type": "arrow",
+   "x": 566.0,
+   "y": 588.0,
+   "width": 0.0,
+   "height": 244.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 979693494,
+   "version": 1,
+   "versionNonce": 147667305,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -244.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-outcome",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-lesson",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-11-topicProgress-student",
+   "type": "arrow",
+   "x": 440,
+   "y": 1032.0,
+   "width": 140,
+   "height": 892.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1803817088,
+   "version": 1,
+   "versionNonce": 200995868,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -140,
+     -892.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-topicProgress",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-student",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-12-topicProgress-topic",
+   "type": "arrow",
+   "x": 740,
+   "y": 1044.0,
+   "width": 580,
+   "height": 942.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 2028687212,
+   "version": 1,
+   "versionNonce": 579690177,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     580,
+     -942.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-topicProgress",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-topic",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-13-coverageMark-student",
+   "type": "arrow",
+   "x": 440,
+   "y": 1300.0,
+   "width": 140,
+   "height": 1136.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1018118421,
+   "version": 1,
+   "versionNonce": 1496886435,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -140,
+     -1136.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-coverageMark",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-student",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-14-coverageMark-specPoint",
+   "type": "arrow",
+   "x": 740,
+   "y": 1312.0,
+   "width": 580,
+   "height": 514.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1426256014,
+   "version": 1,
+   "versionNonce": 139586394,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     580,
+     -514.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-coverageMark",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-specPoint",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-15-coverageMark-lesson",
+   "type": "arrow",
+   "x": 566.0,
+   "y": 1196.0,
+   "width": 0.0,
+   "height": 852.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 130286598,
+   "version": 1,
+   "versionNonce": 1570152712,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -852.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-coverageMark",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-lesson",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-16-question-pastPaperQuestion",
+   "type": "arrow",
+   "x": 1180,
+   "y": 140.0,
+   "width": 580,
+   "height": 254.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1506442652,
+   "version": 1,
+   "versionNonce": 664876774,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     580,
+     254.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-question",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-pastPaperQuestion",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-17-question-importBatch",
+   "type": "arrow",
+   "x": 1180,
+   "y": 152.0,
+   "width": 580,
+   "height": 508.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1389698625,
+   "version": 1,
+   "versionNonce": 1241130074,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     580,
+     508.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-question",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-importBatch",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-18-questionTopic-question",
+   "type": "arrow",
+   "x": 1042.0,
+   "y": 354.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 2132657286,
+   "version": 1,
+   "versionNonce": 1462945690,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-questionTopic",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-question",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-19-questionTopic-topic",
+   "type": "arrow",
+   "x": 1180,
+   "y": 430.0,
+   "width": 140,
+   "height": 304.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1765070035,
+   "version": 1,
+   "versionNonce": 957006265,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     140,
+     -304.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-questionTopic",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-topic",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-20-questionSpecPoint-question",
+   "type": "arrow",
+   "x": 1006.0,
+   "y": 508.0,
+   "width": 0.0,
+   "height": 204.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 611164248,
+   "version": 1,
+   "versionNonce": 1538946474,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -204.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-questionSpecPoint",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-question",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-21-questionSpecPoint-specPoint",
+   "type": "arrow",
+   "x": 1180,
+   "y": 548.0,
+   "width": 140,
+   "height": 214.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 828480808,
+   "version": 1,
+   "versionNonce": 1904904517,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     140,
+     214.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-questionSpecPoint",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-specPoint",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-22-assignment-student",
+   "type": "arrow",
+   "x": 880,
+   "y": 834.0,
+   "width": 580,
+   "height": 682.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1435920784,
+   "version": 1,
+   "versionNonce": 745188127,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -580,
+     -682.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-assignment",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-student",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-23-assignment-lesson",
+   "type": "arrow",
+   "x": 880,
+   "y": 846.0,
+   "width": 140,
+   "height": 662.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 48453508,
+   "version": 1,
+   "versionNonce": 2020027419,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -140,
+     -662.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-assignment",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-lesson",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-24-assignment-deck",
+   "type": "arrow",
+   "x": 1054.0,
+   "y": 1006.0,
+   "width": 0.0,
+   "height": 224.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 991483082,
+   "version": 1,
+   "versionNonce": 763353365,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     224.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-assignment",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-deck",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-25-assignment-pastPaper",
+   "type": "arrow",
+   "x": 1180,
+   "y": 810.0,
+   "width": 580,
+   "height": 712.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 360881140,
+   "version": 1,
+   "versionNonce": 1311939741,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     580,
+     -712.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-assignment",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-pastPaper",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-26-assignmentQuestion-assignment",
+   "type": "arrow",
+   "x": 1018.0,
+   "y": 1056.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 251461309,
+   "version": 1,
+   "versionNonce": 1060197638,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-assignmentQuestion",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-assignment",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-27-assignmentQuestion-question",
+   "type": "arrow",
+   "x": 1030.0,
+   "y": 1056.0,
+   "width": 0.0,
+   "height": 752.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 126603649,
+   "version": 1,
+   "versionNonce": 468597630,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -752.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-assignmentQuestion",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-question",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-28-topic-topic",
+   "type": "arrow",
+   "x": 1620,
+   "y": 30,
+   "width": 0,
+   "height": 40,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1649767777,
+   "version": 1,
+   "versionNonce": 617255373,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     40,
+     0
+    ],
+    [
+     40,
+     40
+    ],
+    [
+     0,
+     40
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-topic",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-topic",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-29-specification-importBatch",
+   "type": "arrow",
+   "x": 1620,
+   "y": 370.0,
+   "width": 140,
+   "height": 314.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 277756008,
+   "version": 1,
+   "versionNonce": 1585623284,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     140,
+     314.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-specification",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-importBatch",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-30-specSection-specification",
+   "type": "arrow",
+   "x": 1446.0,
+   "y": 488.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 531748802,
+   "version": 1,
+   "versionNonce": 854478761,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-specSection",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-specification",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-31-specPoint-specification",
+   "type": "arrow",
+   "x": 1458.0,
+   "y": 682.0,
+   "width": 0.0,
+   "height": 244.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 839558095,
+   "version": 1,
+   "versionNonce": 1968847850,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -244.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-specPoint",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-specification",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-32-specPoint-specSection",
+   "type": "arrow",
+   "x": 1470.0,
+   "y": 682.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1871364441,
+   "version": 1,
+   "versionNonce": 1066240031,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-specPoint",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-specSection",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-33-specPointTopic-specPoint",
+   "type": "arrow",
+   "x": 1482.0,
+   "y": 916.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 173047028,
+   "version": 1,
+   "versionNonce": 357268878,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-specPointTopic",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-specPoint",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-34-specPointTopic-topic",
+   "type": "arrow",
+   "x": 1494.0,
+   "y": 916.0,
+   "width": 0.0,
+   "height": 712.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 964622594,
+   "version": 1,
+   "versionNonce": 862524476,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -712.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-specPointTopic",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-topic",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-35-pastPaperQuestion-pastPaper",
+   "type": "arrow",
+   "x": 1886.0,
+   "y": 294.0,
+   "width": 0.0,
+   "height": 50.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1179913225,
+   "version": 1,
+   "versionNonce": 596654992,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     -50.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-pastPaperQuestion",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-pastPaper",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "arrow-36-pastPaper-importBatch",
+   "type": "arrow",
+   "x": 1898.0,
+   "y": 244.0,
+   "width": 0.0,
+   "height": 324.0,
+   "angle": 0,
+   "strokeColor": "#868e96",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 0,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "index": null,
+   "roundness": {
+    "type": 2
+   },
+   "seed": 1897052333,
+   "version": 1,
+   "versionNonce": 294046656,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1791392165836,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     324.0
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "box-pastPaper",
+    "focus": 0,
+    "gap": 2
+   },
+   "endBinding": {
+    "elementId": "box-importBatch",
+    "focus": 0,
+    "gap": 2
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  }
+ ],
+ "appState": {
+  "gridSize": 20,
+  "viewBackgroundColor": "#ffffff"
+ },
+ "files": {}
+}
