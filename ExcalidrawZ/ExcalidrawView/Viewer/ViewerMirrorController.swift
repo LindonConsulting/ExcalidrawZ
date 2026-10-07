@@ -36,12 +36,11 @@ final class ViewerMirrorController: ObservableObject {
         }
     }
 
-    /// Sharing to browsers on the local network. Off at launch unless
-    /// `startsNetworkSharingAtLaunch` is on: the canvas leaves the machine,
-    /// so it stays opt-in.
+    /// Sharing to browsers on the local network. Starts at launch while
+    /// `startsNetworkSharingAtLaunch` is on (the default), so a kiosk pointed
+    /// at the link comes up on its own.
     @Published private(set) var isNetworkSharingEnabled = false
-    /// Turn sharing on as soon as the app starts, so a kiosk pointed at the
-    /// link comes up without a visit to this window.
+    /// Turn sharing on as soon as the app starts. On by default.
     @Published var startsNetworkSharingAtLaunch: Bool {
         didSet {
             UserDefaults.standard.set(startsNetworkSharingAtLaunch, forKey: Self.autoStartDefaultsKey)
@@ -62,7 +61,7 @@ final class ViewerMirrorController: ObservableObject {
     private var networkServerTask: Task<Void, Never>?
     private init() {
         isFollowingCamera = UserDefaults.standard.object(forKey: Self.followDefaultsKey) as? Bool ?? true
-        startsNetworkSharingAtLaunch = UserDefaults.standard.bool(forKey: Self.autoStartDefaultsKey)
+        startsNetworkSharingAtLaunch = UserDefaults.standard.object(forKey: Self.autoStartDefaultsKey) as? Bool ?? true
         keyWindowCancellable = NotificationCenter.default
             .publisher(for: NSWindow.didBecomeKeyNotification)
             .compactMap { $0.object as? NSWindow }
