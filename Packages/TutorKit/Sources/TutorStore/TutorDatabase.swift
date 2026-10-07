@@ -141,6 +141,18 @@ public final class TutorDatabase: Sendable {
                 t.add(column: "specificationID", .blob).references("specification", onDelete: .setNull)
             }
         }
+        migrator.registerMigration("v3-remote-profile") { db in
+            try db.alter(table: "student") { t in
+                t.add(column: "remoteID", .blob)
+                t.add(column: "yearGroup", .text).notNull().defaults(to: "")
+                t.add(column: "management", .text).notNull().defaults(to: "")
+                t.add(column: "parentName", .text).notNull().defaults(to: "")
+                t.add(column: "parentContact", .text).notNull().defaults(to: "")
+                t.add(column: "rapportNotes", .text).notNull().defaults(to: "")
+                t.add(column: "remoteSyncedAt", .datetime)
+            }
+            try db.create(index: "student_remote", on: "student", columns: ["remoteID"])
+        }
         return migrator
     }
 }

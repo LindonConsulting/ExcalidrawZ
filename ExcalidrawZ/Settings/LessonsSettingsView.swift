@@ -8,6 +8,7 @@
 import SwiftUI
 import TutorAI
 import TutorStore
+import TutorSync
 import UniformTypeIdentifiers
 import ChocofordUI
 
@@ -21,6 +22,10 @@ struct LessonsSettingsView: View {
     @State private var patternSample = "Frankie (CMT) - Maths GCSE"
     @State private var appleAvailability = "Checking…"
     @ObservedObject private var tutorKit = TutorKitContainer.shared
+    @State private var supabaseURL = TutorSyncSettings.projectURL
+    @State private var supabaseKeyDraft = ""
+    @State private var hasSupabaseKey = TutorSyncSettings.hasKey()
+    @State private var syncTestResult: String?
     @State private var isBackupDestinationPresented = false
     @State private var isRestoreSourcePresented = false
     @State private var isRestoreConfirmPresented = false
@@ -94,6 +99,31 @@ struct LessonsSettingsView: View {
             Text("Recap")
         } footer: {
             Text("Automatic prefers the on-device Apple model when available, then the Anthropic API. The file is still created when no backend is available.")
+                .foregroundStyle(.secondary)
+        }
+
+        Section {
+            TextField("Project URL", text: $supabaseURL)
+                .font(.body.monospaced())
+                .onSubmit { TutorSyncSettings.projectURL = supabaseURL }
+            SecureField(hasSupabaseKey ? "Service role key saved – enter a new one to replace it" : "Service role key", text: $supabaseKeyDraft)
+                .onSubmit(saveSupabaseKey)
+            HStack {
+                Button("Save key", action: saveSupabaseKey).disabled(supabaseKeyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                if hasSupabaseKey {
+                    Button("Remove key") { try? TutorSyncSettings.removeKey(); hasSupabaseKey = false }
+                    Button("Test connection") { Task { await testSupabase() } }
+                    Button("Sync now") { Task { await tutorKit.syncFromSupabase() } }.disabled(tutorKit.isSyncing)
+                }
+                Spacer()
+                Text(hasSupabaseKey ? "Key stored in Keychain" : "No key stored").foregroundStyle(.secondary).font(.callout)
+            }
+            if let syncTestResult { Text(syncTestResult).font(.callout).foregroundStyle(.secondary) }
+            if let message = tutorKit.lastSyncMessage { Text(message).font(.callout).foregroundStyle(.secondary) }
+        } header: {
+            Text("ConwyMaths student profiles (Supabase)")
+        } footer: {
+            Text("Profiles (enrolment, year group, parent details, deck assignments) are pulled from the ConwyMaths database and matched to calendar students by name. The service role key stays in this Mac's Keychain.")
                 .foregroundStyle(.secondary)
         }
 
@@ -173,6 +203,27 @@ struct LessonsSettingsView: View {
             hasStoredKey = AnthropicAPIKeyStore.hasKey()
         } catch {
             alertToast(error)
+        }
+    }
+
+    private func saveSupabaseKey() {
+        do {
+            TutorSyncSettings.projectURL = supabaseURL
+            try TutorSyncSettings.saveKey(supabaseKeyDraft)
+            supabaseKeyDraft = ""
+            hasSupabaseKey = TutorSyncSettings.hasKey()
+        } catch {
+            alertToast(error)
+        }
+    }
+
+    private func testSupabase() async {
+        do {
+            TutorSyncSettings.projectURL = supabaseURL
+            let count = try await TutorSyncSettings.makeClient().ping()
+            syncTestResult = "OK: \(count) students visible."
+        } catch {
+            syncTestResult = "Failed: \(error.localizedDescription)"
         }
     }
 

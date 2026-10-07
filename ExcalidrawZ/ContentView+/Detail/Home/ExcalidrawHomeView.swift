@@ -113,8 +113,14 @@ struct ExcalidrawHomeView: View {
             
             switch lastHomeType {
                 case .home:
-                        // Home View
-                        HomeView()
+                        // Home View (or the Students page)
+                        SwiftUI.Group {
+                            if fileState.showsStudentsPage {
+                                StudentsPage()
+                            } else {
+                                HomeView()
+                            }
+                        }
                             .background {
                                 if #available(macOS 14.0, iOS 17.0, *) {
                                     Rectangle()

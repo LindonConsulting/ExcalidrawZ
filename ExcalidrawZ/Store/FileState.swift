@@ -51,6 +51,9 @@ final class FileState: ObservableObject {
         }
     }
     
+    /// Shows the Students page in place of Home (sidebar › Students).
+    @Published var showsStudentsPage = false
+
     @Published var currentActiveGroup: ActiveGroup? {
         didSet {
             if shouldRestoreActiveGroupAfterBlockedSwitch(from: oldValue) {

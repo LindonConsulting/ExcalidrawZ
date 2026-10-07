@@ -13,6 +13,7 @@ import os
 import TutorModels
 import TutorStore
 import TutorRanking
+import TutorSync
 
 @MainActor
 final class TutorKitContainer: ObservableObject {
@@ -25,6 +26,12 @@ final class TutorKitContainer: ObservableObject {
     @Published private(set) var topics: [Topic] = []
     @Published private(set) var students: [Student] = []
     @Published private(set) var specifications: [Specification] = []
+    @Published private(set) var roster: [RosterEntry] = []
+    @Published private(set) var rosterError: String?
+    @Published private(set) var isSyncing = false
+    @Published private(set) var lastSyncMessage: String?
+    @Published private(set) var deckAssignmentsByStudent: [UUID: [RemoteDeckAssignment]] = [:]
+    @Published private(set) var remoteDecks: [UUID: RemoteDeck] = [:]
     /// question id → linked spec point ids
     @Published private(set) var specPointsByQuestion: [UUID: [UUID]] = [:]
     private var treeCache: [UUID: SpecificationTree] = [:]
@@ -89,6 +96,73 @@ final class TutorKitContainer: ObservableObject {
     private func db() throws -> TutorDatabase {
         guard let database else { throw ContainerError.notOpen }
         return database
+    }
+
+    // MARK: - Roster (calendar) and Supabase sync
+
+    func refreshRoster() async {
+        do {
+            roster = try await StudentRosterBuilder.build(pattern: LessonDrawPreferences.shared.titlePattern)
+            rosterError = nil
+        } catch {
+            rosterError = error.localizedDescription
+        }
+    }
+
+    func student(named name: String) -> Student? {
+        students.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    /// Pulls students, enrolments and deck assignments from Supabase and merges
+    /// them into local student records (matched by remote id, then by name).
+    func syncFromSupabase() async {
+        guard !isSyncing else { return }
+        isSyncing = true
+        defer { isSyncing = false }
+        do {
+            let client = try TutorSyncSettings.makeClient()
+            async let remoteStudents = client.fetchStudents()
+            async let enrolments = client.fetchEnrolments()
+            async let decks = client.fetchDecks()
+            async let assignments = client.fetchDeckAssignments()
+            let (studentsRemote, enrolmentsRemote, decksRemote, assignmentsRemote) = try await (remoteStudents, enrolments, decks, assignments)
+
+            let enrolmentsByStudent = Dictionary(grouping: enrolmentsRemote, by: \.student_id)
+            var created = 0, updated = 0
+            for remote in studentsRemote {
+                let existing = students.first { $0.remoteID == remote.id } ?? student(named: remote.name)
+                var local = existing ?? Student(name: remote.name)
+                local.remoteID = remote.id
+                local.yearGroup = remote.year_group ?? ""
+                local.management = remote.management ?? ""
+                local.parentName = remote.parent_name ?? ""
+                local.parentContact = [remote.parent_phone, remote.parent_email].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+                local.rapportNotes = remote.rapport_notes ?? ""
+                if local.targetGrade.isEmpty, let grade = remote.target_grade { local.targetGrade = grade }
+                if local.notes.isEmpty, let notes = remote.notes { local.notes = notes }
+                if let enrolment = (enrolmentsByStudent[remote.id] ?? []).first(where: { $0.active ?? true }) ?? enrolmentsByStudent[remote.id]?.first {
+                    let mapped = EnrolmentMapper.map(courseID: enrolment.course_id, board: enrolment.board, tier: enrolment.tier)
+                    local.subject = mapped.subject
+                    local.level = mapped.level
+                    if let board = mapped.board { local.board = board }
+                    if let tier = mapped.tier { local.tier = tier }
+                    if local.specificationID == nil, let board = local.board,
+                       let spec = specifications.first(where: { $0.board == board && $0.level == local.level && $0.subject == local.subject }) {
+                        local.specificationID = spec.id
+                    }
+                }
+                local.remoteSyncedAt = .now
+                try db().save(local)
+                if existing == nil { created += 1 } else { updated += 1 }
+            }
+            remoteDecks = Dictionary(uniqueKeysWithValues: decksRemote.map { ($0.id, $0) })
+            deckAssignmentsByStudent = Dictionary(grouping: assignmentsRemote, by: \.student_id)
+            refresh()
+            lastSyncMessage = "Synced \(studentsRemote.count) students (\(created) new, \(updated) updated) at \(Date().formatted(date: .omitted, time: .shortened))"
+        } catch {
+            lastSyncMessage = "Sync failed: \(error.localizedDescription)"
+            Self.logger.error("sync failed: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Backups

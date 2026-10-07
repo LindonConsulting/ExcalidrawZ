@@ -49,6 +49,7 @@ struct GroupListView: View {
                                 Button {
                                     fileState.setActiveFile(nil)
                                     fileState.setActiveGroupIfNeeded(nil)
+                                    fileState.showsStudentsPage = false
                                 } label: {
                                     HStack {
                                         Image(systemSymbol: .house)
@@ -58,11 +59,29 @@ struct GroupListView: View {
                                 }
                                 .buttonStyle(
                                     .excalidrawSidebarRow(
-                                        isSelected: fileState.currentActiveFile == nil && fileState.currentActiveGroup == nil,
+                                        isSelected: fileState.currentActiveFile == nil && fileState.currentActiveGroup == nil && !fileState.showsStudentsPage,
                                         isMultiSelected: false
                                     )
                                 )
                                 .id("home")
+
+                                Button {
+                                    fileState.setActiveFile(nil)
+                                    fileState.setActiveGroupIfNeeded(nil)
+                                    fileState.showsStudentsPage = true
+                                } label: {
+                                    HStack {
+                                        Image(systemSymbol: .person2)
+                                            .frame(width: 30, alignment: .leading)
+                                        Text("Students")
+                                    }
+                                }
+                                .buttonStyle(
+                                    .excalidrawSidebarRow(
+                                        isSelected: fileState.currentActiveFile == nil && fileState.currentActiveGroup == nil && fileState.showsStudentsPage,
+                                        isMultiSelected: false
+                                    )
+                                )
                                 
                                 Button {
                                     fileState.setActiveFile(nil)

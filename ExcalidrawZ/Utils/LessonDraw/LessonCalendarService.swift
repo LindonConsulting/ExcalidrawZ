@@ -56,6 +56,15 @@ final class LessonCalendarService: @unchecked Sendable {
 
     /// Events happening now (see `currentEvents`); when there are none, the
     /// next upcoming events within `upcomingDays`, earliest first.
+    /// All non-all-day titled events in a date range, earliest first.
+    func events(from start: Date, to end: Date) async throws -> [LessonCalendarEvent] {
+        let predicate = store.predicateForEvents(withStart: start, end: end, calendars: nil)
+        return store.events(matching: predicate)
+            .filter { !$0.isAllDay && !($0.title ?? "").trimmingCharacters(in: .whitespaces).isEmpty }
+            .sorted { $0.startDate < $1.startDate }
+            .map(Self.lessonEvent)
+    }
+
     /// All non-all-day events from now until `days` ahead, earliest first.
     func upcomingEvents(now: Date = .now, days: Int = 7) async throws -> [LessonCalendarEvent] {
         guard try await requestAccess() else { throw LessonCalendarError.accessDenied }
