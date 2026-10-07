@@ -59,7 +59,40 @@ public enum TutorPrompts {
         public var specPoints: [String]?
     }
 
-    /// `specPoints` are "code: text" lines of the chosen specification (may be empty).
+    /// Stable, cacheable context for tagging: the topic list and the specification points.
+    public static func taggingContext(topics: [Topic], specPoints: [(code: String, text: String)]) -> String {
+        var text = "Topic ids available (id (name)):\n" + topics.filter { $0.parentID != nil }.map { "\($0.id) (\($0.name))" }.joined(separator: "; ")
+        if !specPoints.isEmpty {
+            text += "\n\nSpecification points (code: statement):\n" + specPoints.map { "\($0.code): \($0.text)" }.joined(separator: "\n")
+        }
+        return text
+    }
+
+    /// Per-question prompt; expects `taggingContext` to be sent as a cached system block.
+    public static func taggingUser(texts: [String], hasSpecPoints: Bool) -> String {
+        var prompt = "Classify this tutoring question (GCSE or A-Level Maths or Computer Science) for a question bank, using the topic ids and specification points given in the system context."
+        if !texts.isEmpty {
+            prompt += "\n\nText on the canvas:\n" + texts.map { "- \($0)" }.joined(separator: "\n")
+        }
+        prompt += """
+
+
+        Reply with JSON only, no prose, with these keys:
+        {"title": short descriptive title (max 60 chars),
+         "topics": 1-3 topic ids from the list,
+         "subject": "Maths" or "Computer Science",
+         "level": one of \(QualificationLevel.allCases.map(\.rawValue).joined(separator: ", ")) or "" if unknown,
+         "board": one of \(ExamBoard.allCases.map(\.rawValue).joined(separator: ", ")) or "" if unknown,
+         "tier": "Foundation", "Higher" or "" if unknown or not GCSE,
+         "marks": integer total marks if printed on the question, else null,
+         "difficulty": integer 1 (easy) to 5 (hard),
+         "source": paper/year/question reference if visible, else "",
+         "specPoints": \(hasSpecPoints ? "1-4 matching codes from the specification list" : "[]")}
+        """
+        return prompt
+    }
+
+    /// Legacy single-prompt form (no caching). Kept for callers that pass everything in one user turn.
     public static func taggingUser(texts: [String], topics: [Topic], specPoints: [(code: String, text: String)] = []) -> String {
         var prompt = "Classify this tutoring question (GCSE or A-Level Maths or Computer Science) for a question bank."
         if !texts.isEmpty {

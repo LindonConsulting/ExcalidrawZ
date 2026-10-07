@@ -25,8 +25,9 @@ struct QuestionTagSuggester {
     func suggest(thumbnailPNG: Data?, texts: [String]) async throws -> QuestionTagSuggestion {
         var parts: [AnthropicMessagesClient.ContentPart] = []
         if let thumbnailPNG { parts.append(.imagePNG(thumbnailPNG)) }
-        parts.append(.text(TutorPrompts.taggingUser(texts: texts, topics: topics, specPoints: specPoints.map { (code: $0.code, text: $0.text) })))
-        let reply = try await client.complete(system: nil, user: parts)
+        parts.append(.text(TutorPrompts.taggingUser(texts: texts, hasSpecPoints: !specPoints.isEmpty)))
+        let context = TutorPrompts.taggingContext(topics: topics, specPoints: specPoints.map { (code: $0.code, text: $0.text) })
+        let reply = try await client.complete(system: nil, cachedSystem: context, user: parts)
         return try AnthropicMessagesClient.decodeJSONObject(QuestionTagSuggestion.self, from: reply)
     }
 

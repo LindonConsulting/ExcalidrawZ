@@ -158,26 +158,39 @@ struct QuestionBankPastPaperImportSheet: View {
         log = []
         var added: [Question] = []
 
-        // Split and render on a background thread.
+        // Split and render off the main thread, one paper at a time.
         struct Rendered { var question: PastPaperQuestion; var png: Data; var size: CGSize; var paper: String; var tier: Tier? }
         var rendered: [Rendered] = []
-        for url in papers {
+        let paperURLs = papers
+        let fallbackTier = tier
+        total = paperURLs.count
+        progress = 0
+        for url in paperURLs {
+            if Task.isCancelled { log.append("Stopped."); return }
             let paper = url.deletingPathExtension().lastPathComponent
-            let accessed = url.startAccessingSecurityScopedResource()
-            defer { if accessed { url.stopAccessingSecurityScopedResource() } }
-            guard let document = PDFDocument(url: url) else { log.append("\(paper): could not open"); continue }
-            let analysis = PastPaperAnalyzer.analyze(document)
-            if analysis.source == .pagesFallback { log.append("\(paper): no question numbers found in the text layer, using whole pages") }
-            for question in analysis.questions {
-                do {
-                    let image = try PastPaperRenderer.render(question, in: document)
-                    rendered.append(Rendered(question: question, png: image.pngData, size: image.pointSize, paper: paper,
-                                             tier: papers.count > 1 ? Self.guess(path: url.path).tier ?? tier : tier))
-                } catch {
-                    log.append("\(paper) \(question.label): \(error.localizedDescription)")
+            let perFileTier = paperURLs.count > 1 ? Self.guess(path: url.path).tier ?? fallbackTier : fallbackTier
+            let result: (items: [Rendered], messages: [String]) = await Task.detached(priority: .userInitiated) {
+                let accessed = url.startAccessingSecurityScopedResource()
+                defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+                guard let document = PDFDocument(url: url) else { return ([], ["\(paper): could not open"]) }
+                let analysis = PastPaperAnalyzer.analyze(document)
+                var items: [Rendered] = []
+                var messages: [String] = []
+                if analysis.source == .pagesFallback { messages.append("\(paper): no question numbers found in the text layer, using whole pages") }
+                for question in analysis.questions {
+                    do {
+                        let image = try PastPaperRenderer.render(question, in: document)
+                        items.append(Rendered(question: question, png: image.pngData, size: image.pointSize, paper: paper, tier: perFileTier))
+                    } catch {
+                        messages.append("\(paper) \(question.label): \(error.localizedDescription)")
+                    }
                 }
-            }
-            log.append("\(paper): \(analysis.questions.count) questions found")
+                messages.append("\(paper): \(analysis.questions.count) questions found")
+                return (items, messages)
+            }.value
+            rendered += result.items
+            log += result.messages
+            progress += 1
         }
         total = rendered.count
         progress = 0

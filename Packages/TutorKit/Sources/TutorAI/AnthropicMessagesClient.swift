@@ -52,7 +52,9 @@ public struct AnthropicMessagesClient: Sendable {
     }
 
     /// Single-turn request; returns the concatenated text blocks.
-    public func complete(system: String?, user: [ContentPart], session: URLSession = .shared) async throws -> String {
+    /// `cachedSystem` is sent as a system block marked for prompt caching
+    /// (put large, repeated context such as a specification list there).
+    public func complete(system: String?, cachedSystem: String? = nil, user: [ContentPart], session: URLSession = .shared) async throws -> String {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.timeoutInterval = timeout
@@ -68,7 +70,10 @@ public struct AnthropicMessagesClient: Sendable {
             "fallbacks": "default",
             "messages": [["role": "user", "content": user.map(\.json)]],
         ]
-        if let system { body["system"] = system }
+        var systemBlocks: [[String: Any]] = []
+        if let system { systemBlocks.append(["type": "text", "text": system]) }
+        if let cachedSystem { systemBlocks.append(["type": "text", "text": cachedSystem, "cache_control": ["type": "ephemeral"]]) }
+        if !systemBlocks.isEmpty { body["system"] = systemBlocks }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await session.data(for: request)

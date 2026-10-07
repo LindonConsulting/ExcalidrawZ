@@ -85,26 +85,50 @@ struct QuestionBankAutoTagSheet: View {
         log = []
         do {
             let suggester = try QuestionTagSuggester.make(topics: container.topics, specPoints: tree?.points ?? [])
-            for var question in questions {
-                if Task.isCancelled { log.append("Stopped."); break }
-                do {
-                    let suggestion = try await suggester.suggest(thumbnailPNG: container.thumbnailPNG(for: question.id), texts: [])
-                    QuestionTagSuggester.apply(suggestion, to: &question, topics: container.topics, overwriteTitle: overwriteTitles)
-                    try container.update(question)
-                    if let tree {
-                        let existing = container.specPointsByQuestion[question.id] ?? []
-                        let matched = (suggestion.specPoints ?? []).compactMap { code in
-                            tree.points.first { $0.code.caseInsensitiveCompare(code) == .orderedSame }?.id
+            let topics = container.topics
+            let thumbnails = Dictionary(uniqueKeysWithValues: questions.map { ($0.id, container.thumbnailPNG(for: $0.id)) })
+            let overwrite = overwriteTitles
+            // Up to 4 requests in flight; results applied on the main actor as they arrive.
+            try await withThrowingTaskGroup(of: (Question, QuestionTagSuggestion?, String?).self) { group in
+                var iterator = questions.makeIterator()
+                func enqueue() {
+                    guard let question = iterator.next() else { return }
+                    group.addTask {
+                        do {
+                            let s = try await suggester.suggest(thumbnailPNG: thumbnails[question.id] ?? nil, texts: [])
+                            return (question, s, nil)
+                        } catch {
+                            return (question, nil, error.localizedDescription)
                         }
-                        try container.setSpecPoints(Array(Set(existing + matched)), forQuestion: question.id)
-                        log.append("\(question.title): \(matched.count) spec point\(matched.count == 1 ? "" : "s"), \(question.topicIDs.count) topics")
-                    } else {
-                        log.append("\(question.title): \(question.topicIDs.count) topics")
                     }
-                } catch {
-                    log.append("\(question.title): failed – \(error.localizedDescription)")
                 }
-                progress += 1
+                for _ in 0..<4 { enqueue() }
+                while let (original, suggestion, failure) = try await group.next() {
+                    if Task.isCancelled { group.cancelAll(); log.append("Stopped."); break }
+                    var question = original
+                    if let suggestion {
+                        QuestionTagSuggester.apply(suggestion, to: &question, topics: topics, overwriteTitle: overwrite)
+                        do {
+                            try container.update(question)
+                            if let tree {
+                                let existing = container.specPointsByQuestion[question.id] ?? []
+                                let matched = (suggestion.specPoints ?? []).compactMap { code in
+                                    tree.points.first { $0.code.caseInsensitiveCompare(code) == .orderedSame }?.id
+                                }
+                                try container.setSpecPoints(Array(Set(existing + matched)), forQuestion: question.id)
+                                log.append("\(question.title): \(matched.count) spec point\(matched.count == 1 ? "" : "s"), \(question.topicIDs.count) topics")
+                            } else {
+                                log.append("\(question.title): \(question.topicIDs.count) topics")
+                            }
+                        } catch {
+                            log.append("\(question.title): save failed – \(error.localizedDescription)")
+                        }
+                    } else {
+                        log.append("\(question.title): failed – \(failure ?? "unknown error")")
+                    }
+                    progress += 1
+                    enqueue()
+                }
             }
         } catch {
             log.append(error.localizedDescription)
