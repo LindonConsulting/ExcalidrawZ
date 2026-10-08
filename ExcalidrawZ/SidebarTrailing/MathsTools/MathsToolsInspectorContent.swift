@@ -2,9 +2,10 @@
 //  MathsToolsInspectorContent.swift
 //  ExcalidrawZ
 //
-//  Trailing-sidebar panel with maths teaching tools: triangles, an angle
-//  drawer and a protractor. Each tool drops a grouped, selected shape at
-//  the viewport centre.
+//  Trailing-sidebar panel with maths teaching tools. Triangles and the
+//  compass are interactive (drawn on the canvas with the pointer, see
+//  mathsTools.js in the web fork); the angle and protractor are inserted
+//  ready-made at the viewport centre.
 //
 
 import SwiftUI
@@ -18,15 +19,12 @@ struct MathsToolsInspectorContent: View {
 
     @AppStorage("MathsToolsSize") private var size: Double = 240
     @AppStorage("MathsToolsHandDrawn") private var handDrawn = false
-    @AppStorage("MathsToolsLabelVertices") private var labelVertices = true
-    @AppStorage("MathsToolsIsoscelesApex") private var apexAngle: Double = 40
+    @AppStorage("MathsToolsLabelVertices") private var labelVertices = false
     @AppStorage("MathsToolsAngleDegrees") private var angleDegrees: Double = 45
     @AppStorage("MathsToolsAngleLabel") private var showAngleLabel = true
     @AppStorage("MathsToolsProtractorFine") private var fineTicks = false
     @AppStorage("MathsToolsCompassRadius") private var compassRadius: Double = 120
-    @AppStorage("MathsToolsCompassSweep") private var compassSweep: Double = 60
-    @AppStorage("MathsToolsCompassStart") private var compassStart: Double = 0
-    @AppStorage("MathsToolsCompassCentre") private var compassCentre = true
+    @AppStorage("MathsToolsCompassCentre") private var compassCentre = false
 
     @State private var isInserting = false
     @State private var angleText = ""
@@ -52,13 +50,16 @@ struct MathsToolsInspectorContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if let coordinator = activeCanvasCoordinator {
+                    MathsToolStatusBanner(core: coordinator)
+                }
                 trianglesSection
+                Divider()
+                compassSection
                 Divider()
                 angleSection
                 Divider()
                 protractorSection
-                Divider()
-                compassSection
                 Divider()
                 styleSection
             }
@@ -66,6 +67,15 @@ struct MathsToolsInspectorContent: View {
         }
         .disabled(isInserting)
         .onAppear { angleText = formatted(angleDegrees) }
+        .onChange(of: compassRadius) { _ in
+            updateToolOptions(.object(["radius": .number(compassRadius)]))
+        }
+        .onChange(of: compassCentre) { _ in
+            updateToolOptions(.object(["centreMark": .bool(compassCentre)]))
+        }
+        .onChange(of: labelVertices) { _ in
+            updateToolOptions(.object(["labels": .bool(labelVertices)]))
+        }
     }
 
     // MARK: Sections
@@ -75,26 +85,71 @@ struct MathsToolsInspectorContent: View {
             sectionTitle("Triangles")
             HStack(spacing: 8) {
                 toolButton(title: "Right-angled", preview: .rightAngled) {
-                    MathsToolsElementFactory.rightAngledTriangle(size: size, style: style)
+                    startTool(.object([
+                        "kind": .string("triangle"), "variant": .string("right"),
+                        "labels": .bool(labelVertices)
+                    ]))
                 }
                 toolButton(title: "Equilateral", preview: .equilateral) {
-                    MathsToolsElementFactory.equilateralTriangle(size: size, style: style)
+                    startTool(.object([
+                        "kind": .string("triangle"), "variant": .string("equilateral"),
+                        "labels": .bool(labelVertices)
+                    ]))
                 }
-                toolButton(title: "Isosceles", preview: .isosceles(apex: apexAngle)) {
-                    MathsToolsElementFactory.isoscelesTriangle(size: size, apexAngle: apexAngle, style: style)
+                toolButton(title: "Isosceles", preview: .isosceles(apex: 40)) {
+                    startTool(.object([
+                        "kind": .string("triangle"), "variant": .string("isosceles"),
+                        "labels": .bool(labelVertices)
+                    ]))
                 }
             }
+            Text("Drag on the canvas like the rectangle tool. The point you press is the right angle, or the apex for isosceles and equilateral.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var compassSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("Compass")
             HStack {
-                Text("Isosceles apex")
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Stepper(value: $apexAngle, in: 10...170, step: 5) {
-                    Text("\(Int(apexAngle))°")
-                        .monospacedDigit()
-                        .frame(minWidth: 36, alignment: .trailing)
-                }
+                Text("Radius").foregroundStyle(.secondary)
+                Slider(value: $compassRadius, in: 20...400, step: 5)
+                Text("\(Int(compassRadius))")
+                    .monospacedDigit()
+                    .frame(width: 36, alignment: .trailing)
             }
             .font(.callout)
+            Toggle("Mark the pin point", isOn: $compassCentre)
+                .font(.callout)
+            HStack(spacing: 8) {
+                MathsToolPreview(kind: .compassArc(start: 20, sweep: 110))
+                    .frame(width: 44, height: 44)
+                Button {
+                    startTool(.object([
+                        "kind": .string("compass"),
+                        "radius": .number(compassRadius),
+                        "centreMark": .bool(compassCentre)
+                    ]))
+                } label: {
+                    Label("Compass", systemSymbol: .scope)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                Button {
+                    insert(MathsToolsElementFactory.compassCircle(
+                        radius: compassRadius, showCentre: compassCentre, style: style
+                    ))
+                } label: {
+                    Label("Circle", systemSymbol: .plus)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .help("Insert a full circle of this radius at the viewport centre")
+            }
+            Text("Click to place the pin, then drag to swing the pencil around it. Click elsewhere to move the pin; Esc lifts it, Esc again puts the compass away.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -160,65 +215,7 @@ struct MathsToolsInspectorContent: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
-            Text("Select the protractor and drag its rotation handle to line it up with an angle.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var compassSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionTitle("Compass")
-            HStack {
-                Text("Radius").foregroundStyle(.secondary)
-                Slider(value: $compassRadius, in: 20...400, step: 5)
-                Text("\(Int(compassRadius))")
-                    .monospacedDigit()
-                    .frame(width: 36, alignment: .trailing)
-            }
-            .font(.callout)
-            HStack {
-                Text("Arc sweep").foregroundStyle(.secondary)
-                Slider(value: $compassSweep, in: 10...360, step: 5)
-                Text("\(Int(compassSweep))°")
-                    .monospacedDigit()
-                    .frame(width: 40, alignment: .trailing)
-            }
-            .font(.callout)
-            HStack {
-                Text("Start angle").foregroundStyle(.secondary)
-                Slider(value: $compassStart, in: 0...359, step: 5)
-                Text("\(Int(compassStart))°")
-                    .monospacedDigit()
-                    .frame(width: 40, alignment: .trailing)
-            }
-            .font(.callout)
-            Toggle("Mark the centre", isOn: $compassCentre)
-                .font(.callout)
-            HStack(spacing: 8) {
-                MathsToolPreview(kind: .compassArc(start: compassStart, sweep: compassSweep))
-                    .frame(width: 44, height: 44)
-                Button {
-                    insert(MathsToolsElementFactory.compassArc(
-                        radius: compassRadius, startDegrees: compassStart, sweepDegrees: compassSweep,
-                        showCentre: compassCentre, style: style
-                    ))
-                } label: {
-                    Label("Arc", systemSymbol: .plus)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                Button {
-                    insert(MathsToolsElementFactory.compassCircle(
-                        radius: compassRadius, showCentre: compassCentre, style: style
-                    ))
-                } label: {
-                    Label("Circle", systemSymbol: .plus)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-            }
-            Text("Drag the group so the centre mark sits on the point you are constructing from; arcs of the same radius intersect exactly.")
+            Text("Drag the protractor so its centre mark sits on the vertex, then turn it with the rotation handle; it pivots about the centre mark.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -235,10 +232,13 @@ struct MathsToolsInspectorContent: View {
                     .frame(width: 36, alignment: .trailing)
             }
             .font(.callout)
-            Toggle("Hand-drawn style", isOn: $handDrawn)
+            Toggle("Hand-drawn angle and protractor", isOn: $handDrawn)
                 .font(.callout)
             Toggle("Label triangle vertices", isOn: $labelVertices)
                 .font(.callout)
+            Text("Triangles and compass arcs use the current stroke colour, width and sloppiness from the toolbar.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -252,11 +252,9 @@ struct MathsToolsInspectorContent: View {
     private func toolButton(
         title: String,
         preview: MathsToolPreview.Kind,
-        build: @escaping () -> MathsToolsBuild
+        action: @escaping () -> Void
     ) -> some View {
-        Button {
-            insert(build())
-        } label: {
+        Button(action: action) {
             VStack(spacing: 6) {
                 MathsToolPreview(kind: preview)
                     .frame(width: 44, height: 40)
@@ -269,7 +267,7 @@ struct MathsToolsInspectorContent: View {
             .padding(.vertical, 8)
         }
         .buttonStyle(.bordered)
-        .help("Insert \(title.lowercased()) triangle")
+        .help("Draw \(title.lowercased()) triangle")
     }
 
     private func formatted(_ value: Double) -> String {
@@ -282,6 +280,27 @@ struct MathsToolsInspectorContent: View {
             angleDegrees = value
         }
         angleText = formatted(angleDegrees)
+    }
+
+    private func startTool(_ spec: ExcalidrawCore.JSONValue) {
+        guard let coordinator = activeCanvasCoordinator else {
+            alertToast(.init(displayMode: .hud, type: .error(.red), title: "Open a canvas first."))
+            return
+        }
+        Task { @MainActor in
+            do {
+                try await coordinator.startMathsTool(spec)
+            } catch {
+                alertToast(error)
+            }
+        }
+    }
+
+    private func updateToolOptions(_ options: ExcalidrawCore.JSONValue) {
+        guard let coordinator = activeCanvasCoordinator, coordinator.mathsToolState.active else { return }
+        Task { @MainActor in
+            try? await coordinator.setMathsToolOptions(options)
+        }
     }
 
     private func insert(_ build: MathsToolsBuild) {
@@ -297,6 +316,54 @@ struct MathsToolsInspectorContent: View {
             } catch {
                 alertToast(error)
             }
+        }
+    }
+}
+
+/// Shows which interactive tool is running on the canvas, with a Stop button.
+private struct MathsToolStatusBanner: View {
+    @ObservedObject var core: ExcalidrawCore
+
+    private var message: String? {
+        let state = core.mathsToolState
+        guard state.active else { return nil }
+        switch state.kind {
+            case "triangle":
+                let name: String
+                switch state.variant {
+                    case "equilateral": name = "equilateral"
+                    case "isosceles": name = "isosceles"
+                    default: name = "right-angled"
+                }
+                return "Drag on the canvas to draw a \(name) triangle."
+            case "compass":
+                return state.hasPin == true
+                    ? "Drag to draw an arc. Click to move the pin."
+                    : "Click on the canvas to place the compass pin."
+            default:
+                return "Maths tool active."
+        }
+    }
+
+    var body: some View {
+        if let message {
+            HStack(spacing: 10) {
+                Image(systemSymbol: .scope)
+                    .foregroundStyle(Color.accentColor)
+                Text(message)
+                    .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button("Stop") {
+                    Task { @MainActor in try? await core.stopMathsTool() }
+                }
+                .controlSize(.small)
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.accentColor.opacity(0.12))
+            )
         }
     }
 }

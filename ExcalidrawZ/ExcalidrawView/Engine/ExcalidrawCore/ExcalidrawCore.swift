@@ -52,6 +52,8 @@ class ExcalidrawCore: NSObject, ObservableObject {
     /// Laser-pointer stroke segments from the web editor, forwarded to the
     /// Viewer as they arrive (not throttled, unlike scene deltas).
     let laserPointerPathPublisher = PassthroughSubject<LaserPointerPath, Never>()
+    /// Interactive maths tool (triangles / compass) running in the web view, if any.
+    @Published var mathsToolState = MathsToolState(active: false)
 
     var downloadCache: [String : Data] = [:]
     var downloads: [URLRequest : URL] = [:]

@@ -140,6 +140,12 @@ enum MathsToolsElementFactory {
         }
         out.append(line(body, closed: true, style: style, gid: gid, background: "#dbeafe", opacity: 85))
 
+        // Invisible counterweight below the baseline so the group's bounding box
+        // is centred on the origin: Excalidraw rotates a selection about its
+        // bounding-box centre, so this makes the protractor turn about the
+        // bottom-centre mark instead of the middle of the semicircle.
+        out.append(line([(-r, r), (r, r)], closed: false, style: style, gid: gid, strokeWidth: 1, opacity: 0))
+
         // Inner scale arc.
         var inner: [Point] = []
         for a in stride(from: 180.0, through: 0.0, by: -2) {
