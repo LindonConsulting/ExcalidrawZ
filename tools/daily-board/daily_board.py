@@ -32,7 +32,7 @@ APP_DIR = os.path.expanduser("~/Library/Application Support/Daily Board")
 CONFIG_PATH = os.path.join(APP_DIR, "config.json")
 STATE_PATH = os.path.join(APP_DIR, "state.json")
 LOG_PATH = os.path.join(APP_DIR, "daily-board.log")
-DEFAULT_BOARD_DIR = os.path.expanduser("~/Documents/Daily Board")
+DEFAULT_BOARD_DIR = os.path.expanduser("~/Daily Board")
 
 # Brand colours (Lindon Academy brand manual)
 INDIGO = "#142C61"
@@ -631,7 +631,6 @@ def cmd_install():
         "com.lindonacademy.dailyboard.build": {
             "ProgramArguments": [python, script, "build"],
             "StartCalendarInterval": {"Hour": 5, "Minute": 30},
-            "RunAtLoad": True,
         },
         "com.lindonacademy.dailyboard.sync": {
             "ProgramArguments": [python, script, "sync"],
