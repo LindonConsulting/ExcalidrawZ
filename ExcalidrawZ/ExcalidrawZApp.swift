@@ -311,6 +311,15 @@ struct ExcalidrawZApp: App {
                     Text("New Lesson Draw")
                 }
                 .keyboardShortcut("N", modifiers: [.command, .shift])
+
+                Button {
+                    NotificationCenter.default.post(
+                        name: .shouldHandleImportMyTutorLesson,
+                        object: nil
+                    )
+                } label: {
+                    Text("Import MyTutor Lesson…")
+                }
                 
                 Button {
                     NotificationCenter.default.post(

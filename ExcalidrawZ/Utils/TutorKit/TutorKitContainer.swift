@@ -436,6 +436,23 @@ final class TutorKitContainer: ObservableObject {
         refresh()
     }
 
+    /// Records a session for `lessonFileID`, or updates the existing one's
+    /// recap when the file already has a session (e.g. an imported MyTutor
+    /// lesson appended to a Lesson Draw file).
+    func upsertLessonSession(student: Student, lessonFileID: String, date: Date, subjectLine: String, recap: String?) throws {
+        let database = try db()
+        if var existing = try database.lessonSession(forFile: lessonFileID) {
+            if let recap, !recap.isEmpty {
+                existing.recap = [existing.recap, recap].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
+            }
+            if existing.subjectLine.isEmpty { existing.subjectLine = subjectLine }
+            try database.record(existing)
+        } else {
+            try database.record(LessonSession(studentID: student.id, lessonFileID: lessonFileID, date: date, subjectLine: subjectLine, recap: recap))
+        }
+        refresh()
+    }
+
     func save(_ student: Student) throws {
         try db().save(student)
         refresh()

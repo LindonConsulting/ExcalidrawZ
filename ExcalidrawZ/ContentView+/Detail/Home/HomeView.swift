@@ -92,7 +92,10 @@ struct HomeView: View {
                 
                 ZStack {
                     VStack(spacing: 30) {
-                        NewLessonDrawButton()
+                        HStack(spacing: 12) {
+                            NewLessonDrawButton()
+                            ImportMyTutorLessonButton()
+                        }
 
                         UpcomingLessonsSection()
 
