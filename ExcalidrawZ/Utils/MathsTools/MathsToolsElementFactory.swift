@@ -186,6 +186,66 @@ enum MathsToolsElementFactory {
         return MathsToolsBuild(skeletons: out, groupID: gid, title: "protractor")
     }
 
+    // MARK: Compass
+
+    /// A compass arc of `radius`, swept anticlockwise from `startDegrees`
+    /// through `sweepDegrees`, with a small centre mark where the point sat.
+    static func compassArc(
+        radius: Double, startDegrees: Double, sweepDegrees: Double,
+        showCentre: Bool, style: MathsToolsStyle
+    ) -> MathsToolsBuild {
+        let gid = makeGroupID()
+        let r = max(10, radius)
+        let sweep = sweepDegrees.clamped(to: 1...360)
+        var out: [JSONValue] = []
+        var arc: [Point] = []
+        var a = 0.0
+        while a < sweep {
+            arc.append(onCircle(r, startDegrees + a))
+            a += 2
+        }
+        arc.append(onCircle(r, startDegrees + sweep))
+        out.append(line(arc, closed: false, style: style, gid: gid))
+        if showCentre {
+            out += centreMark(size: max(6, r * 0.05), style: style, gid: gid)
+        }
+        return MathsToolsBuild(skeletons: out, groupID: gid, title: "compass arc")
+    }
+
+    /// A full circle of `radius` with a centre mark.
+    static func compassCircle(radius: Double, showCentre: Bool, style: MathsToolsStyle) -> MathsToolsBuild {
+        let gid = makeGroupID()
+        let r = max(10, radius)
+        var out: [JSONValue] = [
+            .object([
+                "type": .string("ellipse"),
+                "x": .number(-r),
+                "y": .number(-r),
+                "width": .number(2 * r),
+                "height": .number(2 * r),
+                "strokeColor": .string(style.strokeColor),
+                "backgroundColor": .string("transparent"),
+                "fillStyle": .string("solid"),
+                "strokeWidth": .number(style.strokeWidth),
+                "strokeStyle": .string("solid"),
+                "roughness": .number(style.roughness),
+                "groupIds": .array([.string(gid)])
+            ])
+        ]
+        if showCentre {
+            out += centreMark(size: max(6, r * 0.05), style: style, gid: gid)
+        }
+        return MathsToolsBuild(skeletons: out, groupID: gid, title: "circle")
+    }
+
+    private static func centreMark(size: Double, style: MathsToolsStyle, gid: String) -> [JSONValue] {
+        let w = max(1, style.strokeWidth - 0.5)
+        return [
+            line([(-size, 0), (size, 0)], closed: false, style: style, gid: gid, strokeWidth: w),
+            line([(0, -size), (0, size)], closed: false, style: style, gid: gid, strokeWidth: w)
+        ]
+    }
+
     // MARK: - Primitives
 
     private static func onCircle(_ radius: Double, _ degrees: Double) -> Point {

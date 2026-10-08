@@ -23,6 +23,10 @@ struct MathsToolsInspectorContent: View {
     @AppStorage("MathsToolsAngleDegrees") private var angleDegrees: Double = 45
     @AppStorage("MathsToolsAngleLabel") private var showAngleLabel = true
     @AppStorage("MathsToolsProtractorFine") private var fineTicks = false
+    @AppStorage("MathsToolsCompassRadius") private var compassRadius: Double = 120
+    @AppStorage("MathsToolsCompassSweep") private var compassSweep: Double = 60
+    @AppStorage("MathsToolsCompassStart") private var compassStart: Double = 0
+    @AppStorage("MathsToolsCompassCentre") private var compassCentre = true
 
     @State private var isInserting = false
     @State private var angleText = ""
@@ -53,6 +57,8 @@ struct MathsToolsInspectorContent: View {
                 angleSection
                 Divider()
                 protractorSection
+                Divider()
+                compassSection
                 Divider()
                 styleSection
             }
@@ -160,6 +166,64 @@ struct MathsToolsInspectorContent: View {
         }
     }
 
+    private var compassSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("Compass")
+            HStack {
+                Text("Radius").foregroundStyle(.secondary)
+                Slider(value: $compassRadius, in: 20...400, step: 5)
+                Text("\(Int(compassRadius))")
+                    .monospacedDigit()
+                    .frame(width: 36, alignment: .trailing)
+            }
+            .font(.callout)
+            HStack {
+                Text("Arc sweep").foregroundStyle(.secondary)
+                Slider(value: $compassSweep, in: 10...360, step: 5)
+                Text("\(Int(compassSweep))°")
+                    .monospacedDigit()
+                    .frame(width: 40, alignment: .trailing)
+            }
+            .font(.callout)
+            HStack {
+                Text("Start angle").foregroundStyle(.secondary)
+                Slider(value: $compassStart, in: 0...359, step: 5)
+                Text("\(Int(compassStart))°")
+                    .monospacedDigit()
+                    .frame(width: 40, alignment: .trailing)
+            }
+            .font(.callout)
+            Toggle("Mark the centre", isOn: $compassCentre)
+                .font(.callout)
+            HStack(spacing: 8) {
+                MathsToolPreview(kind: .compassArc(start: compassStart, sweep: compassSweep))
+                    .frame(width: 44, height: 44)
+                Button {
+                    insert(MathsToolsElementFactory.compassArc(
+                        radius: compassRadius, startDegrees: compassStart, sweepDegrees: compassSweep,
+                        showCentre: compassCentre, style: style
+                    ))
+                } label: {
+                    Label("Arc", systemSymbol: .plus)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                Button {
+                    insert(MathsToolsElementFactory.compassCircle(
+                        radius: compassRadius, showCentre: compassCentre, style: style
+                    ))
+                } label: {
+                    Label("Circle", systemSymbol: .plus)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
+            Text("Drag the group so the centre mark sits on the point you are constructing from; arcs of the same radius intersect exactly.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
     private var styleSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle("Style")
@@ -245,6 +309,7 @@ struct MathsToolPreview: View {
         case isosceles(apex: Double)
         case angle(degrees: Double)
         case protractor
+        case compassArc(start: Double, sweep: Double)
     }
 
     let kind: Kind
@@ -297,6 +362,14 @@ struct MathsToolPreview: View {
                     path.addLine(to: v)
                     path.addLine(to: CGPoint(x: v.x + r * cos(theta), y: v.y - r * sin(theta)))
                     marker.addArc(center: v, radius: r * 0.35, startAngle: .zero, endAngle: .radians(-theta), clockwise: true)
+                case .compassArc(let start, let sweep):
+                    let r = min(w, h) * 0.42
+                    let c = CGPoint(x: origin.x + w / 2, y: origin.y + h / 2)
+                    let s = start * .pi / 180
+                    let e = (start + sweep.clampedPreview) * .pi / 180
+                    path.addArc(center: c, radius: r, startAngle: .radians(-s), endAngle: .radians(-e), clockwise: true)
+                    marker.move(to: CGPoint(x: c.x - 3, y: c.y)); marker.addLine(to: CGPoint(x: c.x + 3, y: c.y))
+                    marker.move(to: CGPoint(x: c.x, y: c.y - 3)); marker.addLine(to: CGPoint(x: c.x, y: c.y + 3))
                 case .protractor:
                     let r = min(w / 2, h * 0.9)
                     let c = CGPoint(x: origin.x + w / 2, y: origin.y + h * 0.9)
