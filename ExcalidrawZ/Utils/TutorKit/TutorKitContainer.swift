@@ -4,7 +4,8 @@
 //
 //  App-side owner of the TutorKit database: opens it, seeds the topic
 //  taxonomy, migrates the pre-TutorKit question bank, and publishes
-//  snapshots for SwiftUI.
+//  snapshots for SwiftUI. Students are looked up by id; names only come in
+//  from the calendar and the file group, and are resolved once at the edge.
 //
 
 import Foundation
@@ -25,6 +26,14 @@ final class TutorKitContainer: ObservableObject {
     @Published private(set) var outcomes: [UUID: [Outcome]] = [:]
     @Published private(set) var topics: [Topic] = []
     @Published private(set) var students: [Student] = []
+    /// student id → live enrolments, primary first
+    @Published private(set) var enrolments: [UUID: [Enrolment]] = [:]
+    /// student id → lessons, newest first
+    @Published private(set) var lessons: [UUID: [Lesson]] = [:]
+    /// student id → focus topic ids
+    @Published private(set) var focusTopics: [UUID: [String]] = [:]
+    /// student id → contacts
+    @Published private(set) var contacts: [UUID: [StudentContact]] = [:]
     @Published private(set) var specifications: [Specification] = []
     @Published private(set) var roster: [RosterEntry] = []
     @Published private(set) var rosterError: String?
@@ -35,6 +44,7 @@ final class TutorKitContainer: ObservableObject {
     /// question id → linked spec point ids
     @Published private(set) var specPointsByQuestion: [UUID: [UUID]] = [:]
     private var treeCache: [UUID: SpecificationTree] = [:]
+    private var lessonsByFile: [String: Lesson] = [:]
     @Published private(set) var openError: Error?
     @Published private(set) var legacyImportReport: LegacyQuestionBankImporter.Report?
 
@@ -85,8 +95,13 @@ final class TutorKitContainer: ObservableObject {
             outcomes = try database.outcomesByQuestion()
             topics = try database.topics()
             students = try database.students()
+            enrolments = try database.enrolmentsByStudent()
+            lessons = try database.lessonsByStudent()
+            focusTopics = try database.focusTopicIDsByStudent()
+            contacts = try database.contactsByStudent()
             specifications = try database.specifications()
             specPointsByQuestion = try database.specPointIDsByQuestion()
+            lessonsByFile = Dictionary(lessons.values.flatMap { $0 }.compactMap { lesson in lesson.fileID.map { ($0, lesson) } }, uniquingKeysWith: { a, _ in a })
             treeCache = [:]
         } catch {
             openError = error
@@ -96,6 +111,115 @@ final class TutorKitContainer: ObservableObject {
     private func db() throws -> TutorDatabase {
         guard let database else { throw ContainerError.notOpen }
         return database
+    }
+
+    // MARK: - Students and enrolments
+
+    func student(id: UUID?) -> Student? {
+        guard let id else { return nil }
+        return students.first { $0.id == id }
+    }
+
+    func student(named name: String) -> Student? {
+        let needle = name.trimmingCharacters(in: .whitespaces)
+        guard !needle.isEmpty else { return nil }
+        return students.first { $0.name.caseInsensitiveCompare(needle) == .orderedSame }
+    }
+
+    /// Display name for an outcome's student, or "Unknown".
+    func studentName(for id: UUID?) -> String {
+        student(id: id)?.name ?? (id.flatMap { try? database?.student(id: $0) }?.name ?? "Unknown")
+    }
+
+    func enrolments(for student: Student) -> [Enrolment] { enrolments[student.id] ?? [] }
+
+    func primaryEnrolment(for student: Student) -> Enrolment? {
+        let list = enrolments(for: student)
+        return list.first { $0.isPrimary } ?? list.first
+    }
+
+    /// Specification ids linked through the student's enrolments, primary first.
+    func specificationIDs(for student: Student) -> [UUID] {
+        var result: [UUID] = []
+        for id in enrolments(for: student).compactMap(\.specificationID) where !result.contains(id) { result.append(id) }
+        return result
+    }
+
+    /// Specifications linked to a student, primary first.
+    func specifications(for student: Student) -> [Specification] {
+        specificationIDs(for: student).compactMap { specification(id: $0) }
+    }
+
+    func focusTopicIDs(for student: Student) -> [String] { focusTopics[student.id] ?? [] }
+
+    func contacts(for student: Student) -> [StudentContact] { contacts[student.id] ?? [] }
+
+    /// "GCSE · Maths · Edexcel · Higher" from the primary enrolment.
+    func courseSummary(for student: Student) -> String {
+        guard let e = primaryEnrolment(for: student) else { return "" }
+        return [e.level.rawValue, e.subject.rawValue, e.board?.rawValue, e.tier.flatMap { $0 == .notApplicable ? nil : $0.rawValue }]
+            .compactMap { $0 }.joined(separator: " · ")
+    }
+
+    func save(_ student: Student) throws {
+        try db().save(student)
+        refresh()
+    }
+
+    func archive(_ student: Student) throws {
+        var copy = student
+        copy.deletedAt = .now
+        try db().save(copy)
+        refresh()
+    }
+
+    func deleteStudent(id: UUID) throws {
+        try db().deleteStudent(id: id)
+        refresh()
+    }
+
+    @discardableResult
+    func save(_ enrolment: Enrolment) throws -> Enrolment {
+        let saved = try db().save(enrolment)
+        refresh()
+        return saved
+    }
+
+    func deleteEnrolment(id: UUID) throws {
+        try db().deleteEnrolment(id: id)
+        refresh()
+    }
+
+    func setFocusTopics(_ topicIDs: [String], for student: Student) throws {
+        try db().setFocusTopics(topicIDs, forStudent: student.id)
+        refresh()
+    }
+
+    /// Finds the student by name or creates a minimal record with a primary
+    /// enrolment guessed from the calendar subject (used by Lesson Draw).
+    @discardableResult
+    func ensureStudent(named name: String, subjectHint: String?) throws -> Student {
+        openIfNeeded()
+        if let existing = try db().student(named: name) { return existing }
+        let student = try db().save(Student(name: name.trimmingCharacters(in: .whitespaces)))
+        try db().save(Self.enrolment(for: student.id, subjectHint: subjectHint, isPrimary: true))
+        refresh()
+        return student
+    }
+
+    /// An enrolment guessed from free text such as "A-Level Maths (Edexcel, Higher)".
+    static func enrolment(for studentID: UUID, subjectHint: String?, isPrimary: Bool) -> Enrolment {
+        var enrolment = Enrolment(studentID: studentID, isPrimary: isPrimary)
+        guard let hint = subjectHint?.lowercased() else { return enrolment }
+        if hint.contains("computer") || hint.contains(" cs") || hint.hasPrefix("cs") { enrolment.subject = .computerScience }
+        else if hint.contains("biolog") { enrolment.subject = .biology }
+        else if hint.contains("chem") { enrolment.subject = .chemistry }
+        else if hint.contains("physic") { enrolment.subject = .physics }
+        if hint.contains("a level") || hint.contains("a-level") || hint.contains("alevel") { enrolment.level = .aLevel }
+        else if hint.contains("ks3") { enrolment.level = .ks3 }
+        for board in ExamBoard.allCases where hint.contains(board.rawValue.lowercased()) { enrolment.board = board }
+        if hint.contains("foundation") { enrolment.tier = .foundation } else if hint.contains("higher") { enrolment.tier = .higher }
+        return enrolment
     }
 
     // MARK: - Roster (calendar) and Supabase sync
@@ -109,25 +233,22 @@ final class TutorKitContainer: ObservableObject {
         }
     }
 
-    func student(named name: String) -> Student? {
-        students.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
-    }
-
-    /// Pulls students, enrolments and deck assignments from Supabase and merges
-    /// them into local student records (matched by remote id, then by name).
+    /// Pulls students, enrolments, contacts and deck assignments from Supabase
+    /// and merges them into local records (matched by remote id, then by name).
     func syncFromSupabase() async {
         guard !isSyncing else { return }
         isSyncing = true
         defer { isSyncing = false }
         do {
+            let database = try db()
             let client = try TutorSyncSettings.makeClient()
             async let remoteStudents = client.fetchStudents()
-            async let enrolments = client.fetchEnrolments()
+            async let remoteEnrolments = client.fetchEnrolments()
             async let decks = client.fetchDecks()
             async let assignments = client.fetchDeckAssignments()
-            let (studentsRemote, enrolmentsRemote, decksRemote, assignmentsRemote) = try await (remoteStudents, enrolments, decks, assignments)
+            let (studentsRemote, enrolmentsRemote, decksRemote, assignmentsRemote) = try await (remoteStudents, remoteEnrolments, decks, assignments)
 
-            let enrolmentsByStudent = Dictionary(grouping: enrolmentsRemote, by: \.student_id)
+            let enrolmentsByRemoteStudent = Dictionary(grouping: enrolmentsRemote, by: \.student_id)
             var created = 0, updated = 0
             for remote in studentsRemote {
                 let existing = students.first { $0.remoteID == remote.id } ?? student(named: remote.name)
@@ -135,25 +256,46 @@ final class TutorKitContainer: ObservableObject {
                 local.remoteID = remote.id
                 local.yearGroup = remote.year_group ?? ""
                 local.management = remote.management ?? ""
-                local.parentName = remote.parent_name ?? ""
-                local.parentContact = [remote.parent_phone, remote.parent_email].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
                 local.rapportNotes = remote.rapport_notes ?? ""
-                if local.targetGrade.isEmpty, let grade = remote.target_grade { local.targetGrade = grade }
                 if local.notes.isEmpty, let notes = remote.notes { local.notes = notes }
-                if let enrolment = (enrolmentsByStudent[remote.id] ?? []).first(where: { $0.active ?? true }) ?? enrolmentsByStudent[remote.id]?.first {
-                    let mapped = EnrolmentMapper.map(courseID: enrolment.course_id, board: enrolment.board, tier: enrolment.tier)
-                    local.subject = mapped.subject
-                    local.level = mapped.level
-                    if let board = mapped.board { local.board = board }
-                    if let tier = mapped.tier { local.tier = tier }
-                    if local.specificationID == nil, let board = local.board,
-                       let spec = specifications.first(where: { $0.board == board && $0.level == local.level && $0.subject == local.subject }) {
-                        local.specificationID = spec.id
-                    }
-                }
                 local.remoteSyncedAt = .now
-                try db().save(local)
+                local = try database.save(local)
                 if existing == nil { created += 1 } else { updated += 1 }
+
+                // Contacts: the remote has one parent record per student.
+                let parentName = remote.parent_name ?? ""
+                let phone = remote.parent_phone ?? "", email = remote.parent_email ?? ""
+                if !parentName.isEmpty || !phone.isEmpty || !email.isEmpty {
+                    let current = try database.contacts(forStudent: local.id)
+                    var contact = current.first { $0.isPrimary } ?? current.first ?? StudentContact(studentID: local.id, relationship: "parent", isPrimary: true)
+                    contact.name = parentName; contact.phone = phone; contact.email = email
+                    try database.save(contact)
+                }
+
+                // Enrolments: one local row per remote enrolment, matched by remote id, then subject+level.
+                var localEnrolments = try database.enrolments(forStudent: local.id)
+                let remoteRows = enrolmentsByRemoteStudent[remote.id] ?? []
+                for (index, row) in remoteRows.enumerated() {
+                    let mapped = EnrolmentMapper.map(courseID: row.course_id, board: row.board, tier: row.tier)
+                    var enrolment = localEnrolments.first { $0.remoteID == row.id }
+                        ?? localEnrolments.first { $0.subject == mapped.subject && $0.level == mapped.level }
+                        ?? Enrolment(studentID: local.id, subject: mapped.subject, level: mapped.level,
+                                     isPrimary: localEnrolments.isEmpty && index == 0)
+                    enrolment.remoteID = row.id
+                    enrolment.courseID = row.course_id
+                    enrolment.subject = mapped.subject
+                    enrolment.level = mapped.level
+                    if let board = mapped.board { enrolment.board = board }
+                    if let tier = mapped.tier { enrolment.tier = tier }
+                    if row.active == false, enrolment.endedAt == nil { enrolment.endedAt = .now }
+                    if enrolment.targetGrade.isEmpty, enrolment.isPrimary, let grade = remote.target_grade { enrolment.targetGrade = grade }
+                    if enrolment.specificationID == nil, let board = enrolment.board,
+                       let spec = specifications.first(where: { $0.board == board && $0.level == enrolment.level && $0.subject == enrolment.subject }) {
+                        enrolment.specificationID = spec.id
+                    }
+                    let saved = try database.save(enrolment)
+                    if let i = localEnrolments.firstIndex(where: { $0.id == saved.id }) { localEnrolments[i] = saved } else { localEnrolments.append(saved) }
+                }
             }
             remoteDecks = Dictionary(uniqueKeysWithValues: decksRemote.map { ($0.id, $0) })
             deckAssignmentsByStudent = Dictionary(grouping: assignmentsRemote, by: \.student_id)
@@ -243,12 +385,68 @@ final class TutorKitContainer: ObservableObject {
         (try? db().questions(withImageHashNear: hash, threshold: ImageHashDistance.duplicateThreshold, excluding: id)) ?? []
     }
 
+    // MARK: - Lessons
+
+    /// The lesson a Lesson Draw file belongs to, if any.
+    func lesson(forFile fileID: String?) -> Lesson? {
+        guard let fileID else { return nil }
+        return lessonsByFile[fileID]
+    }
+
+    func lessons(for student: Student) -> [Lesson] { lessons[student.id] ?? [] }
+
+    /// Creates the lesson for `fileID`, or merges the recap into the existing one
+    /// (e.g. an imported MyTutor lesson appended to a Lesson Draw file).
+    @discardableResult
+    func upsertLesson(student: Student, fileID: String, date: Date, subjectLine: String, recap: String?) throws -> Lesson {
+        let database = try db()
+        let lesson: Lesson
+        if var existing = try database.lesson(forFile: fileID) {
+            if let recap, !recap.isEmpty {
+                existing.recap = [existing.recap, recap].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
+            }
+            if existing.subjectLine.isEmpty { existing.subjectLine = subjectLine }
+            lesson = try database.save(existing)
+        } else {
+            let enrolment = Self.matchEnrolment(subjectLine, among: try database.enrolments(forStudent: student.id))
+            lesson = try database.save(Lesson(studentID: student.id, enrolmentID: enrolment?.id, fileID: fileID, startAt: date,
+                                              status: .done, subjectLine: subjectLine, recap: recap))
+        }
+        refresh()
+        return lesson
+    }
+
+    func save(_ lesson: Lesson) throws {
+        try db().save(lesson)
+        refresh()
+    }
+
+    /// Picks the enrolment whose subject appears in the calendar subject line; falls back to the primary.
+    static func matchEnrolment(_ subjectLine: String, among enrolments: [Enrolment]) -> Enrolment? {
+        let line = subjectLine.lowercased()
+        if !line.isEmpty {
+            if let hit = enrolments.first(where: { line.contains($0.subject.rawValue.lowercased()) }) { return hit }
+            if line.contains("cs") || line.contains("comput"), let hit = enrolments.first(where: { $0.subject == .computerScience }) { return hit }
+        }
+        return enrolments.first { $0.isPrimary } ?? enrolments.first
+    }
+
     // MARK: - Outcomes
 
-    func recordUse(of questionID: UUID, studentName: String, lessonFileID: String?) throws {
-        let name = studentName.trimmingCharacters(in: .whitespaces)
-        let student = try db().student(named: name)
-        try db().record(Outcome(questionID: questionID, studentID: student?.id, studentName: name.isEmpty ? "Unknown" : name, lessonFileID: lessonFileID))
+    /// Records that a question was shown. The name comes from the file group;
+    /// a student record (and the lesson row for the file) is created when needed.
+    func recordUse(of questionID: UUID, studentName: String?, lessonFileID: String?) throws {
+        let name = (studentName ?? "").trimmingCharacters(in: .whitespaces)
+        var student: Student?
+        if !name.isEmpty, name.caseInsensitiveCompare("Unknown") != .orderedSame {
+            student = try ensureStudent(named: name, subjectHint: nil)
+        }
+        var lessonID: UUID?
+        if let fileID = lessonFileID, let student {
+            lessonID = try db().lesson(forFile: fileID)?.id
+                ?? upsertLesson(student: student, fileID: fileID, date: .now, subjectLine: "", recap: nil).id
+        }
+        try db().record(Outcome(questionID: questionID, studentID: student?.id, lessonID: lessonID))
         refresh()
     }
 
@@ -263,11 +461,13 @@ final class TutorKitContainer: ObservableObject {
     }
 
     /// Outcomes still waiting for a result, optionally limited to one lesson file or student.
-    func pendingOutcomes(lessonFileID: String? = nil, studentName: String? = nil) -> [Outcome] {
-        outcomes.values.flatMap { $0 }
+    func pendingOutcomes(lessonFileID: String? = nil, studentID: UUID? = nil) -> [Outcome] {
+        let lessonID = lesson(forFile: lessonFileID)?.id
+        if lessonFileID != nil, lessonID == nil { return [] }
+        return outcomes.values.flatMap { $0 }
             .filter { $0.result == .unknown }
-            .filter { lessonFileID == nil || $0.lessonFileID == lessonFileID }
-            .filter { studentName == nil || $0.studentName.caseInsensitiveCompare(studentName!) == .orderedSame }
+            .filter { lessonID == nil || $0.lessonID == lessonID }
+            .filter { studentID == nil || $0.studentID == studentID }
             .sorted { $0.shownAt > $1.shownAt }
     }
 
@@ -280,10 +480,13 @@ final class TutorKitContainer: ObservableObject {
         refresh()
     }
 
-    func hasBeenShown(_ questionID: UUID, to studentName: String) -> Bool {
-        let needle = studentName.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !needle.isEmpty else { return false }
-        return (outcomes[questionID] ?? []).contains { $0.studentName.lowercased() == needle }
+    func hasBeenShown(_ questionID: UUID, to studentID: UUID) -> Bool {
+        (outcomes[questionID] ?? []).contains { $0.studentID == studentID }
+    }
+
+    func hasBeenShown(_ questionID: UUID, toStudentNamed name: String) -> Bool {
+        guard let student = student(named: name) else { return false }
+        return hasBeenShown(questionID, to: student.id)
     }
 
     // MARK: - Specifications
@@ -327,28 +530,28 @@ final class TutorKitContainer: ObservableObject {
     /// Coverage across every specification linked to the student.
     func coverage(for student: Student) -> [UUID: CoverageStatus] {
         var result: [UUID: CoverageStatus] = [:]
-        for specID in student.allSpecificationIDs {
-            if let partial = try? db().coverage(specificationID: specID, studentID: student.id, studentName: student.name) {
+        for specID in specificationIDs(for: student) {
+            if let partial = try? db().coverage(specificationID: specID, studentID: student.id) {
                 result.merge(partial) { current, _ in current }
             }
         }
         return result
     }
 
-    /// Specifications linked to a student, primary first.
-    func specifications(for student: Student) -> [Specification] {
-        student.allSpecificationIDs.compactMap { specification(id: $0) }
-    }
-
-    /// Questions linked to a spec point, split into unused / used for the student.
+    /// Questions linked to a spec point.
     func questions(forSpecPoint pointID: UUID) -> [Question] {
         questions.filter { (specPointsByQuestion[$0.id] ?? []).contains(pointID) }
     }
 
-    /// The specification for a student name (used when capturing from a lesson file).
+    /// The primary specification for a student name (used when capturing from a lesson file).
     func specificationID(forStudentNamed name: String?) -> UUID? {
-        guard let name else { return nil }
-        return students.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }?.specificationID
+        guard let name, let student = student(named: name) else { return nil }
+        return primaryEnrolment(for: student)?.specificationID ?? specificationIDs(for: student).first
+    }
+
+    /// Number of students enrolled against a specification.
+    func studentCount(forSpecification id: UUID) -> Int {
+        enrolments.values.filter { $0.contains { $0.specificationID == id } }.count
     }
 
     // MARK: - Warm-up picks
@@ -361,23 +564,25 @@ final class TutorKitContainer: ObservableObject {
     }
 
     /// Picks warm-up questions for a student name (creates no records).
-    func warmUpPicks(forStudentNamed name: String, count: Int = 3) -> [WarmUpPick] {
+    func warmUpPicks(forStudentNamed name: String, subjectLine: String? = nil, count: Int = 3) -> [WarmUpPick] {
         openIfNeeded()
-        let student = students.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
+        let student = student(named: name)
         var tiers: [UUID: Tier?] = [:]
         var coverage: [UUID: CoverageStatus] = [:]
+        var enrolment: Enrolment?
         if let student {
-            for tree in student.allSpecificationIDs.compactMap({ specificationTree(id: $0) }) {
+            enrolment = Self.matchEnrolment(subjectLine ?? "", among: enrolments(for: student))
+            for tree in specificationIDs(for: student).compactMap({ specificationTree(id: $0) }) {
                 for point in tree.points { tiers[point.id] = point.tier }
             }
             coverage = self.coverage(for: student)
         }
-        let context = PickerContext(student: student, coverage: coverage, specPointsByQuestion: specPointsByQuestion,
-                                    specPointTiers: tiers, outcomes: outcomes)
+        let context = PickerContext(student: student, enrolment: enrolment, focusTopicIDs: Set(student.map(focusTopicIDs(for:)) ?? []),
+                                    coverage: coverage, specPointsByQuestion: specPointsByQuestion, specPointTiers: tiers, outcomes: outcomes)
         return CoveragePicker(count: count).pick(questions, context: context).map { WarmUpPick(question: $0.question, reason: $0.reason) }
     }
 
-    // MARK: - Students
+    // MARK: - Stats
 
     struct CoverageSummary {
         var total: Int
@@ -394,72 +599,23 @@ final class TutorKitContainer: ObservableObject {
     }
 
     func stats(for student: Student) -> StudentStats {
-        let sessions = (try? database?.lessonSessions(forStudent: student.id)) ?? []
-        let shown = outcomes.values.flatMap { $0 }.filter { $0.studentID == student.id || $0.studentName.lowercased() == student.name.lowercased() }
+        let lessons = lessons(for: student)
+        let shown = outcomes.values.flatMap { $0 }.filter { $0.studentID == student.id }
         var summary: CoverageSummary?
-        let trees = student.allSpecificationIDs.compactMap { specificationTree(id: $0) }
+        let trees = specificationIDs(for: student).compactMap { specificationTree(id: $0) }
         if !trees.isEmpty {
             let coverage = coverage(for: student)
+            let tier = primaryEnrolment(for: student)?.tier
             var counts: [CoverageStatus: Int] = [:]
             var total = 0
             for tree in trees {
-                let points = tree.points.filter { $0.tier == nil || student.tier == nil || $0.tier == student.tier }
+                let points = tree.points.filter { $0.tier == nil || tier == nil || $0.tier == tier }
                 for point in points { counts[coverage[point.id] ?? .notCovered, default: 0] += 1 }
                 total += points.count
             }
             summary = CoverageSummary(total: total, counts: counts)
         }
-        return StudentStats(lessons: sessions.count, questionsShown: shown.count, lastLesson: sessions.first?.date, coverage: summary,
+        return StudentStats(lessons: lessons.count, questionsShown: shown.count, lastLesson: lessons.first?.startAt, coverage: summary,
                             pendingOutcomes: shown.filter { $0.result == .unknown }.count)
-    }
-
-    /// Finds the student by name or creates a minimal record (used by Lesson Draw).
-    @discardableResult
-    func ensureStudent(named name: String, subjectHint: String?) throws -> Student {
-        openIfNeeded()
-        if let existing = try db().student(named: name) { return existing }
-        var student = Student(name: name.trimmingCharacters(in: .whitespaces))
-        if let hint = subjectHint?.lowercased() {
-            if hint.contains("computer") || hint.contains("cs") { student.subject = .computerScience }
-            if hint.contains("a level") || hint.contains("a-level") || hint.contains("alevel") { student.level = .aLevel }
-            else if hint.contains("ks3") { student.level = .ks3 }
-            for board in ExamBoard.allCases where hint.contains(board.rawValue.lowercased()) { student.board = board }
-            if hint.contains("foundation") { student.tier = .foundation } else if hint.contains("higher") { student.tier = .higher }
-        }
-        try db().save(student)
-        refresh()
-        return student
-    }
-
-    func recordLessonSession(student: Student, lessonFileID: String, date: Date, subjectLine: String, recap: String?) throws {
-        try db().record(LessonSession(studentID: student.id, lessonFileID: lessonFileID, date: date, subjectLine: subjectLine, recap: recap))
-        refresh()
-    }
-
-    /// Records a session for `lessonFileID`, or updates the existing one's
-    /// recap when the file already has a session (e.g. an imported MyTutor
-    /// lesson appended to a Lesson Draw file).
-    func upsertLessonSession(student: Student, lessonFileID: String, date: Date, subjectLine: String, recap: String?) throws {
-        let database = try db()
-        if var existing = try database.lessonSession(forFile: lessonFileID) {
-            if let recap, !recap.isEmpty {
-                existing.recap = [existing.recap, recap].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
-            }
-            if existing.subjectLine.isEmpty { existing.subjectLine = subjectLine }
-            try database.record(existing)
-        } else {
-            try database.record(LessonSession(studentID: student.id, lessonFileID: lessonFileID, date: date, subjectLine: subjectLine, recap: recap))
-        }
-        refresh()
-    }
-
-    func save(_ student: Student) throws {
-        try db().save(student)
-        refresh()
-    }
-
-    func deleteStudent(id: UUID) throws {
-        try db().deleteStudent(id: id)
-        refresh()
     }
 }

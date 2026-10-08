@@ -48,12 +48,12 @@ struct LessonReviewSheet: View {
     @ObservedObject private var container = TutorKitContainer.shared
 
     var lessonFileID: String?
-    var studentName: String?
+    var studentID: UUID?
     var title: String
 
     @State private var difficulty: [UUID: Int] = [:]
 
-    private var pending: [Outcome] { container.pendingOutcomes(lessonFileID: lessonFileID, studentName: studentName) }
+    private var pending: [Outcome] { container.pendingOutcomes(lessonFileID: lessonFileID, studentID: studentID) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -102,7 +102,7 @@ struct LessonReviewSheet: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(question?.title ?? "Question").font(.headline).lineLimit(2)
-                Text("\(outcome.studentName) · \(outcome.shownAt.formatted(date: .abbreviated, time: .shortened))")
+                Text("\(container.studentName(for: outcome.studentID)) · \(outcome.shownAt.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption).foregroundStyle(.secondary)
                 HStack(spacing: 12) {
                     OutcomeQuickButtons(outcome: outcome, compact: false)

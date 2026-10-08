@@ -45,7 +45,7 @@ struct QuestionBankInspectorContent: View {
         return container.questions.filter { question in
             guard question.matches(query: query, topicNames: names) else { return false }
             if !strandFilter.isEmpty, !question.topicIDs.contains(where: { $0.hasPrefix(strandFilter + ".") || $0 == strandFilter }) { return false }
-            if hideUsedByCurrentStudent, let student = currentStudent, container.hasBeenShown(question.id, to: student) { return false }
+            if hideUsedByCurrentStudent, let student = currentStudent, container.hasBeenShown(question.id, toStudentNamed: student) { return false }
             return true
         }
     }
@@ -191,7 +191,7 @@ struct QuestionBankInspectorContent: View {
     @ViewBuilder
     private func card(_ question: Question) -> some View {
         let uses = container.outcomes[question.id] ?? []
-        let usedByCurrent = currentStudent.map { container.hasBeenShown(question.id, to: $0) } ?? false
+        let usedByCurrent = currentStudent.map { container.hasBeenShown(question.id, toStudentNamed: $0) } ?? false
         VStack(alignment: .leading, spacing: 8) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8).fill(Color.white)
@@ -217,7 +217,8 @@ struct QuestionBankInspectorContent: View {
             if !question.topicIDs.isEmpty || !question.freeTags.isEmpty || !specCodes.isEmpty {
                 FlowTags(tags: specCodes + question.topicIDs.map(container.topicName) + question.freeTags.map { "#\($0)" })
             }
-            if let pendingHere = uses.first(where: { $0.result == .unknown && $0.lessonFileID == currentFileID && currentFileID != nil }) {
+            if let lessonID = container.lesson(forFile: currentFileID)?.id,
+               let pendingHere = uses.first(where: { $0.result == .unknown && $0.lessonID == lessonID }) {
                 HStack(spacing: 8) {
                     Text("How did it go?").font(.caption).foregroundStyle(.secondary)
                     OutcomeQuickButtons(outcome: pendingHere)
@@ -225,7 +226,7 @@ struct QuestionBankInspectorContent: View {
             }
             if let last = uses.first {
                 Label(
-                    "Shown \(uses.count)× · last to \(last.studentName), \(last.shownAt.formatted(date: .abbreviated, time: .omitted))",
+                    "Shown \(uses.count)× · last to \(container.studentName(for: last.studentID)), \(last.shownAt.formatted(date: .abbreviated, time: .omitted))",
                     systemSymbol: usedByCurrent ? .exclamationmarkTriangle : .clock
                 )
                 .font(.caption).foregroundStyle(usedByCurrent ? .orange : .secondary)
@@ -243,7 +244,7 @@ struct QuestionBankInspectorContent: View {
                     if !uses.isEmpty {
                         Menu("Remove use") {
                             ForEach(uses) { use in
-                                Button("\(use.studentName) · \(use.shownAt.formatted(date: .abbreviated, time: .omitted))") {
+                                Button("\(container.studentName(for: use.studentID)) · \(use.shownAt.formatted(date: .abbreviated, time: .omitted))") {
                                     do { try container.deleteOutcome(id: use.id) } catch { alertToast(error) }
                                 }
                             }
@@ -281,7 +282,7 @@ struct QuestionBankInspectorContent: View {
         defer { insertingID = nil }
         do {
             try await QuestionBankCanvasBridge.insert(question, from: container, into: coordinator)
-            try container.recordUse(of: question.id, studentName: currentStudent ?? "Unknown", lessonFileID: currentFileID)
+            try container.recordUse(of: question.id, studentName: currentStudent, lessonFileID: currentFileID)
             alertToast(.init(displayMode: .hud, type: .complete(.green), title: "Inserted “\(question.title)”"))
         } catch {
             alertToast(error)

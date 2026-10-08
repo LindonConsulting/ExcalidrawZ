@@ -33,7 +33,7 @@ struct StudentDetailSheet: View {
             if let student {
                 header(student)
                 Divider()
-                let trees = student.allSpecificationIDs.compactMap { container.specificationTree(id: $0) }
+                let trees = container.specificationIDs(for: student).compactMap { container.specificationTree(id: $0) }
                 if !trees.isEmpty {
                     checklists(student: student, trees: trees)
                 } else {
@@ -58,7 +58,7 @@ struct StudentDetailSheet: View {
             if let student { StudentEditSheet(student: student) }
         }
         .sheet(isPresented: $isReviewPresented) {
-            if let student { LessonReviewSheet(studentName: student.name, title: "Results for \(student.name)") }
+            if let student { LessonReviewSheet(studentID: student.id, title: "Results for \(student.name)") }
         }
     }
 
@@ -68,9 +68,14 @@ struct StudentDetailSheet: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(student.name).font(.title2.bold())
-                Text([student.level.rawValue, student.subject.rawValue, student.board?.rawValue, student.tier?.rawValue, student.targetGrade.isEmpty ? nil : "Target \(student.targetGrade)"]
-                    .compactMap { $0 }.joined(separator: " · "))
+                let enrolment = container.primaryEnrolment(for: student)
+                Text([container.courseSummary(for: student), (enrolment?.targetGrade).flatMap { $0.isEmpty ? nil : "Target \($0)" }]
+                    .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
                     .foregroundStyle(.secondary)
+                let others = container.enrolments(for: student).filter { $0.id != enrolment?.id }
+                if !others.isEmpty {
+                    Text("Also: " + others.map(\.courseName).joined(separator: ", ")).font(.callout).foregroundStyle(.secondary)
+                }
                 let specs = container.specifications(for: student)
                 if !specs.isEmpty {
                     Text(specs.map(\.title).joined(separator: " · ")).font(.callout).foregroundStyle(.secondary)
@@ -86,7 +91,7 @@ struct StudentDetailSheet: View {
             Spacer()
             VStack(alignment: .trailing, spacing: 8) {
                 Button("Edit…") { isEditing = true }
-                let pending = container.pendingOutcomes(studentName: student.name).count
+                let pending = container.pendingOutcomes(studentID: student.id).count
                 if pending > 0 {
                     Button { isReviewPresented = true } label: { Label("Record \(pending) result\(pending == 1 ? "" : "s")", systemSymbol: .checklist) }
                 }
@@ -144,7 +149,7 @@ struct StudentDetailSheet: View {
 
     private func visiblePoints(_ points: [SpecPoint], student: Student, coverage: [UUID: CoverageStatus]) -> [SpecPoint] {
         points.filter { point in
-            if let tier = point.tier, let studentTier = student.tier, tier != studentTier { return false }
+            if let tier = point.tier, let studentTier = container.primaryEnrolment(for: student)?.tier, tier != studentTier { return false }
             let status = coverage[point.id] ?? .notCovered
             switch filter {
                 case .all: return true

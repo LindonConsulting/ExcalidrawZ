@@ -219,7 +219,7 @@ enum LessonspaceImportCoordinator {
         let container = TutorKitContainer.shared
         if let student = try? container.ensureStudent(named: lesson.student, subjectHint: lesson.subject),
            let fileID = file.id?.uuidString {
-            try? container.upsertLessonSession(student: student, lessonFileID: fileID, date: lesson.lessonDate, subjectLine: lesson.subject ?? "", recap: summary)
+            try? container.upsertLesson(student: student, fileID: fileID, date: lesson.lessonDate, subjectLine: lesson.subject ?? "", recap: summary)
         }
 
         if didAppend, fileState.currentActiveFile?.id == FileState.ActiveFile.file(file).id {

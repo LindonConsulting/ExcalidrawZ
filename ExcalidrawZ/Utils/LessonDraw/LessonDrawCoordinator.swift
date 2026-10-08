@@ -121,7 +121,7 @@ enum LessonDrawCoordinator {
                 plan.previousElements = try LessonRecapBuilder.elements(from: data)
             }
         }
-        plan.warmUp = TutorKitContainer.shared.warmUpPicks(forStudentNamed: match.student)
+        plan.warmUp = TutorKitContainer.shared.warmUpPicks(forStudentNamed: match.student, subjectLine: match.subject)
         return plan
     }
 
@@ -180,7 +180,7 @@ enum LessonDrawCoordinator {
         try? context.save()
         if let student = try? TutorKitContainer.shared.ensureStudent(named: plan.student, subjectHint: plan.subject),
            let fileID = file.id?.uuidString {
-            try? container.recordLessonSession(student: student, lessonFileID: fileID, date: plan.lessonDate, subjectLine: plan.subject ?? "", recap: summary)
+            try? container.upsertLesson(student: student, fileID: fileID, date: plan.lessonDate, subjectLine: plan.subject ?? "", recap: summary)
             for pick in plan.warmUp {
                 try? container.recordUse(of: pick.question.id, studentName: student.name, lessonFileID: fileID)
             }

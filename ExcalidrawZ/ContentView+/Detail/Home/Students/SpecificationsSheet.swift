@@ -102,7 +102,7 @@ struct SpecificationsSheet: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text("\(container.students.filter { $0.specificationID == spec.id }.count) students").font(.caption).foregroundStyle(.secondary)
+                    Text("\(container.studentCount(forSpecification: spec.id)) students").font(.caption).foregroundStyle(.secondary)
                     Button(role: .destructive) { deleting = spec } label: { Image(systemSymbol: .trash) }.buttonStyle(.borderless)
                 }
                 .padding(.vertical, 4)

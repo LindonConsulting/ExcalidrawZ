@@ -38,7 +38,7 @@ struct StudentsPage: View {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         return byKey.values
             .filter { showInactive || ($0.roster?.isActive ?? false) }
-            .filter { q.isEmpty || $0.name.lowercased().contains(q) || ($0.student.map { "\($0.board?.rawValue ?? "") \($0.level.rawValue) \($0.subject.rawValue) \($0.yearGroup) \($0.management)".lowercased().contains(q) } ?? false) }
+            .filter { q.isEmpty || $0.name.lowercased().contains(q) || ($0.student.map { "\(container.courseSummary(for: $0)) \($0.yearGroup) \($0.management)".lowercased().contains(q) } ?? false) }
             .sorted { ($0.roster?.nextLesson ?? .distantFuture, $0.name) < ($1.roster?.nextLesson ?? .distantFuture, $1.name) }
     }
 
@@ -106,7 +106,8 @@ struct StudentsPage: View {
             .width(min: 140)
             TableColumn("Course") { row in
                 if let s = row.student {
-                    Text([s.level.rawValue, s.subject.rawValue, s.board?.rawValue, s.tier.flatMap { $0 == .notApplicable ? nil : $0.rawValue }].compactMap { $0 }.joined(separator: " · "))
+                    let others = container.enrolments(for: s).count - 1
+                    Text(container.courseSummary(for: s) + (others > 0 ? " +\(others)" : ""))
                 } else {
                     Text(row.roster?.subjects.joined(separator: ", ") ?? "").foregroundStyle(.secondary)
                 }

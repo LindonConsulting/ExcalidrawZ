@@ -42,7 +42,8 @@ struct StudentsSection: View {
             } else {
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
                     ForEach(container.students) { student in
-                        StudentCard(student: student, stats: container.stats(for: student))
+                        StudentCard(student: student, course: container.courseSummary(for: student),
+                                    targetGrade: container.primaryEnrolment(for: student)?.targetGrade ?? "", stats: container.stats(for: student))
                             .onTapGesture { detailStudent = student }
                             .contextMenu {
                                 Button("Edit…") { editingStudent = student }
@@ -62,9 +63,7 @@ struct StudentsSection: View {
     }
 
     private func archive(_ student: Student) {
-        var copy = student
-        copy.archivedAt = .now
-        do { try container.save(copy) } catch { alertToast(error) }
+        do { try container.archive(student) } catch { alertToast(error) }
     }
 
     private func openGroup(named name: String) {
@@ -77,6 +76,8 @@ struct StudentsSection: View {
 
 struct StudentCard: View {
     let student: Student
+    let course: String
+    let targetGrade: String
     let stats: TutorKitContainer.StudentStats
 
     var body: some View {
@@ -84,15 +85,13 @@ struct StudentCard: View {
             HStack {
                 Text(student.name).font(.headline).lineLimit(1)
                 Spacer()
-                if !student.targetGrade.isEmpty {
-                    Text("Target \(student.targetGrade)")
+                if !targetGrade.isEmpty {
+                    Text("Target \(targetGrade)")
                         .font(.caption2).padding(.horizontal, 6).padding(.vertical, 2)
                         .background(Color.accentColor.opacity(0.15), in: Capsule())
                 }
             }
-            Text([student.level.rawValue, student.subject.rawValue, student.board?.rawValue, student.tier.flatMap { $0 == .notApplicable ? nil : $0.rawValue }]
-                .compactMap { $0 }.joined(separator: " · "))
-                .font(.caption).foregroundStyle(.secondary)
+            Text(course).font(.caption).foregroundStyle(.secondary)
             if let coverage = stats.coverage {
                 CoverageBar(coverage: coverage)
             }
