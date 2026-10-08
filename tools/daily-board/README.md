@@ -40,7 +40,10 @@ Sheet: https://docs.google.com/spreadsheets/d/1jEjQ7GBBfrsGB5pF2Uuk2kONbK_jyxtcg
    `~/Library/Application Support/Daily Board/config.json`. Paste the URL as `endpoint` and the secret as `key`.
 3. **Check it**: `python3 daily_board.py fetch` prints today's data; `python3 daily_board.py build` writes today's board.
 4. **Schedule**: `python3 daily_board.py install` loads two launchd agents: build at 05:30, sync every 5 minutes.
-5. **Pictures**: drop PNG/JPG files into `~/Daily Board/Pictures`. One is picked per day in rotation.
+5. **Pictures**: by default the panel shows NASA's Astronomy Picture of the Day with its title and credit,
+   read from https://science.nasa.gov/apod/ (cached in the app support folder). Drop PNG/JPG files into
+   `~/Daily Board/Pictures` to override it; those rotate one per day. Set `"picture": "local"` in the
+   config to turn NASA off.
 6. **Share the sheet with Jess** (editor). Nothing else for her to set up.
 
 The folder `~/Daily Board` is already linked in Lindon Academy under *Linked Storage* (via a symlink at

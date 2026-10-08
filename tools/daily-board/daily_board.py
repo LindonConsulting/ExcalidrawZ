@@ -72,6 +72,8 @@ def load_config():
     with open(CONFIG_PATH) as f:
         cfg = json.load(f)
     cfg["board_dir"] = os.path.expanduser(cfg.get("board_dir") or DEFAULT_BOARD_DIR)
+    cfg.setdefault("picture", "nasa")          # "nasa" or "local"
+    cfg.setdefault("nasa_api_key", "DEMO_KEY")  # free key at https://api.nasa.gov raises the rate limit
     return cfg
 
 
@@ -325,7 +327,7 @@ class Board:
             cy += 24 * (title.count("\n") + 1) + 12
         return cy - y
 
-    def picture(self, x, y, w, path):
+    def picture(self, x, y, w, path, caption=None):
         if not path:
             self.add(text(x, y, "Drop pictures into\n" + os.path.join(DEFAULT_BOARD_DIR, "Pictures"),
                           size=16, color=GREY))
@@ -354,7 +356,18 @@ class Board:
             fileId=file_id, status="saved", scale=[1, 1], crop=None,
             roughness=0, strokeColor="transparent",
         ), kind="picture"))
-        return dh
+        if not caption:
+            return dh
+        title, credit = caption
+        cy = y + dh + 12
+        title = wrap(title, max(20, int(w / 10)))
+        self.add(text(x, cy, title, size=18))
+        cy += 22 * (title.count("\n") + 1) + 4
+        if credit:
+            credit = wrap(credit, max(24, int(w / 8)))
+            self.add(text(x, cy, credit, size=14, color=GREY))
+            cy += 18 * (credit.count("\n") + 1)
+        return cy - y
 
     def to_json(self, source):
         return {
@@ -368,6 +381,87 @@ class Board:
             },
             "files": self.files,
         }
+
+
+def fetch_apod(cfg, today):
+    """NASA Astronomy Picture of the Day, read from https://science.nasa.gov/apod/
+    (the old api.nasa.gov endpoint broke when APOD moved there in 2026).
+    Returns (path, (title, credit)) or None. Cached per APOD date."""
+    import html as html_mod
+    cache_dir = os.path.join(APP_DIR, "apod")
+    os.makedirs(cache_dir, exist_ok=True)
+    try:
+        req = urllib.request.Request("https://science.nasa.gov/apod/",
+                                     headers={"User-Agent": "Mozilla/5.0 daily-board/1"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            page = resp.read().decode("utf-8", "ignore")
+    except Exception as err:  # noqa: BLE001
+        log("apod page: %s" % err)
+        page = ""
+
+    meta = None
+    if page:
+        imgs = re.findall(r'https://assets\.science\.nasa\.gov/[^"\s]*?/apod/apod/[^"\s]+', page)
+        imgs = [html_mod.unescape(u) for u in imgs]
+        pick = next((u for u in imgs if "w=1024" in u), None) or next(
+            (u for u in imgs if "?" not in u), None) or (imgs[0] if imgs else None)
+        hm = re.search(r"<h1[^>]*>\s*Astronomy Picture of the Day", page)
+        h1 = hm.start() if hm else -1
+        tm = re.search(r"<h2[^>]*>(.*?)</h2>", page[h1:], re.S) if h1 >= 0 else None
+        title = " ".join(html_mod.unescape(re.sub(r"<[^>]+>", "", tm.group(1))).split()) if tm else ""
+        dm = re.search(r"discuss_apod\.php\?date=(\d{6})", page)
+        apod_date = ("20" + dm.group(1)) if dm else today.strftime("%Y%m%d")
+        credit = ""
+        if tm:
+            after = " ".join(html_mod.unescape(re.sub(r"<[^>]+>", " ", page[h1 + tm.end():h1 + tm.end() + 6000])).split())
+            cm = re.search(r"Credit:?\s*(.*?)(?:\s+Authors? & editors|\s+A service of|$)", after)
+            if cm:
+                credit = cm.group(1).strip()[:120]
+        if pick:
+            meta = {"url": pick, "title": title, "credit": credit, "date": apod_date}
+
+    if meta is None:
+        # Fall back to the most recent cached entry.
+        cached = sorted(glob.glob(os.path.join(cache_dir, "*.json")))
+        if not cached:
+            return None
+        with open(cached[-1]) as f:
+            meta = json.load(f)
+
+    ext = os.path.splitext(meta["url"].split("?")[0])[1].lower() or ".jpg"
+    img_path = os.path.join(cache_dir, meta["date"] + ext)
+    if not os.path.exists(img_path):
+        try:
+            req = urllib.request.Request(meta["url"], headers={"User-Agent": "Mozilla/5.0 daily-board/1"})
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = resp.read()
+            with open(img_path, "wb") as f:
+                f.write(data)
+        except Exception as err:  # noqa: BLE001
+            log("apod image: %s" % err)
+            return None
+    with open(os.path.join(cache_dir, meta["date"] + ".json"), "w") as f:
+        json.dump(meta, f)
+    with open(img_path, "rb") as f:
+        dims = image_dimensions(f.read(64 * 1024))
+    if not dims or dims[0] < 400 or dims[1] < 300:
+        return None
+    d = meta["date"]
+    nice = "%s %s" % (int(d[6:8]), dt.date(int(d[:4]), int(d[4:6]), 1).strftime("%b"))
+    credit = "NASA APOD " + nice + (" · " + meta["credit"] if meta.get("credit") else "")
+    return img_path, (meta.get("title", ""), credit)
+
+
+def choose_picture(cfg, board_dir, today):
+    """Local pictures win when present; otherwise NASA's picture of the day."""
+    local = pick_picture(board_dir, today)
+    if local:
+        return local, None
+    if cfg.get("picture", "nasa") == "nasa":
+        got = fetch_apod(cfg, today)
+        if got:
+            return got
+    return None, None
 
 
 def pick_picture(board_dir, today):
@@ -448,7 +542,8 @@ def flag_items(flags, today):
     return out
 
 
-def build_board(data, today, board_dir):
+def build_board(data, today, board_dir, cfg=None):
+    cfg = cfg or {}
     b = Board(today)
     do_today, due_today, overdue, coming = categorise(data.get("todos", []), today)
     flags = flag_items(data.get("flags", []), today)
@@ -487,8 +582,9 @@ def build_board(data, today, board_dir):
 
     # Column C: picture + scratch space
     cx, cw, y = 1280, 480, 140
-    pic = pick_picture(board_dir, today)
-    h = b.panel(cx, y, cw, "Picture of the day", lambda x, yy, w: b.picture(x, yy, w, pic), accent=GOLD)
+    pic, caption = choose_picture(cfg, board_dir, today)
+    h = b.panel(cx, y, cw, "Picture of the day",
+                lambda x, yy, w: b.picture(x, yy, w, pic, caption), accent=GOLD)
     y += h + 30
     b.panel(cx, y, cw, "Scratch", lambda x, yy, w: 260, accent=SNOW)
 
@@ -506,7 +602,7 @@ def cmd_build(cfg, day=None, data=None):
     if data is None:
         cmd_sync(cfg)  # capture any ticks drawn since the last sync first
         data = fetch_board(cfg, day)
-    doc = build_board(data, day, cfg["board_dir"])
+    doc = build_board(data, day, cfg["board_dir"], cfg)
     path = board_path(cfg["board_dir"], day)
     tmp = path + ".tmp"
     with open(tmp, "w") as f:
@@ -681,7 +777,7 @@ def demo_data(today):
 def main(argv):
     cmd = argv[1] if len(argv) > 1 else "build"
     if cmd == "demo":
-        cfg = {"board_dir": DEFAULT_BOARD_DIR}
+        cfg = {"board_dir": DEFAULT_BOARD_DIR, "picture": "local"}
         today = dt.date.today()
         path = cmd_build(cfg, today, demo_data(today))
         print(path)
