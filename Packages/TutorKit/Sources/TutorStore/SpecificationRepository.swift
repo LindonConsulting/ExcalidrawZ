@@ -104,10 +104,10 @@ public extension TutorDatabase {
     // MARK: Coverage
 
     /// Coverage per spec point for a student, from outcomes on linked questions.
-    func coverage(specificationID: UUID, studentID: UUID, studentName: String) throws -> [UUID: CoverageStatus] {
+    func coverage(specificationID: UUID, studentID: UUID) throws -> [UUID: CoverageStatus] {
         let byPoint = try questionIDsBySpecPoint(specificationID: specificationID)
         let outcomes = try writer.read { db in
-            try Outcome.filter(Column("studentID") == studentID || Column("studentName").collating(.nocase) == studentName).fetchAll(db)
+            try Outcome.filter(Column("studentID") == studentID && Column("deletedAt") == nil).fetchAll(db)
         }
         let byQuestion = Dictionary(grouping: outcomes, by: \.questionID)
         var result: [UUID: CoverageStatus] = [:]

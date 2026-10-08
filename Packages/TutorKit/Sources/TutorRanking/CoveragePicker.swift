@@ -4,6 +4,10 @@ import TutorModels
 /// Everything the picker needs about one student, precomputed by the caller.
 public struct PickerContext: Sendable {
     public var student: Student?
+    /// The enrolment the lesson is for (subject/level/tier fit); nil = no restriction.
+    public var enrolment: Enrolment?
+    /// Topic ids the tutor has flagged as weak for the student.
+    public var focusTopicIDs: Set<String>
     /// spec point id → status for this student (empty when no spec is linked)
     public var coverage: [UUID: CoverageStatus]
     /// question id → spec point ids
@@ -13,9 +17,11 @@ public struct PickerContext: Sendable {
     public var outcomes: [UUID: [Outcome]]
     public var now: Date
 
-    public init(student: Student?, coverage: [UUID: CoverageStatus] = [:], specPointsByQuestion: [UUID: [UUID]] = [:],
+    public init(student: Student?, enrolment: Enrolment? = nil, focusTopicIDs: Set<String> = [],
+                coverage: [UUID: CoverageStatus] = [:], specPointsByQuestion: [UUID: [UUID]] = [:],
                 specPointTiers: [UUID: Tier?] = [:], outcomes: [UUID: [Outcome]] = [:], now: Date = .now) {
-        self.student = student; self.coverage = coverage; self.specPointsByQuestion = specPointsByQuestion
+        self.student = student; self.enrolment = enrolment; self.focusTopicIDs = focusTopicIDs
+        self.coverage = coverage; self.specPointsByQuestion = specPointsByQuestion
         self.specPointTiers = specPointTiers; self.outcomes = outcomes; self.now = now
     }
 }
@@ -35,22 +41,19 @@ public struct CoveragePicker: Sendable {
     }
 
     public func rank(_ questions: [Question], context: PickerContext) -> [Scored] {
-        let student = context.student
-        let focus = Set(student?.focusTopicIDs ?? [])
+        let studentID = context.student?.id
+        let enrolment = context.enrolment
+        let focus = context.focusTopicIDs
         var scored: [Scored] = []
-        for question in questions where question.archivedAt == nil {
+        for question in questions where question.deletedAt == nil {
             // Never repeat for this student.
-            let seen = (context.outcomes[question.id] ?? []).contains { outcome in
-                (student != nil && outcome.studentID == student!.id)
-                    || (student != nil && outcome.studentName.caseInsensitiveCompare(student!.name) == .orderedSame)
-            }
-            if seen { continue }
+            if let studentID, (context.outcomes[question.id] ?? []).contains(where: { $0.studentID == studentID }) { continue }
             // Subject/level/tier fit.
-            if let student {
+            if let enrolment {
                 let linkedToStudentSpec = (context.specPointsByQuestion[question.id] ?? []).contains { context.coverage[$0] != nil }
-                if question.subject != student.subject && !linkedToStudentSpec { continue }
-                if let level = question.level, level != student.level { continue }
-                if student.level == .gcse, let tier = question.tier, let studentTier = student.tier, tier != .notApplicable, tier != studentTier { continue }
+                if question.subject != enrolment.subject && !linkedToStudentSpec { continue }
+                if let level = question.level, level != enrolment.level { continue }
+                if enrolment.level == .gcse, let tier = question.tier, let studentTier = enrolment.tier, tier != .notApplicable, tier != studentTier { continue }
             }
 
             var score = 1.0
@@ -58,7 +61,7 @@ public struct CoveragePicker: Sendable {
             let points = context.specPointsByQuestion[question.id] ?? []
             var pointScore = 0.0
             for point in points {
-                if let tier = context.specPointTiers[point] ?? nil, let studentTier = student?.tier, tier != studentTier { continue }
+                if let tier = context.specPointTiers[point] ?? nil, let studentTier = enrolment?.tier, tier != studentTier { continue }
                 switch context.coverage[point] ?? .notCovered {
                     case .wrong: pointScore += 5; reasons.append("got this wrong before")
                     case .partial: pointScore += 4; reasons.append("partly right before")

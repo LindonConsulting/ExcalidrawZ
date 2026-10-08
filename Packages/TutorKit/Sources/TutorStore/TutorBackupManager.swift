@@ -46,8 +46,8 @@ public struct TutorBackupManager: Sendable {
         let manifest = Manifest(
             createdAt: now,
             hostName: ProcessInfo.processInfo.hostName,
-            questionCount: try database.questions(includeArchived: true).count,
-            studentCount: try database.students(includeArchived: true).count
+            questionCount: try database.questions(includeDeleted: true).count,
+            studentCount: try database.students(includeDeleted: true).count
         )
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

@@ -60,7 +60,7 @@ public struct LegacyQuestionBankImporter {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let index = try decoder.decode(LegacyIndex.self, from: Data(contentsOf: indexURL))
-        let existing = Set(try database.questions(includeArchived: true).map(\.id))
+        let existing = Set(try database.questions(includeDeleted: true).map(\.id))
 
         for entry in index.entries {
             if existing.contains(entry.id) { report.skipped += 1; continue }
@@ -97,14 +97,22 @@ public struct LegacyQuestionBankImporter {
 
             for use in entry.uses ?? [] {
                 let student = try database.student(named: use.student)
+                var lessonID: UUID?
+                if let fileID = use.lessonFileID, let student {
+                    if let lesson = try database.lesson(forFile: fileID) {
+                        lessonID = lesson.id
+                    } else {
+                        lessonID = try database.save(Lesson(studentID: student.id, fileID: fileID, startAt: use.date, status: .done)).id
+                    }
+                }
                 try database.record(Outcome(
                     id: use.id ?? UUID(),
                     questionID: entry.id,
                     studentID: student?.id,
-                    studentName: use.student,
-                    lessonFileID: use.lessonFileID,
+                    lessonID: lessonID,
                     shownAt: use.date,
-                    result: .unknown
+                    result: .unknown,
+                    note: student == nil ? "Legacy use by \(use.student)" : ""
                 ))
                 report.outcomesImported += 1
             }

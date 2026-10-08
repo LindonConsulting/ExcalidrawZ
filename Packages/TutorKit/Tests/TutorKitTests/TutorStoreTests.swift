@@ -18,15 +18,17 @@ final class TutorStoreTests: XCTestCase {
 
     func testRoundTrips() throws {
         let db = try TutorDatabase(directory: tempDir)
-        let student = try db.save(Student(name: "Frankie", board: .edexcel, tier: .higher, targetGrade: "7"))
+        let student = try db.save(Student(name: "Frankie"))
+        try db.save(Enrolment(studentID: student.id, board: .edexcel, tier: .higher, targetGrade: "7", isPrimary: true))
         XCTAssertEqual(try db.student(named: "frankie")?.id, student.id)
+        XCTAssertEqual(try db.enrolments(forStudent: student.id).first?.courseName, "Edexcel GCSE Maths (Higher)")
 
         let question = Question(title: "Expand (x+2)(x+3)", topicIDs: ["maths.algebra.expanding"], imageHash: "00ff00ff00ff00ff")
         try db.add(question, payload: QuestionPayload(elementsJSON: Data("[]".utf8), thumbnailPNG: Data([1, 2, 3])))
         XCTAssertEqual(try db.questions().count, 1)
         XCTAssertEqual(db.media.thumbnailPNG(for: question.id), Data([1, 2, 3]))
 
-        try db.record(Outcome(questionID: question.id, studentID: student.id, studentName: student.name, result: .partial, perceivedDifficulty: 4))
+        try db.record(Outcome(questionID: question.id, studentID: student.id, result: .partial, perceivedDifficulty: 4))
         XCTAssertEqual(try db.outcomes(forStudent: student.id).first?.result, .partial)
 
         // Cascade: deleting the question removes outcomes and media.
@@ -72,8 +74,9 @@ final class TutorStoreTests: XCTestCase {
         XCTAssertEqual(q.freeTags, ["Weird tag"])
         XCTAssertEqual(q.board, .aqa); XCTAssertEqual(q.tier, .higher); XCTAssertEqual(q.level, .gcse)
         let outcome = try XCTUnwrap(db.outcomes(forQuestion: qid).first)
-        XCTAssertEqual(outcome.studentName, "Frankie")
         XCTAssertNotNil(outcome.studentID)
+        XCTAssertNotNil(outcome.lessonID)
+        XCTAssertEqual(try db.lesson(forFile: "f1")?.id, outcome.lessonID)
         XCTAssertEqual(db.media.thumbnailPNG(for: qid), Data([9]))
         XCTAssertFalse(FileManager.default.fileExists(atPath: legacy.path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: legacy.path + ".migrated"))
@@ -82,8 +85,8 @@ final class TutorStoreTests: XCTestCase {
     func testNeverRepeatPicker() {
         let student = Student(name: "Sam")
         let q1 = Question(title: "1", topicIDs: ["t.a"]), q2 = Question(title: "2", topicIDs: ["t.b"]), q3 = Question(title: "3")
-        let outcomes: [UUID: [Outcome]] = [q1.id: [Outcome(questionID: q1.id, studentID: student.id, studentName: "Sam")]]
-        let picks = NeverRepeatPicker().pick(from: [q1, q2, q3], outcomes: outcomes, request: .init(student: student, count: 2, preferredTopicIDs: ["t.b"]))
+        let outcomes: [UUID: [Outcome]] = [q1.id: [Outcome(questionID: q1.id, studentID: student.id)]]
+        let picks = NeverRepeatPicker().pick(from: [q1, q2, q3], outcomes: outcomes, request: .init(studentID: student.id, count: 2, preferredTopicIDs: ["t.b"]))
         XCTAssertEqual(picks.map(\.title), ["2", "3"])
     }
 
@@ -115,31 +118,33 @@ final class SpecificationTests: XCTestCase {
         XCTAssertEqual(tree.points.first { $0.code == "A18" }?.tier, .higher)
         XCTAssertEqual(try db.specificationTree(id: tree.specification.id)?.points.count, 5)
 
-        let student = try db.save(Student(name: "Frankie", specificationID: tree.specification.id))
+        let student = try db.save(Student(name: "Frankie"))
+        let enrolment = try db.save(Enrolment(studentID: student.id, specificationID: tree.specification.id, isPrimary: true))
         let q = Question(title: "q")
         try db.add(q, payload: QuestionPayload(elementsJSON: Data("[]".utf8)))
         let a18 = tree.points.first { $0.code == "A18" }!
         try db.setSpecPoints([a18.id], forQuestion: q.id)
         XCTAssertEqual(try db.specPointIDs(forQuestion: q.id), [a18.id])
 
-        var coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id, studentName: student.name)
+        var coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id)
         XCTAssertEqual(coverage[a18.id], .notCovered)
-        try db.record(Outcome(questionID: q.id, studentID: student.id, studentName: "Frankie", result: .unknown))
-        coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id, studentName: student.name)
+        try db.record(Outcome(questionID: q.id, studentID: student.id, result: .unknown))
+        coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id)
         XCTAssertEqual(coverage[a18.id], .shown)
-        try db.record(Outcome(questionID: q.id, studentID: nil, studentName: "frankie", shownAt: .now.addingTimeInterval(60), result: .wrong))
-        coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id, studentName: student.name)
+        try db.record(Outcome(questionID: q.id, studentID: student.id, shownAt: .now.addingTimeInterval(60), result: .wrong))
+        coverage = try db.coverage(specificationID: tree.specification.id, studentID: student.id)
         XCTAssertEqual(coverage[a18.id], .wrong)
 
         try db.deleteSpecification(id: tree.specification.id)
         XCTAssertTrue(try db.specPointIDs(forQuestion: q.id).isEmpty)
-        XCTAssertNil(try db.student(id: student.id)?.specificationID)
+        XCTAssertNil(try db.enrolment(id: enrolment.id)?.specificationID)
     }
 }
 
 final class CoveragePickerTests: XCTestCase {
     func testPrefersWrongThenUncoveredAndNeverRepeats() {
-        let student = Student(name: "Frankie", subject: .maths, level: .gcse, tier: .higher, focusTopicIDs: ["maths.algebra.quadratics"])
+        let student = Student(name: "Frankie")
+        let enrolment = Enrolment(studentID: student.id, subject: .maths, level: .gcse, tier: .higher, isPrimary: true)
         let pWrong = UUID(), pNew = UUID(), pRight = UUID()
         let qWrong = Question(title: "wrong-point", subject: .maths, level: .gcse, difficulty: 3)
         let qNew = Question(title: "new-point", subject: .maths, level: .gcse, difficulty: 2)
@@ -148,10 +153,10 @@ final class CoveragePickerTests: XCTestCase {
         let qFocus = Question(title: "focus", subject: .maths, level: .gcse, topicIDs: ["maths.algebra.quadratics"])
         let qFoundation = Question(title: "foundation-only", subject: .maths, level: .gcse, tier: .foundation)
         let context = PickerContext(
-            student: student,
+            student: student, enrolment: enrolment, focusTopicIDs: ["maths.algebra.quadratics"],
             coverage: [pWrong: .wrong, pNew: .notCovered, pRight: .right],
             specPointsByQuestion: [qWrong.id: [pWrong], qNew.id: [pNew], qRight.id: [pRight]],
-            outcomes: [qSeen.id: [Outcome(questionID: qSeen.id, studentID: student.id, studentName: "Frankie")]]
+            outcomes: [qSeen.id: [Outcome(questionID: qSeen.id, studentID: student.id)]]
         )
         let picks = CoveragePicker(count: 3).pick([qRight, qSeen, qFoundation, qNew, qFocus, qWrong], context: context)
         XCTAssertEqual(picks.first?.question.title, "wrong-point")
