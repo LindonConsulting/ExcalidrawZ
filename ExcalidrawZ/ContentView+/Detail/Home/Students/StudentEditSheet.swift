@@ -2,8 +2,8 @@
 //  StudentEditSheet.swift
 //  ExcalidrawZ
 //
-//  Edits a student, their primary enrolment (what you teach them), the other
-//  specifications they study, and their focus topics.
+//  Edits a student's profile, their primary enrolment (what you teach them),
+//  the other specifications they study, their parent contact and focus topics.
 //
 
 import SwiftUI
@@ -20,11 +20,15 @@ struct StudentEditSheet: View {
     private let isNew: Bool
     @State private var student: Student
     @State private var primary: Enrolment
+    @State private var contact: StudentContact
     /// Specification ids of the non-primary enrolments.
     @State private var otherSpecificationIDs: Set<UUID>
     @State private var focusTopicIDs: [String]
     @State private var groupNames: [String] = []
     @State private var isDeleteConfirmPresented = false
+
+    private static let managementOptions = ["private", "mytutor", "school", "other"]
+    private static let contactMethods = ["", "WhatsApp", "Email", "Phone", "Text", "Messenger"]
 
     init(student: Student?) {
         isNew = student == nil
@@ -36,57 +40,86 @@ struct StudentEditSheet: View {
         _primary = State(initialValue: primary)
         _otherSpecificationIDs = State(initialValue: Set(enrolments.filter { $0.id != primary.id }.compactMap(\.specificationID)))
         _focusTopicIDs = State(initialValue: student.map(container.focusTopicIDs(for:)) ?? [])
+        let contacts = student.map(container.contacts(for:)) ?? []
+        _contact = State(initialValue: contacts.first { $0.isPrimary } ?? contacts.first ?? StudentContact(studentID: record.id, relationship: "parent", isPrimary: true))
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(isNew ? "New Student" : "Edit Student").font(.title2.bold())
+        VStack(alignment: .leading, spacing: 12) {
+            Text(isNew ? "New Student" : "Edit \(student.name)").font(.title2.bold())
 
-            Form {
-                HStack {
-                    TextField("Name (matches the file group)", text: $student.name)
-                    if !groupNames.isEmpty {
-                        Menu("Groups") {
-                            ForEach(groupNames, id: \.self) { name in Button(name) { student.name = name } }
-                        }.fixedSize()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    section("Profile") {
+                        HStack {
+                            TextField("Name (matches the file group)", text: $student.name)
+                            if !groupNames.isEmpty {
+                                Menu("Groups") {
+                                    ForEach(groupNames, id: \.self) { name in Button(name) { student.name = name } }
+                                }.fixedSize()
+                            }
+                        }
+                        TextField("Year group", text: $student.yearGroup)
+                        TextField("School", text: $student.school)
+                        Picker("Via", selection: $student.management) {
+                            Text("—").tag("")
+                            ForEach(Self.managementOptions, id: \.self) { Text($0.capitalized).tag($0) }
+                            if !student.management.isEmpty, !Self.managementOptions.contains(student.management) {
+                                Text(student.management).tag(student.management)
+                            }
+                        }
+                        TextField("Notes", text: $student.notes, axis: .vertical).lineLimit(2...5)
+                        TextField("Rapport notes", text: $student.rapportNotes, axis: .vertical).lineLimit(2...5)
+                        TextField("Hobbies", text: $student.hobbies)
+                        TextField("Interests", text: $student.interests)
                     }
-                }
-                TextField("Year group", text: $student.yearGroup)
-                Picker("Subject", selection: $primary.subject) { ForEach(Subject.allCases) { Text($0.rawValue).tag($0) } }
-                Picker("Level", selection: $primary.level) { ForEach(QualificationLevel.allCases) { Text($0.rawValue).tag($0) } }
-                Picker("Board", selection: $primary.board) {
-                    Text("—").tag(ExamBoard?.none)
-                    ForEach(ExamBoard.allCases) { Text($0.rawValue).tag(ExamBoard?.some($0)) }
-                }
-                if primary.level == .gcse {
-                    Picker("Tier", selection: $primary.tier) {
-                        Text("—").tag(Tier?.none)
-                        ForEach([Tier.foundation, .higher]) { Text($0.rawValue).tag(Tier?.some($0)) }
+
+                    section("Course") {
+                        Picker("Subject", selection: $primary.subject) { ForEach(Subject.allCases) { Text($0.rawValue).tag($0) } }
+                        Picker("Level", selection: $primary.level) { ForEach(QualificationLevel.allCases) { Text($0.rawValue).tag($0) } }
+                        Picker("Board", selection: $primary.board) {
+                            Text("—").tag(ExamBoard?.none)
+                            ForEach(ExamBoard.allCases) { Text($0.rawValue).tag(ExamBoard?.some($0)) }
+                        }
+                        if primary.level == .gcse {
+                            Picker("Tier", selection: $primary.tier) {
+                                Text("—").tag(Tier?.none)
+                                ForEach([Tier.foundation, .higher]) { Text($0.rawValue).tag(Tier?.some($0)) }
+                            }
+                        }
+                        Picker("Main specification", selection: $primary.specificationID) {
+                            Text("—").tag(UUID?.none)
+                            ForEach(container.specifications.filter { $0.level == primary.level }) { spec in
+                                Text(spec.displayName).tag(UUID?.some(spec.id))
+                            }
+                        }
+                        TextField("Target grade", text: $primary.targetGrade)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Also studying").font(.callout).foregroundStyle(.secondary)
+                            ForEach(container.specifications.filter { $0.id != primary.specificationID }) { spec in
+                                Toggle(spec.displayName, isOn: Binding(
+                                    get: { otherSpecificationIDs.contains(spec.id) },
+                                    set: { on in if on { otherSpecificationIDs.insert(spec.id) } else { otherSpecificationIDs.remove(spec.id) } }
+                                ))
+                                .toggleStyle(.checkbox)
+                            }
+                        }
                     }
-                }
-                Picker("Main specification", selection: $primary.specificationID) {
-                    Text("—").tag(UUID?.none)
-                    ForEach(container.specifications.filter { $0.level == primary.level }) { spec in
-                        Text(spec.displayName).tag(UUID?.some(spec.id))
+
+                    section("Parent / contact") {
+                        TextField("Name", text: $contact.name)
+                        TextField("Relationship", text: $contact.relationship)
+                        TextField("Phone", text: $contact.phone)
+                        TextField("Email", text: $contact.email)
+                        Picker("Prefers", selection: $contact.preferredMethod) {
+                            ForEach(Self.contactMethods, id: \.self) { Text($0.isEmpty ? "—" : $0).tag($0) }
+                        }
                     }
+
+                    section("Focus topics") { focusTopics }
                 }
-                TextField("Target grade", text: $primary.targetGrade)
-                TextField("Notes", text: $student.notes, axis: .vertical).lineLimit(2...5)
+                .padding(.trailing, 6)
             }
-            .formStyle(.columns)
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Also studying (other specifications)").font(.callout).foregroundStyle(.secondary)
-                ForEach(container.specifications.filter { $0.id != primary.specificationID }) { spec in
-                    Toggle(spec.displayName, isOn: Binding(
-                        get: { otherSpecificationIDs.contains(spec.id) },
-                        set: { on in if on { otherSpecificationIDs.insert(spec.id) } else { otherSpecificationIDs.remove(spec.id) } }
-                    ))
-                    .toggleStyle(.checkbox)
-                }
-            }
-
-            focusTopics
 
             HStack {
                 if !isNew {
@@ -103,7 +136,7 @@ struct StudentEditSheet: View {
             }
         }
         .padding(20)
-        .frame(width: 520)
+        .frame(width: 560, height: 680)
         .onAppear { loadGroupNames() }
         .confirmationDialog("Delete \(student.name)? Their enrolments, lesson history and question outcomes are removed too.", isPresented: $isDeleteConfirmPresented, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
@@ -113,9 +146,19 @@ struct StudentEditSheet: View {
     }
 
     @ViewBuilder
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.headline)
+            Form { content() }
+                .formStyle(.columns)
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.06)))
+    }
+
+    @ViewBuilder
     private var focusTopics: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Focus topics").font(.callout).foregroundStyle(.secondary)
             FlowTags(tags: focusTopicIDs.map(container.topicName)) { name in
                 focusTopicIDs.removeAll { container.topicName($0) == name }
             }
@@ -148,7 +191,6 @@ struct StudentEditSheet: View {
         do {
             try container.save(student)
             try container.save(primary)
-            // Other specifications: one enrolment each; drop the ones switched off.
             let existing = container.enrolments(for: student).filter { $0.id != primary.id }
             for enrolment in existing where enrolment.specificationID.map({ !otherSpecificationIDs.contains($0) }) ?? false {
                 try container.deleteEnrolment(id: enrolment.id)
@@ -157,6 +199,14 @@ struct StudentEditSheet: View {
                 guard let spec = container.specification(id: specID) else { continue }
                 try container.save(Enrolment(studentID: student.id, specificationID: spec.id, subject: spec.subject, level: spec.level,
                                              board: spec.board, tier: spec.level == .gcse ? primary.tier : nil))
+            }
+            var contact = contact
+            contact.studentID = student.id
+            contact.isPrimary = true
+            if contact.summary.isEmpty {
+                if !isNew, container.contacts(for: student).contains(where: { $0.id == contact.id }) { try container.deleteContact(id: contact.id) }
+            } else {
+                try container.save(contact)
             }
             try container.setFocusTopics(focusTopicIDs, for: student)
             dismiss()

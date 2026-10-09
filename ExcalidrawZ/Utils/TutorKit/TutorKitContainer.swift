@@ -190,6 +190,16 @@ final class TutorKitContainer: ObservableObject {
         refresh()
     }
 
+    func save(_ contact: StudentContact) throws {
+        try db().save(contact)
+        refresh()
+    }
+
+    func deleteContact(id: UUID) throws {
+        try db().deleteContact(id: id)
+        refresh()
+    }
+
     func setFocusTopics(_ topicIDs: [String], for student: Student) throws {
         try db().setFocusTopics(topicIDs, forStudent: student.id)
         refresh()
