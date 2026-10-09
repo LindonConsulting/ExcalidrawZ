@@ -72,7 +72,7 @@ struct ExcalidrawSettingsView: View {
         } footer: {
             HStack {
                 Spacer()
-                Text("When a text element contains only a formula such as $x^2$, it is rendered as a math image when you finish editing. Hover the image and choose “Edit as text” to get the text back.")
+                Text("When you finish editing a text element, any formula in it such as $\\frac{2}{5}$ is rendered as maths and the rest stays as normal text. Hover a formula and choose “Edit as text” to get the original text back.")
                     .foregroundStyle(.secondary)
             }
         }
