@@ -233,8 +233,7 @@ final class TutorKitContainer: ObservableObject {
         }
     }
 
-    /// Pulls students, enrolments, contacts and deck assignments from Supabase
-    /// and merges them into local records (matched by remote id, then by name).
+    /// Two-way sync with the TutorKit Supabase project (pull, then push), plus the deck catalogue.
     func syncFromSupabase() async {
         guard !isSyncing else { return }
         isSyncing = true
@@ -242,65 +241,15 @@ final class TutorKitContainer: ObservableObject {
         do {
             let database = try db()
             let client = try TutorSyncSettings.makeClient()
-            async let remoteStudents = client.fetchStudents()
-            async let remoteEnrolments = client.fetchEnrolments()
-            async let decks = client.fetchDecks()
-            async let assignments = client.fetchDeckAssignments()
-            let (studentsRemote, enrolmentsRemote, decksRemote, assignmentsRemote) = try await (remoteStudents, remoteEnrolments, decks, assignments)
-
-            let enrolmentsByRemoteStudent = Dictionary(grouping: enrolmentsRemote, by: \.student_id)
-            var created = 0, updated = 0
-            for remote in studentsRemote {
-                let existing = students.first { $0.remoteID == remote.id } ?? student(named: remote.name)
-                var local = existing ?? Student(name: remote.name)
-                local.remoteID = remote.id
-                local.yearGroup = remote.year_group ?? ""
-                local.management = remote.management ?? ""
-                local.rapportNotes = remote.rapport_notes ?? ""
-                if local.notes.isEmpty, let notes = remote.notes { local.notes = notes }
-                local.remoteSyncedAt = .now
-                local = try database.save(local)
-                if existing == nil { created += 1 } else { updated += 1 }
-
-                // Contacts: the remote has one parent record per student.
-                let parentName = remote.parent_name ?? ""
-                let phone = remote.parent_phone ?? "", email = remote.parent_email ?? ""
-                if !parentName.isEmpty || !phone.isEmpty || !email.isEmpty {
-                    let current = try database.contacts(forStudent: local.id)
-                    var contact = current.first { $0.isPrimary } ?? current.first ?? StudentContact(studentID: local.id, relationship: "parent", isPrimary: true)
-                    contact.name = parentName; contact.phone = phone; contact.email = email
-                    try database.save(contact)
-                }
-
-                // Enrolments: one local row per remote enrolment, matched by remote id, then subject+level.
-                var localEnrolments = try database.enrolments(forStudent: local.id)
-                let remoteRows = enrolmentsByRemoteStudent[remote.id] ?? []
-                for (index, row) in remoteRows.enumerated() {
-                    let mapped = EnrolmentMapper.map(courseID: row.course_id, board: row.board, tier: row.tier)
-                    var enrolment = localEnrolments.first { $0.remoteID == row.id }
-                        ?? localEnrolments.first { $0.subject == mapped.subject && $0.level == mapped.level }
-                        ?? Enrolment(studentID: local.id, subject: mapped.subject, level: mapped.level,
-                                     isPrimary: localEnrolments.isEmpty && index == 0)
-                    enrolment.remoteID = row.id
-                    enrolment.courseID = row.course_id
-                    enrolment.subject = mapped.subject
-                    enrolment.level = mapped.level
-                    if let board = mapped.board { enrolment.board = board }
-                    if let tier = mapped.tier { enrolment.tier = tier }
-                    if row.active == false, enrolment.endedAt == nil { enrolment.endedAt = .now }
-                    if enrolment.targetGrade.isEmpty, enrolment.isPrimary, let grade = remote.target_grade { enrolment.targetGrade = grade }
-                    if enrolment.specificationID == nil, let board = enrolment.board,
-                       let spec = specifications.first(where: { $0.board == board && $0.level == enrolment.level && $0.subject == enrolment.subject }) {
-                        enrolment.specificationID = spec.id
-                    }
-                    let saved = try database.save(enrolment)
-                    if let i = localEnrolments.firstIndex(where: { $0.id == saved.id }) { localEnrolments[i] = saved } else { localEnrolments.append(saved) }
-                }
+            let report = try await TutorSyncEngine(database: database, client: client).sync()
+            if let decksRemote = try? await client.fetchDecks() {
+                remoteDecks = Dictionary(uniqueKeysWithValues: decksRemote.map { ($0.id, $0) })
             }
-            remoteDecks = Dictionary(uniqueKeysWithValues: decksRemote.map { ($0.id, $0) })
-            deckAssignmentsByStudent = Dictionary(grouping: assignmentsRemote, by: \.student_id)
+            if let assignmentsRemote = try? await client.fetchDeckAssignments() {
+                deckAssignmentsByStudent = Dictionary(grouping: assignmentsRemote, by: \.student_id)
+            }
             refresh()
-            lastSyncMessage = "Synced \(studentsRemote.count) students (\(created) new, \(updated) updated) at \(Date().formatted(date: .omitted, time: .shortened))"
+            lastSyncMessage = "Synced at \(Date().formatted(date: .omitted, time: .shortened)): \(report.description)"
         } catch {
             lastSyncMessage = "Sync failed: \(error.localizedDescription)"
             Self.logger.error("sync failed: \(error.localizedDescription)")
