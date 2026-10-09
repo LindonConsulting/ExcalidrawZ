@@ -50,27 +50,32 @@ struct StudentEditSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     section("Profile") {
-                        HStack {
-                            TextField("Name (matches the file group)", text: $student.name)
-                            if !groupNames.isEmpty {
-                                Menu("Groups") {
-                                    ForEach(groupNames, id: \.self) { name in Button(name) { student.name = name } }
-                                }.fixedSize()
+                        field("Name") {
+                            HStack {
+                                TextField("Matches the file group", text: $student.name)
+                                if !groupNames.isEmpty {
+                                    Menu("Groups") {
+                                        ForEach(groupNames, id: \.self) { name in Button(name) { student.name = name } }
+                                    }.fixedSize()
+                                }
                             }
                         }
-                        TextField("Year group", text: $student.yearGroup)
-                        TextField("School", text: $student.school)
-                        Picker("Via", selection: $student.management) {
-                            Text("—").tag("")
-                            ForEach(Self.managementOptions, id: \.self) { Text($0.capitalized).tag($0) }
-                            if !student.management.isEmpty, !Self.managementOptions.contains(student.management) {
-                                Text(student.management).tag(student.management)
+                        field("Year group") { TextField("", text: $student.yearGroup) }
+                        field("School") { TextField("", text: $student.school) }
+                        field("Via") {
+                            Picker("", selection: $student.management) {
+                                Text("—").tag("")
+                                ForEach(Self.managementOptions, id: \.self) { Text($0.capitalized).tag($0) }
+                                if !student.management.isEmpty, !Self.managementOptions.contains(student.management) {
+                                    Text(student.management).tag(student.management)
+                                }
                             }
+                            .labelsHidden().fixedSize()
                         }
-                        TextField("Notes", text: $student.notes, axis: .vertical).lineLimit(2...5)
-                        TextField("Rapport notes", text: $student.rapportNotes, axis: .vertical).lineLimit(2...5)
-                        TextField("Hobbies", text: $student.hobbies)
-                        TextField("Interests", text: $student.interests)
+                        field("Notes") { TextField("", text: $student.notes, axis: .vertical).lineLimit(2...5) }
+                        field("Rapport notes") { TextField("What they're into, how lessons go", text: $student.rapportNotes, axis: .vertical).lineLimit(2...5) }
+                        field("Hobbies") { TextField("", text: $student.hobbies) }
+                        field("Interests") { TextField("", text: $student.interests) }
                     }
 
                     section("Enrolments") {
@@ -90,18 +95,21 @@ struct StudentEditSheet: View {
                     }
 
                     section("Parent / contact") {
-                        TextField("Name", text: $contact.name)
-                        TextField("Relationship", text: $contact.relationship)
-                        TextField("Phone", text: $contact.phone)
-                        TextField("Email", text: $contact.email)
-                        Picker("Prefers", selection: $contact.preferredMethod) {
-                            ForEach(Self.contactMethods, id: \.self) { Text($0.isEmpty ? "—" : $0).tag($0) }
+                        field("Name") { TextField("", text: $contact.name) }
+                        field("Relationship") { TextField("", text: $contact.relationship) }
+                        field("Phone") { TextField("", text: $contact.phone) }
+                        field("Email") { TextField("", text: $contact.email) }
+                        field("Prefers") {
+                            Picker("", selection: $contact.preferredMethod) {
+                                ForEach(Self.contactMethods, id: \.self) { Text($0.isEmpty ? "—" : $0).tag($0) }
+                            }
+                            .labelsHidden().fixedSize()
                         }
                     }
 
                     section("Focus topics") { focusTopics }
                 }
-                .padding(.trailing, 6)
+                .frame(width: 528, alignment: .leading)
             }
 
             HStack {
@@ -152,19 +160,18 @@ struct StudentEditSheet: View {
                 }
                 .buttonStyle(.borderless)
                 .help(e.isPrimary ? "Main enrolment (used by Lesson Draw when the calendar doesn't say)" : "Make this the main enrolment")
-                Picker("", selection: enrolment.subject) { ForEach(Subject.allCases) { Text($0.rawValue).tag($0) } }.labelsHidden().fixedSize()
-                Picker("", selection: enrolment.level) { ForEach(QualificationLevel.allCases) { Text($0.rawValue).tag($0) } }.labelsHidden().fixedSize()
+                Picker("", selection: enrolment.subject) { ForEach(Subject.allCases) { Text($0.rawValue).tag($0) } }.labelsHidden()
+                Picker("", selection: enrolment.level) { ForEach(QualificationLevel.allCases) { Text($0.rawValue).tag($0) } }.labelsHidden()
                 Picker("", selection: enrolment.board) {
                     Text("Board").tag(ExamBoard?.none)
                     ForEach(ExamBoard.allCases) { Text($0.rawValue).tag(ExamBoard?.some($0)) }
-                }.labelsHidden().fixedSize()
+                }.labelsHidden()
                 if e.level == .gcse {
                     Picker("", selection: enrolment.tier) {
                         Text("Tier").tag(Tier?.none)
                         ForEach([Tier.foundation, .higher]) { Text($0.rawValue).tag(Tier?.some($0)) }
-                    }.labelsHidden().fixedSize()
+                    }.labelsHidden()
                 }
-                Spacer()
                 Button(role: .destructive) {
                     enrolments.removeAll { $0.id == e.id }
                     if !enrolments.contains(where: \.isPrimary), !enrolments.isEmpty { enrolments[0].isPrimary = true }
@@ -173,14 +180,16 @@ struct StudentEditSheet: View {
                 .disabled(enrolments.count == 1)
             }
             HStack(spacing: 8) {
-                Picker("Specification", selection: enrolment.specificationID) {
+                Text("Specification").foregroundStyle(.secondary)
+                Picker("", selection: enrolment.specificationID) {
                     Text("—").tag(UUID?.none)
                     ForEach(container.specifications.filter { $0.level == e.level && $0.subject == e.subject }) { spec in
                         Text(spec.displayName).tag(UUID?.some(spec.id))
                     }
                 }
-                .frame(maxWidth: 320)
-                TextField("Target", text: enrolment.targetGrade).frame(width: 70)
+                .labelsHidden()
+                Text("Target").foregroundStyle(.secondary)
+                TextField("", text: enrolment.targetGrade).frame(width: 60)
             }
             .padding(.leading, 26)
         }
@@ -192,11 +201,20 @@ struct StudentEditSheet: View {
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.headline)
-            Form { content() }
-                .formStyle(.columns)
+            VStack(alignment: .leading, spacing: 8) { content() }
         }
         .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.06)))
+    }
+
+    /// Label on the left at a fixed width, control filling the rest.
+    @ViewBuilder
+    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(label).foregroundStyle(.secondary).frame(width: 110, alignment: .trailing)
+            content().frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     @ViewBuilder
