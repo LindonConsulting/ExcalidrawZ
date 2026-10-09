@@ -2,7 +2,7 @@
 //  StudentEditSheet.swift
 //  ExcalidrawZ
 //
-//  Edits a student's profile, their primary enrolment (what you teach them),
+//  Edits a student's profile, their enrolments (what you teach them, one per subject/level),
 //  the other specifications they study, their parent contact and focus topics.
 //
 
@@ -19,10 +19,9 @@ struct StudentEditSheet: View {
 
     private let isNew: Bool
     @State private var student: Student
-    @State private var primary: Enrolment
+    /// Live enrolments being edited, primary first. Removed ones are deleted on save.
+    @State private var enrolments: [Enrolment]
     @State private var contact: StudentContact
-    /// Specification ids of the non-primary enrolments.
-    @State private var otherSpecificationIDs: Set<UUID>
     @State private var focusTopicIDs: [String]
     @State private var groupNames: [String] = []
     @State private var isDeleteConfirmPresented = false
@@ -35,10 +34,10 @@ struct StudentEditSheet: View {
         let container = TutorKitContainer.shared
         let record = student ?? Student(name: "")
         _student = State(initialValue: record)
-        let enrolments = student.map(container.enrolments(for:)) ?? []
-        let primary = enrolments.first { $0.isPrimary } ?? enrolments.first ?? Enrolment(studentID: record.id, isPrimary: true)
-        _primary = State(initialValue: primary)
-        _otherSpecificationIDs = State(initialValue: Set(enrolments.filter { $0.id != primary.id }.compactMap(\.specificationID)))
+        var enrolments = student.map(container.enrolments(for:)) ?? []
+        if enrolments.isEmpty { enrolments = [Enrolment(studentID: record.id, isPrimary: true)] }
+        if !enrolments.contains(where: \.isPrimary) { enrolments[0].isPrimary = true }
+        _enrolments = State(initialValue: enrolments)
         _focusTopicIDs = State(initialValue: student.map(container.focusTopicIDs(for:)) ?? [])
         let contacts = student.map(container.contacts(for:)) ?? []
         _contact = State(initialValue: contacts.first { $0.isPrimary } ?? contacts.first ?? StudentContact(studentID: record.id, relationship: "parent", isPrimary: true))
@@ -74,34 +73,18 @@ struct StudentEditSheet: View {
                         TextField("Interests", text: $student.interests)
                     }
 
-                    section("Course") {
-                        Picker("Subject", selection: $primary.subject) { ForEach(Subject.allCases) { Text($0.rawValue).tag($0) } }
-                        Picker("Level", selection: $primary.level) { ForEach(QualificationLevel.allCases) { Text($0.rawValue).tag($0) } }
-                        Picker("Board", selection: $primary.board) {
-                            Text("—").tag(ExamBoard?.none)
-                            ForEach(ExamBoard.allCases) { Text($0.rawValue).tag(ExamBoard?.some($0)) }
+                    section("Enrolments") {
+                        ForEach($enrolments) { $enrolment in
+                            enrolmentRow($enrolment)
                         }
-                        if primary.level == .gcse {
-                            Picker("Tier", selection: $primary.tier) {
-                                Text("—").tag(Tier?.none)
-                                ForEach([Tier.foundation, .higher]) { Text($0.rawValue).tag(Tier?.some($0)) }
+                        HStack {
+                            Button { enrolments.append(Enrolment(studentID: student.id, isPrimary: enrolments.isEmpty)) } label: {
+                                Label("Add enrolment", systemSymbol: .plus)
                             }
-                        }
-                        Picker("Main specification", selection: $primary.specificationID) {
-                            Text("—").tag(UUID?.none)
-                            ForEach(container.specifications.filter { $0.level == primary.level }) { spec in
-                                Text(spec.displayName).tag(UUID?.some(spec.id))
-                            }
-                        }
-                        TextField("Target grade", text: $primary.targetGrade)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Also studying").font(.callout).foregroundStyle(.secondary)
-                            ForEach(container.specifications.filter { $0.id != primary.specificationID }) { spec in
-                                Toggle(spec.displayName, isOn: Binding(
-                                    get: { otherSpecificationIDs.contains(spec.id) },
-                                    set: { on in if on { otherSpecificationIDs.insert(spec.id) } else { otherSpecificationIDs.remove(spec.id) } }
-                                ))
-                                .toggleStyle(.checkbox)
+                            .controlSize(.small)
+                            Spacer()
+                            if let clash = duplicateEnrolment {
+                                Text("Two enrolments for \(clash)").font(.caption).foregroundStyle(.red)
                             }
                         }
                     }
@@ -136,13 +119,73 @@ struct StudentEditSheet: View {
             }
         }
         .padding(20)
-        .frame(width: 560, height: 680)
+        .frame(width: 580, height: 720)
         .onAppear { loadGroupNames() }
         .confirmationDialog("Delete \(student.name)? Their enrolments, lesson history and question outcomes are removed too.", isPresented: $isDeleteConfirmPresented, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
                 do { try container.deleteStudent(id: student.id); dismiss() } catch { alertToast(error) }
             }
         }
+    }
+
+    private var primaryEnrolment: Enrolment { enrolments.first { $0.isPrimary } ?? enrolments.first ?? Enrolment(studentID: student.id) }
+
+    /// "GCSE Maths" when two live enrolments share subject and level (the store refuses that).
+    private var duplicateEnrolment: String? {
+        var seen = Set<String>()
+        for e in enrolments {
+            let key = "\(e.level.rawValue) \(e.subject.rawValue)"
+            if !seen.insert(key).inserted { return key }
+        }
+        return nil
+    }
+
+    @ViewBuilder
+    private func enrolmentRow(_ enrolment: Binding<Enrolment>) -> some View {
+        let e = enrolment.wrappedValue
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Button {
+                    for i in enrolments.indices { enrolments[i].isPrimary = enrolments[i].id == e.id }
+                } label: {
+                    Image(systemSymbol: e.isPrimary ? .starFill : .star).foregroundStyle(e.isPrimary ? .yellow : .secondary)
+                }
+                .buttonStyle(.borderless)
+                .help(e.isPrimary ? "Main enrolment (used by Lesson Draw when the calendar doesn't say)" : "Make this the main enrolment")
+                Picker("", selection: enrolment.subject) { ForEach(Subject.allCases) { Text($0.rawValue).tag($0) } }.labelsHidden().fixedSize()
+                Picker("", selection: enrolment.level) { ForEach(QualificationLevel.allCases) { Text($0.rawValue).tag($0) } }.labelsHidden().fixedSize()
+                Picker("", selection: enrolment.board) {
+                    Text("Board").tag(ExamBoard?.none)
+                    ForEach(ExamBoard.allCases) { Text($0.rawValue).tag(ExamBoard?.some($0)) }
+                }.labelsHidden().fixedSize()
+                if e.level == .gcse {
+                    Picker("", selection: enrolment.tier) {
+                        Text("Tier").tag(Tier?.none)
+                        ForEach([Tier.foundation, .higher]) { Text($0.rawValue).tag(Tier?.some($0)) }
+                    }.labelsHidden().fixedSize()
+                }
+                Spacer()
+                Button(role: .destructive) {
+                    enrolments.removeAll { $0.id == e.id }
+                    if !enrolments.contains(where: \.isPrimary), !enrolments.isEmpty { enrolments[0].isPrimary = true }
+                } label: { Image(systemSymbol: .trash) }
+                .buttonStyle(.borderless)
+                .disabled(enrolments.count == 1)
+            }
+            HStack(spacing: 8) {
+                Picker("Specification", selection: enrolment.specificationID) {
+                    Text("—").tag(UUID?.none)
+                    ForEach(container.specifications.filter { $0.level == e.level && $0.subject == e.subject }) { spec in
+                        Text(spec.displayName).tag(UUID?.some(spec.id))
+                    }
+                }
+                .frame(maxWidth: 320)
+                TextField("Target", text: enrolment.targetGrade).frame(width: 70)
+            }
+            .padding(.leading, 26)
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(e.isPrimary ? 0.10 : 0.04)))
     }
 
     @ViewBuilder
@@ -163,7 +206,7 @@ struct StudentEditSheet: View {
                 focusTopicIDs.removeAll { container.topicName($0) == name }
             }
             Menu("Add focus topic") {
-                ForEach(container.strands.filter { $0.subject == primary.subject && ($0.level == nil || $0.level == primary.level) }) { strand in
+                ForEach(container.strands.filter { $0.subject == primaryEnrolment.subject && ($0.level == nil || $0.level == primaryEnrolment.level) }) { strand in
                     Menu(strand.name) {
                         ForEach(container.children(of: strand.id)) { topic in
                             Button(topic.name) { if !focusTopicIDs.contains(topic.id) { focusTopicIDs.append(topic.id) } }
@@ -185,20 +228,21 @@ struct StudentEditSheet: View {
 
     private func save() {
         student.name = student.name.trimmingCharacters(in: .whitespaces)
-        if primary.level != .gcse { primary.tier = nil }
-        primary.isPrimary = true
-        primary.studentID = student.id
+        if let clash = duplicateEnrolment {
+            alertToast(.init(displayMode: .alert, type: .error(.red), title: "Two enrolments for \(clash). Remove one."))
+            return
+        }
         do {
             try container.save(student)
-            try container.save(primary)
-            let existing = container.enrolments(for: student).filter { $0.id != primary.id }
-            for enrolment in existing where enrolment.specificationID.map({ !otherSpecificationIDs.contains($0) }) ?? false {
-                try container.deleteEnrolment(id: enrolment.id)
+            let before = isNew ? [] : container.enrolments(for: student)
+            for removed in before where !enrolments.contains(where: { $0.id == removed.id }) {
+                try container.deleteEnrolment(id: removed.id)
             }
-            for specID in otherSpecificationIDs where !existing.contains(where: { $0.specificationID == specID }) {
-                guard let spec = container.specification(id: specID) else { continue }
-                try container.save(Enrolment(studentID: student.id, specificationID: spec.id, subject: spec.subject, level: spec.level,
-                                             board: spec.board, tier: spec.level == .gcse ? primary.tier : nil))
+            // Non-primary first; saving the primary demotes the others in the store.
+            for var enrolment in enrolments.sorted(by: { !$0.isPrimary && $1.isPrimary }) {
+                enrolment.studentID = student.id
+                if enrolment.level != .gcse { enrolment.tier = nil }
+                try container.save(enrolment)
             }
             var contact = contact
             contact.studentID = student.id
