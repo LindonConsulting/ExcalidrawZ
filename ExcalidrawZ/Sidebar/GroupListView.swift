@@ -12,6 +12,8 @@ import ChocofordEssentials
 import ChocofordUI
 
 struct GroupListView: View {
+    /// Collaboration is hidden by default on the teaching build; flip this default to show it.
+    @AppStorage("sidebar.showsCollaborationRow") private var showsCollaborationRow = false
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
     @Environment(\.alertToast) var alertToast
@@ -82,7 +84,10 @@ struct GroupListView: View {
                                         isMultiSelected: false
                                     )
                                 )
-                                
+
+                                TodaysNoteSidebarRow()
+
+                                if showsCollaborationRow {
                                 Button {
                                     fileState.setActiveFile(nil)
                                     fileState.setActiveGroupIfNeeded(.collaboration)
@@ -109,6 +114,7 @@ struct GroupListView: View {
                                         isMultiSelected: false
                                     )
                                 )
+                                }
                                 
                                 // Temporary
                                 if !fileState.temporaryFiles.isEmpty {

@@ -22,6 +22,7 @@ import os
 import plistlib
 import random
 import re
+import shutil
 import struct
 import subprocess
 import sys
@@ -721,7 +722,11 @@ def cmd_sync(cfg):
 def cmd_install():
     agents = os.path.expanduser("~/Library/LaunchAgents")
     os.makedirs(agents, exist_ok=True)
-    script = os.path.abspath(__file__)
+    # Run the agents from a copy outside the repo, so switching git branches
+    # (where tools/daily-board may not exist) cannot break the schedule.
+    os.makedirs(APP_DIR, exist_ok=True)
+    script = os.path.join(APP_DIR, "daily_board.py")
+    shutil.copyfile(os.path.abspath(__file__), script)
     python = sys.executable
     specs = {
         "com.lindonacademy.dailyboard.build": {
