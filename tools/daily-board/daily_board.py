@@ -74,6 +74,9 @@ def load_config():
         cfg = json.load(f)
     cfg["board_dir"] = os.path.expanduser(cfg.get("board_dir") or DEFAULT_BOARD_DIR)
     cfg.setdefault("picture", "nasa")          # "nasa" or "local"
+    # Whole-board transform applied after layout so the board fits the kiosk at 100% zoom:
+    # every coordinate becomes (x + offset_x) * scale. Tune these to taste.
+    cfg.setdefault("layout", {"scale": 0.67, "offset_x": -130, "offset_y": -20})
     cfg.setdefault("nasa_api_key", "DEMO_KEY")  # free key at https://api.nasa.gov raises the rate limit
     return cfg
 
@@ -592,6 +595,24 @@ def build_board(data, today, board_dir, cfg=None):
     return b.to_json("Lindon Academy daily board")
 
 
+def apply_layout(doc, scale=1.0, offset_x=0.0, offset_y=0.0):
+    """Scales and shifts every element so the board fits the viewer without panning."""
+    if scale == 1.0 and offset_x == 0 and offset_y == 0:
+        return doc
+    for el in doc.get("elements", []):
+        el["x"] = (el["x"] + offset_x) * scale
+        el["y"] = (el["y"] + offset_y) * scale
+        el["width"] = el.get("width", 0) * scale
+        el["height"] = el.get("height", 0) * scale
+        if "fontSize" in el:
+            el["fontSize"] = el["fontSize"] * scale
+        if "points" in el and el["points"]:
+            el["points"] = [[px * scale, py * scale] for px, py in el["points"]]
+        if el.get("strokeWidth"):
+            el["strokeWidth"] = max(1, round(el["strokeWidth"] * scale, 2))
+    return doc
+
+
 def board_path(board_dir, day):
     return os.path.join(board_dir, day.strftime("%Y-%m-%d %a") + ".excalidraw")
 
@@ -604,6 +625,8 @@ def cmd_build(cfg, day=None, data=None):
         cmd_sync(cfg)  # capture any ticks drawn since the last sync first
         data = fetch_board(cfg, day)
     doc = build_board(data, day, cfg["board_dir"], cfg)
+    layout = cfg.get("layout") or {}
+    apply_layout(doc, float(layout.get("scale", 1.0)), float(layout.get("offset_x", 0)), float(layout.get("offset_y", 0)))
     path = board_path(cfg["board_dir"], day)
     tmp = path + ".tmp"
     with open(tmp, "w") as f:
