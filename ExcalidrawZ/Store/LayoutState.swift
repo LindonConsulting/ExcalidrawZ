@@ -16,6 +16,7 @@ final class LayoutState: ObservableObject {
         case preference
         case search
         case questionBank
+        case mathsTools
 #if DEBUG
         case debug
 #endif
