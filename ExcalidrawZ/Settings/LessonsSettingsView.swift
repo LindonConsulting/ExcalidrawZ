@@ -121,9 +121,9 @@ struct LessonsSettingsView: View {
             if let syncTestResult { Text(syncTestResult).font(.callout).foregroundStyle(.secondary) }
             if let message = tutorKit.lastSyncMessage { Text(message).font(.callout).foregroundStyle(.secondary) }
         } header: {
-            Text("ConwyMaths student profiles (Supabase)")
+            Text("TutorKit cloud backup (Supabase)")
         } footer: {
-            Text("Profiles (enrolment, year group, parent details, deck assignments) are pulled from the ConwyMaths database and matched to calendar students by name. The service role key stays in this Mac's Keychain.")
+            Text("Sync pulls changes made elsewhere, then pushes this Mac's students, enrolments, lessons, outcomes, questions and specifications to the TutorKit project (latest change wins). Question images stay local. The service role key stays in this Mac's Keychain.")
                 .foregroundStyle(.secondary)
         }
 

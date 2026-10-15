@@ -84,7 +84,29 @@ public struct SupabaseRESTClient: Sendable {
 
     /// Quick connectivity check: counts students.
     public func ping() async throws -> Int {
-        try await select(RemoteStudent.self, from: "students", columns: "id,name", filters: [URLQueryItem(name: "deleted_at", value: "is.null")]).count
+        try await selectRows(from: "students", columns: "id", filters: [URLQueryItem(name: "deleted_at", value: "is.null")]).count
+    }
+
+    // MARK: Raw JSON rows (used by the sync engine)
+
+    /// Rows as JSON dictionaries; dates stay ISO8601 strings.
+    public func selectRows(from table: String, columns: String = "*", filters: [URLQueryItem] = [], order: String? = nil,
+                           limit: Int? = nil, offset: Int? = nil) async throws -> [[String: Any]] {
+        var query = [URLQueryItem(name: "select", value: columns)] + filters
+        if let order { query.append(URLQueryItem(name: "order", value: order)) }
+        if let limit { query.append(URLQueryItem(name: "limit", value: String(limit))) }
+        if let offset { query.append(URLQueryItem(name: "offset", value: String(offset))) }
+        let data = try await send(try request("GET", table, query: query))
+        return (try JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
+    }
+
+    /// Insert-or-update on the primary key (or `onConflict` columns).
+    public func upsertRows(_ rows: [[String: Any]], into table: String, onConflict: String? = nil) async throws {
+        guard !rows.isEmpty else { return }
+        var query: [URLQueryItem] = []
+        if let onConflict { query.append(URLQueryItem(name: "on_conflict", value: onConflict)) }
+        let body = try JSONSerialization.data(withJSONObject: rows)
+        _ = try await send(try request("POST", table, query: query, body: body, prefer: "resolution=merge-duplicates,return=minimal"))
     }
 }
 

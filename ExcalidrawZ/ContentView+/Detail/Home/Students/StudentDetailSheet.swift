@@ -85,7 +85,14 @@ struct StudentDetailSheet: View {
                     Label("\(stats.questionsShown) questions shown", systemSymbol: .archivebox)
                 }
                 .font(.callout).foregroundStyle(.secondary)
+                let profile = [student.yearGroup, student.school, student.management].filter { !$0.isEmpty }.joined(separator: " · ")
+                if !profile.isEmpty { Text(profile).font(.callout).foregroundStyle(.secondary) }
+                if let contact = container.contacts(for: student).first, !contact.summary.isEmpty {
+                    Label(contact.summary + (contact.preferredMethod.isEmpty ? "" : " (\(contact.preferredMethod))"), systemSymbol: .personCropCircle)
+                        .font(.callout).foregroundStyle(.secondary)
+                }
                 if !student.notes.isEmpty { Text(student.notes).font(.callout) }
+                if !student.rapportNotes.isEmpty { Text(student.rapportNotes).font(.callout).foregroundStyle(.secondary) }
                 if let coverage = stats.coverage { CoverageBar(coverage: coverage).frame(maxWidth: 420) }
             }
             Spacer()

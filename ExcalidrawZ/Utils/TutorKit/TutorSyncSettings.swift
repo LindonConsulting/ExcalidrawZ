@@ -2,7 +2,7 @@
 //  TutorSyncSettings.swift
 //  ExcalidrawZ
 //
-//  Supabase (ConwyMaths) connection settings: URL in defaults, key in Keychain.
+//  Supabase (TutorKit project) connection settings: URL in defaults, key in Keychain.
 //
 
 import Foundation
@@ -11,14 +11,19 @@ import TutorSync
 
 enum TutorSyncSettings {
     static let urlKey = "TutorSync.supabaseURL"
-    static let defaultURL = "https://vndqkdnitcxgqsiwkwpe.supabase.co"
+    /// The TutorKit project (fresh, October 2026). The old ConwyMaths project is archived and paused.
+    static let defaultURL = "https://futrtkratfqoxwijgrkc.supabase.co"
+    static let legacyURL = "https://vndqkdnitcxgqsiwkwpe.supabase.co"
 
     static var keyStore: KeychainSecretStore {
         KeychainSecretStore(service: "\(Bundle.main.bundleIdentifier ?? "com.chocoford.excalidraw").tutor-sync", account: "supabase-service-key")
     }
 
     static var projectURL: String {
-        get { UserDefaults.standard.string(forKey: urlKey) ?? defaultURL }
+        get {
+            let stored = UserDefaults.standard.string(forKey: urlKey)
+            return (stored == nil || stored == legacyURL) ? defaultURL : stored!
+        }
         set { UserDefaults.standard.set(newValue, forKey: urlKey) }
     }
 

@@ -43,7 +43,8 @@ struct StudentsSection: View {
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
                     ForEach(container.students) { student in
                         StudentCard(student: student, course: container.courseSummary(for: student),
-                                    targetGrade: container.primaryEnrolment(for: student)?.targetGrade ?? "", stats: container.stats(for: student))
+                                    targetGrade: container.primaryEnrolment(for: student)?.targetGrade ?? "", stats: container.stats(for: student),
+                                    onView: { detailStudent = student }, onEdit: { editingStudent = student })
                             .onTapGesture { detailStudent = student }
                             .contextMenu {
                                 Button("Edit…") { editingStudent = student }
@@ -79,6 +80,8 @@ struct StudentCard: View {
     let course: String
     let targetGrade: String
     let stats: TutorKitContainer.StudentStats
+    var onView: () -> Void = {}
+    var onEdit: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -106,6 +109,13 @@ struct StudentCard: View {
                 }
             }
             .font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                Button("View profile", action: onView)
+                Button("Edit…", action: onEdit)
+                Spacer()
+            }
+            .controlSize(.small)
+            .padding(.top, 2)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)

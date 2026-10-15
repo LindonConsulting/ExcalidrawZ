@@ -18,6 +18,7 @@ struct StudentsPage: View {
     @State private var showInactive = false
     @State private var selection: String?
     @State private var detailStudent: Student?
+    @State private var editingStudent: Student?
     @State private var creatingName: String?
     @State private var isSpecificationsPresented = false
 
@@ -56,6 +57,7 @@ struct StudentsPage: View {
             await container.refreshRoster()
         }
         .sheet(item: $detailStudent) { student in StudentDetailSheet(studentID: student.id) }
+        .sheet(item: $editingStudent) { student in StudentEditSheet(student: student) }
         .sheet(isPresented: Binding(get: { creatingName != nil }, set: { if !$0 { creatingName = nil } })) {
             StudentEditSheet(student: Student(name: creatingName ?? ""))
         }
@@ -148,16 +150,22 @@ struct StudentsPage: View {
             TableColumn("") { row in
                 HStack {
                     if let student = row.student {
-                        Button("Open") { detailStudent = student }
+                        Button("View") { detailStudent = student }
+                        Button("Edit") { editingStudent = student }
                     } else {
                         Button("Create profile") { creatingName = row.name }
                     }
                 }
                 .controlSize(.small)
             }
-            .width(110)
+            .width(150)
         }
-        .contextMenu(forSelectionType: String.self) { _ in } primaryAction: { ids in
+        .contextMenu(forSelectionType: String.self) { ids in
+            if let id = ids.first, let row = rows.first(where: { $0.id == id }), let student = row.student {
+                Button("View profile") { detailStudent = student }
+                Button("Edit profile…") { editingStudent = student }
+            }
+        } primaryAction: { ids in
             if let id = ids.first, let row = rows.first(where: { $0.id == id }) {
                 if let student = row.student { detailStudent = student } else { creatingName = row.name }
             }

@@ -14,7 +14,7 @@ let package = Package(
         .target(name: "TutorModels"),
         .target(
             name: "TutorStore",
-            dependencies: ["TutorModels", .product(name: "GRDB", package: "GRDB.swift")]
+            dependencies: ["TutorModels", "TutorSync", .product(name: "GRDB", package: "GRDB.swift")]
         ),
         .target(name: "TutorAI", dependencies: ["TutorModels"]),
         .target(name: "TutorRanking", dependencies: ["TutorModels"]),
