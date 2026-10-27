@@ -102,7 +102,6 @@ extension ExcalidrawCore: WKScriptMessageHandler {
                               toolState.excalidrawWebCoordinator === self else { return }
                         toolState.inPenMode = true
                         try? await toolState.setPencilInteractionMode(toolState.pencilInteractionMode)
-                        NotificationCenter.default.post(name: .didPencilConnected, object: nil)
                     }
                 case .didSelectElements(let message):
                     DispatchQueue.main.async {
