@@ -119,7 +119,7 @@ extension FileState {
                 )
 
             case .temporaryFile, nil:
-                throw AIChatEditError.unsupportedFile
+                throw FileRestoreError.unsupportedFile
         }
     }
 
@@ -154,4 +154,8 @@ extension FileState {
             try context.save()
         }
     }
+}
+
+enum FileRestoreError: Error {
+    case unsupportedFile
 }

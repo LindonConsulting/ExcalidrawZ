@@ -162,8 +162,6 @@ struct InspectorPresentationModifier: ViewModifier {
     @ViewBuilder
     private func inspectorContent() -> some View {
         switch layoutState.activeInspectorTab {
-            case .aiChat:
-                AIChatView()
             case .library:
                 LibraryView(librariesToImport: $librariesToImport)
             case .history:
@@ -209,8 +207,6 @@ struct InspectorPresentationModifier: ViewModifier {
 
     private var inspectorTitle: String {
         switch layoutState.activeInspectorTab {
-            case .aiChat:
-                "AI Chat"
             case .library:
                 String(localizable: .librariesTitle)
             case .history:
@@ -324,7 +320,7 @@ struct InspectorPresentationModifier: ViewModifier {
 
     private var shouldUseFloatingNavigationInspectorContent: Bool {
         switch layoutState.activeInspectorTab {
-            case .aiChat, .library, .presentation:
+            case .library, .presentation:
                 true
             case .history:
                 !isCompactIOS
@@ -356,16 +352,7 @@ struct InspectorPresentationModifier: ViewModifier {
     @ViewBuilder
     private func floatingInspectorTitle() -> some View {
 #if os(iOS)
-        if #available(iOS 26.0, *),
-           layoutState.activeInspectorTab == .aiChat {
-            InspectorToolbarTitleLabel(title: inspectorTitle)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
-                .padding(.bottom, 7)
-                .padding(.horizontal, 10)
-        } else {
-            defaultFloatingInspectorTitle()
-        }
+        defaultFloatingInspectorTitle()
 #else
         defaultFloatingInspectorTitle()
 #endif

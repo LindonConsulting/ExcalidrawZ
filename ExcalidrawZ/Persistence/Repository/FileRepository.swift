@@ -704,22 +704,6 @@ actor FileRepository {
             }
         }
 
-        for fileScopeID in sideEffects.fileScopeIDs {
-            let scope = AIConversationFileScope(
-                kind: .libraryFile,
-                id: fileScopeID
-            )
-            do {
-                try await PersistenceController.shared.aiConversationRepository
-                    .deleteConversations(
-                        forFileScope: scope
-                    )
-                await AIChatPreferences.shared.deleteFileAccessOverride(for: scope)
-            } catch {
-                logger.warning("Failed to delete AI conversations for file \(fileScopeID): \(error)")
-            }
-        }
-
         do {
             let deletedMediaCount = try await MediaCleanupCoordinator.shared.cleanOrphanedMedia(
                 withObjectURIs: sideEffects.mediaObjectURIs

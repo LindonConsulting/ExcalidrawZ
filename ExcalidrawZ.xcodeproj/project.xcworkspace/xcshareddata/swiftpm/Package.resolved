@@ -1,5 +1,5 @@
 {
-  "originHash" : "9ed047d89af7688690fc70142dd156931cff35dc435e78fb93b764ba2abc6ed7",
+  "originHash" : "2d8e8b5d688375ef52471e943f98edbcfd1e5ee98faed0d429a9456a893505a2",
   "pins" : [
     {
       "identity" : "alerttoast",
@@ -8,15 +8,6 @@
       "state" : {
         "branch" : "master",
         "revision" : "76a1c1793cd3443001c20c6033beb84453b25d9f"
-      }
-    },
-    {
-      "identity" : "anycodable",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Flight-School/AnyCodable",
-      "state" : {
-        "revision" : "862808b2070cd908cb04f9aafe7de83d35f81b05",
-        "version" : "0.6.7"
       }
     },
     {
@@ -56,15 +47,6 @@
       }
     },
     {
-      "identity" : "keyboardshortcuts",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sindresorhus/KeyboardShortcuts.git",
-      "state" : {
-        "revision" : "49c3fc04ea827f816df67843bfcc57286b47ff06",
-        "version" : "3.0.1"
-      }
-    },
-    {
       "identity" : "kingfisher",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/onevcat/Kingfisher.git",
@@ -74,48 +56,12 @@
       }
     },
     {
-      "identity" : "llmcore",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/chocoford/LLMCore.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "b2dc30680b24904a30cd2a0ee423537cbada4031"
-      }
-    },
-    {
-      "identity" : "llmkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/chocoford/LLMKit.git",
-      "state" : {
-        "branch" : "dev",
-        "revision" : "9ff6292cf5f5d62c73ddea7d917eeee24da0708e"
-      }
-    },
-    {
       "identity" : "microsoft-authentication-library-for-objc",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/AzureAD/microsoft-authentication-library-for-objc",
       "state" : {
         "revision" : "6ec4d48696fc254f96e1be59f503251effa8b4a7",
         "version" : "2.14.1"
-      }
-    },
-    {
-      "identity" : "networkimage",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gonzalezreal/NetworkImage",
-      "state" : {
-        "revision" : "2849f5323265386e200484b0d0f896e73c3411b9",
-        "version" : "6.0.1"
-      }
-    },
-    {
-      "identity" : "openai",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/MacPaw/OpenAI.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "4ea7b3906e4c24bbc4870aab2888a98d30dff386"
       }
     },
     {
@@ -155,48 +101,12 @@
       }
     },
     {
-      "identity" : "swift-cmark",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-cmark",
-      "state" : {
-        "revision" : "924936d0427cb25a61169739a7660230bffa6ea6",
-        "version" : "0.8.0"
-      }
-    },
-    {
-      "identity" : "swift-http-types",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-http-types",
-      "state" : {
-        "revision" : "db774a277f60063a32d854f2980299caf06da041",
-        "version" : "1.6.0"
-      }
-    },
-    {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
         "revision" : "a878e7f8f46cfc0e1125e565b5c08e7d5272dc9a",
         "version" : "1.14.0"
-      }
-    },
-    {
-      "identity" : "swift-markdown-ui",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gonzalezreal/swift-markdown-ui.git",
-      "state" : {
-        "revision" : "5f613358148239d0292c0cef674a3c2314737f9e",
-        "version" : "2.4.1"
-      }
-    },
-    {
-      "identity" : "swift-openapi-runtime",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-openapi-runtime",
-      "state" : {
-        "revision" : "3d3a8457661daf7fb260ceeb9f0e24e5204ba5fb",
-        "version" : "1.12.0"
       }
     },
     {
@@ -224,15 +134,6 @@
       "state" : {
         "branch" : "dev",
         "revision" : "a079333861f767e14f6d32d8eb7110dcaee2db5d"
-      }
-    },
-    {
-      "identity" : "vortex",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/twostraws/Vortex.git",
-      "state" : {
-        "revision" : "9d9d9016ceace579455f01f8e0bd59facae7d252",
-        "version" : "1.0.4"
       }
     },
     {

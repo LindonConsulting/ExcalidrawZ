@@ -287,28 +287,8 @@ struct LocalFilesProvider<Content: View>: View {
         }
         files.removeAll(where: { $0.filePath == path })
         LocalFilesProviderCache.setFiles(files, for: folderCacheKey)
-        deleteAIConversations(forLocalFileAtPath: path)
     }
 
-    private func deleteAIConversations(forLocalFileAtPath path: String) {
-        let url = URL(fileURLWithPath: path)
-        Task.detached {
-            let scope = AIConversationFileScope(
-                kind: .localFile,
-                id: url.absoluteString
-            )
-            do {
-                try await PersistenceController.shared.aiConversationRepository
-                    .deleteConversations(
-                        forFileScope: scope
-                    )
-                await AIChatPreferences.shared.deleteFileAccessOverride(for: scope)
-            } catch {
-                localFilesProviderLogger.warning("Failed to delete AI conversations for removed local file \(path): \(error)")
-            }
-        }
-    }
-    
     private func handleItemUpdated(path: String) {
         guard let file = self.files.first(where: {$0.filePath == path}) else { return }
         self.updateFlags[file] = Date()

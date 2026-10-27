@@ -26,7 +26,6 @@ struct ExcalidrawEditorToolbarModifier: ViewModifier {
     @EnvironmentObject var fileState: FileState
     @EnvironmentObject var toolState: ToolState
     @EnvironmentObject private var lockedContentState: LockedContentStateStore
-    @ObservedObject private var aiChatPreferences = AIChatPreferences.shared
 
     @State private var isCollaboratorPopoverPresented = false
     @State private var lockedFileAccessRequest: LockedFileAccessRequest?
@@ -336,10 +335,6 @@ struct ExcalidrawEditorToolbarModifier: ViewModifier {
                         Label(.localizable(.lockedContentFileUnlockedToolbarTitle), systemImage: LockedContentSymbols.keyShield)
                     }
                     .help(String(localizable: .lockedContentLockFilesHelp))
-                }
-
-                if aiChatPreferences.isAIEnabled && AIChatAvailability.isAvailable {
-                    AICreditsToolbarButton()
                 }
             }
         }

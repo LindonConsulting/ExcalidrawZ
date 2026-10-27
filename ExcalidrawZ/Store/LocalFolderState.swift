@@ -225,29 +225,6 @@ class LocalFileUtils {
                 // Also update checkpoints
                 self.updateCheckpoints(oldURL: file, newURL: newURL)
 
-                do {
-                    let oldLocalScope = AIConversationFileScope(kind: .localFile, id: file.absoluteString)
-                    let oldTemporaryScope = AIConversationFileScope(kind: .temporaryFile, id: file.absoluteString)
-                    let newLocalScope = AIConversationFileScope(kind: .localFile, id: newURL.absoluteString)
-                    try await PersistenceController.shared.aiConversationRepository.rebindConversations(
-                        from: oldLocalScope,
-                        to: newLocalScope
-                    )
-                    await AIChatPreferences.shared.rebindFileAccessOverride(
-                        from: oldLocalScope,
-                        to: newLocalScope
-                    )
-                    try await PersistenceController.shared.aiConversationRepository.rebindConversations(
-                        from: oldTemporaryScope,
-                        to: newLocalScope
-                    )
-                    await AIChatPreferences.shared.rebindFileAccessOverride(
-                        from: oldTemporaryScope,
-                        to: newLocalScope
-                    )
-                } catch {
-                    localFolderStateLogger.warning("Failed to rebind AI conversations for moved local file: \(error)")
-                }
 
                 urlMapping[file] = newURL
             }

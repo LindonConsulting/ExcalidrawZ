@@ -98,7 +98,6 @@ enum AIProposalSandbox {
             if offscreenCore.webView.url == nil {
                 loadLocalExcalidrawPage(in: offscreenCore)
             }
-            ExcalidrawCoordinatorRegistry.shared.updateProposal(offscreenCore)
             return offscreenCore
         }
 
@@ -115,7 +114,6 @@ enum AIProposalSandbox {
         let core = ExcalidrawCore()
         core.webView.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
         offscreenCore = core
-        ExcalidrawCoordinatorRegistry.shared.updateProposal(core)
         loadLocalExcalidrawPage(in: core)
         return core
     }
@@ -138,7 +136,6 @@ enum AIProposalSandbox {
             try await coordinator.replaceAllElements([])
         } catch {
             offscreenCore = nil
-            ExcalidrawCoordinatorRegistry.shared.updateProposal(nil)
             return
         }
     }

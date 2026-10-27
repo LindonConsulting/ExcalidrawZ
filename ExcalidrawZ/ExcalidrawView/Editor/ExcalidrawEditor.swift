@@ -19,7 +19,7 @@ import ChocofordUI
 import Logging
 
 enum EditorRoute: Hashable {
-    case aiChat
+    case none
 }
 
 struct ExcalidrawEditor: View {
@@ -132,17 +132,6 @@ struct ExcalidrawEditor: View {
         return nil
     }
 
-    private var usesCompactIOSAIChatSurfaces: Bool {
-#if os(iOS)
-        ExcalidrawToolbarLayoutPolicy.usesCompactIOSBottomToolbar(
-            horizontalSizeClass: containerHorizontalSizeClass,
-            containerWidth: containerSize.width
-        )
-#else
-        false
-#endif
-    }
-
     private var activeCloudStorageMetadataRevision: Int {
         guard case .cloudStorageFile(let reference) = activeFile else { return 0 }
         return cloudStorageDocumentStore.metadataRevision(for: reference.locationID)
@@ -171,7 +160,6 @@ struct ExcalidrawEditor: View {
 
     private var shouldFloatNavigationToolbarOverCanvas: Bool {
 #if os(iOS)
-        guard !usesCompactIOSAIChatSurfaces else { return false }
         return UIDevice.current.userInterfaceIdiom == .pad
 #elseif os(macOS)
         true
@@ -241,9 +229,6 @@ struct ExcalidrawEditor: View {
             .environment(\.excalidrawNativeViewportInsets, nativeViewportInsetsForWeb)
             .allowsHitTesting(!isLoadingFile)
             .ignoresSafeArea(.container, edges: canvasIgnoredSafeAreaEdges)
-#if os(iOS)
-            .dismissKeyboardOnCanvasTap(isEnabled: layoutState.isCompactAIChatInputEditing)
-#endif
             .background {
 #if os(iOS)
                 Color.clear
@@ -268,15 +253,6 @@ struct ExcalidrawEditor: View {
                 .allowsHitTesting(!isLoadingFile)
         }
         .readSize($editorContentSize)
-        .overlay(alignment: .bottom) {
-#if os(iOS)
-            if !usesCompactIOSAIChatSurfaces {
-                AIChatIslandOverlay(canvasSize: editorContentSize)
-            }
-#else
-            AIChatIslandOverlay(canvasSize: editorContentSize)
-#endif
-        }
 #if os(macOS)
         .overlay(alignment: .bottomTrailing) {
             if case .cloudStorageFile(let reference) = fileState.currentActiveFile {
@@ -307,19 +283,11 @@ struct ExcalidrawEditor: View {
 //#endif
 //        }
 //#endif
-#if os(iOS)
-        .overlay(alignment: .bottom) {
-            CompactAIChatEditorOverlays()
-        }
-#endif
         .background {
             NativeViewportInsetsMeasurementView(
                 insets: $measuredNativeViewportInsets
             )
         }
-        .animation(.smooth(duration: 0.3), value: layoutState.isAIChatIslandMode)
-        .animation(.smooth(duration: 0.3), value: layoutState.isCompactAIChatToolbarPresented)
-        .animation(.smooth(duration: 0.3), value: layoutState.isCompactAIChatInputEditing)
         .modifier(
             LockedFileUnlockOverlayModifier(
                 activeFile: activeFile,
@@ -470,15 +438,6 @@ struct ExcalidrawEditor: View {
 
     private var editorWithDocumentLifecycle: some View {
         editorWithCloudStorageLifecycle
-        .watch(value: fileState.currentActiveFileIsInTrash) { _ in
-            collapseCompactAISurfacesIfCurrentFileIsTrashed()
-        }
-        .watch(value: layoutState.isAIChatIslandMode) { _ in
-            collapseCompactAISurfacesIfCurrentFileIsTrashed()
-        }
-        .watch(value: layoutState.isCompactAIChatToolbarPresented) { _ in
-            collapseCompactAISurfacesIfCurrentFileIsTrashed()
-        }
         .task {
             noteOpenTransitionStarted(for: activeFile)
             prepareCanvasLoadingPresentation(for: activeFile)
@@ -486,7 +445,6 @@ struct ExcalidrawEditor: View {
             await loadExcalidrawFile(from: activeFile)
         }
         .onAppear {
-            collapseCompactAISurfacesIfCurrentFileIsTrashed()
             refreshActiveCloudStorageMetadata()
         }
         .onDisappear {
@@ -585,12 +543,6 @@ struct ExcalidrawEditor: View {
             case .collaborationFile, nil:
                 break
         }
-    }
-
-    private func collapseCompactAISurfacesIfCurrentFileIsTrashed() {
-        guard fileState.currentActiveFileIsInTrash else { return }
-        layoutState.isAIChatIslandMode = false
-        layoutState.exitCompactAIChatToolbar()
     }
 
     private func beginFileLoadRevealGuard(fileID: String) {

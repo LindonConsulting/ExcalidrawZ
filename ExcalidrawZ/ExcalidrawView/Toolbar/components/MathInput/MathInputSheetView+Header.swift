@@ -141,9 +141,6 @@ extension MathInputSheetView {
     }
 
     func handleWorkspaceSelectionChanged(_ newValue: MathInputWorkspace) {
-        if isLatexAIModePresented {
-            cancelLatexAIMode()
-        }
         if newValue != .equation {
             templateSearchText = ""
         }

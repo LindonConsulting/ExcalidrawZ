@@ -19,7 +19,6 @@ struct ExcalidrawTrailingControls: View {
     @EnvironmentObject private var appPreference: AppPreference
     @EnvironmentObject private var layoutState: LayoutState
     @EnvironmentObject private var fileState: FileState
-    @ObservedObject private var aiChatPreferences = AIChatPreferences.shared
     @AppStorage(FloatingInspectorMetrics.widthStorageKey) private var floatingInspectorWidth = FloatingInspectorMetrics.defaultWidth
     @State private var displayedHorizontalOffset: CGFloat = 0
     @State private var hasInitializedHorizontalOffset = false
@@ -128,24 +127,6 @@ struct ExcalidrawTrailingControls: View {
         }
     }
 
-    private var shouldOpenAIChatAsIsland: Bool {
-        isCompactIOS &&
-        AIChatAvailability.isAvailable &&
-        aiChatPreferences.isAIEnabled &&
-        !fileState.currentActiveFileIsInTrash
-    }
-
-    private func toggleAIChatPresentation() {
-        if layoutState.isAIChatIslandMode {
-            layoutState.isAIChatIslandMode = false
-        } else if shouldOpenAIChatAsIsland {
-            layoutState.isInspectorPresented = false
-            layoutState.enterAIChatIsland()
-        } else {
-            layoutState.toggleInspector(.aiChat)
-        }
-    }
-
     var body: some View {
         if shouldShowControls {
             VStack(alignment: .trailing, spacing: controlSpacing) {
@@ -183,14 +164,6 @@ struct ExcalidrawTrailingControls: View {
                     icon: .play,
                     title: String(localizable: .presentationTitle),
                     isDisabled: isDisabled(tab: .presentation)
-                )
-
-                InspectorTabButton(
-                    tab: .aiChat,
-                    icon: .sparkles,
-                    title: "AI Chat",
-                    isDisabled: isDisabled(tab: .aiChat),
-                    action: toggleAIChatPresentation
                 )
             }
             .padding(.top, topPadding)
@@ -250,9 +223,6 @@ private struct InspectorTabButton: View {
     var action: (() -> Void)?
 
     private var isActive: Bool {
-        if tab == .aiChat, layoutState.isAIChatIslandMode {
-            return true
-        }
         return layoutState.isInspectorPresented && layoutState.activeInspectorTab == tab
     }
 

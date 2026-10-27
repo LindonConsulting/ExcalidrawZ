@@ -141,8 +141,6 @@ struct MathInputSheetSnapshot: Hashable {
     var functionYLabel: String
     var functionShowGrid: Bool
     var functionBackgroundColor: String?
-    var isLatexAIModePresented: Bool
-    var latexAIPrompt: String
     var clipboardText: String
 }
 

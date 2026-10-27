@@ -468,12 +468,6 @@ struct ExcalidrawToolbar: View {
             title: String(localizable: .canvasPreferencesTitle)
         )
         if shouldCollapseCompactInspectorTabs {
-            compactInspectorTabButton(
-                tab: .aiChat,
-                icon: .sparkles,
-                title: "AI Chat",
-                action: toggleCompactAIChatPresentation
-            )
             compactInspectorTabsMenu()
         } else {
             compactInspectorTabButton(
@@ -496,12 +490,6 @@ struct ExcalidrawToolbar: View {
                 tab: .presentation,
                 icon: .play,
                 title: String(localizable: .presentationTitle)
-            )
-            compactInspectorTabButton(
-                tab: .aiChat,
-                icon: .sparkles,
-                title: "AI Chat",
-                action: toggleCompactAIChatPresentation
             )
         }
         compactEditButton
@@ -642,18 +630,7 @@ struct ExcalidrawToolbar: View {
     }
     
     private func compactInspectorTabIsActive(_ tab: LayoutState.InspectorTab) -> Bool {
-        if tab == .aiChat, layoutState.isAIChatIslandMode {
-            return true
-        }
         return layoutState.isInspectorPresented && layoutState.activeInspectorTab == tab
-    }
-    
-    private func toggleCompactAIChatPresentation() {
-        if layoutState.isAIChatIslandMode {
-            layoutState.isAIChatIslandMode = false
-        } else {
-            layoutState.toggleInspector(.aiChat)
-        }
     }
     
     @ViewBuilder

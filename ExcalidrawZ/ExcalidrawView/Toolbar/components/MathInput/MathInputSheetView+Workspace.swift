@@ -95,7 +95,7 @@ extension MathInputSheetView {
                 .tracking(1.2)
 
             TextArea(
-                text: isLatexAIModePresented ? $latexAIPrompt : $inputText,
+                text: $inputText,
                 placeholder: Text(latexEditorPlaceholder)
             )
             .textFont(latexEditorTextFont)
@@ -105,62 +105,15 @@ extension MathInputSheetView {
                 latexEditorBackground
             }
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(alignment: .bottomLeading) {
-                if isLatexAIModePresented {
-                    latexAICreditsBadge
-                        .padding(8)
-                }
-            }
-            .overlay(alignment: .bottomTrailing) {
-                latexAIControls
-                    .padding(8)
-            }
-        }
-    }
-
-    var latexAICreditsBadge: some View {
-        HStack(spacing: 5) {
-            Image(systemSymbol: hasInsufficientLatexAICredits ? .exclamationmarkTriangleFill : .sparkles)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(hasInsufficientLatexAICredits ? .orange : .secondary)
-
-            Text(latexAICreditsText)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(hasInsufficientLatexAICredits ? .orange : .secondary)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 8)
-        .frame(height: 24)
-        .background {
-            Capsule()
-                .fill(.clear)
-                .background {
-                    if #available(macOS 26.0, iOS 26.0, *) {
-                        Capsule()
-                            .fill(.clear)
-                            .glassEffect(.regular, in: Capsule())
-                    } else {
-                        Capsule()
-                            .fill(.ultraThinMaterial)
-                    }
-                }
-                .overlay {
-                    Capsule()
-                        .strokeBorder(Color.primary.opacity(0.10))
-                }
         }
     }
 
     var latexEditorPlaceholder: String {
-        isLatexAIModePresented
-            ? String(localizable: .toolbarLatexMathAIPromptPlaceholder)
-            : String(localizable: .toolbarLatexMathLatexPlaceholder)
+        String(localizable: .toolbarLatexMathLatexPlaceholder)
     }
 
     var latexEditorTitle: String {
-        isLatexAIModePresented
-            ? String(localizable: .toolbarLatexMathAIPromptTitle)
-            : String(localizable: .toolbarLatexMathLatexTitle)
+        String(localizable: .toolbarLatexMathLatexTitle)
     }
 
     private var latexEditorInsets: EdgeInsets {
@@ -173,121 +126,17 @@ extension MathInputSheetView {
     }
 
     private var latexEditorTextFont: TextAreaFont {
-        isLatexAIModePresented ? .body : .system(design: .monospaced)
+        .system(design: .monospaced)
     }
 
     @ViewBuilder
     private var latexEditorBackground: some View {
-        if isLatexAIModePresented {
-            MathAIDynamicEditorBackground(cornerRadius: 12)
-        } else {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.secondary.opacity(canvasColorScheme == .dark ? 0.12 : 0.06))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color.secondary.opacity(0.22))
-                }
-        }
-    }
-
-    @ViewBuilder
-    var latexAIControls: some View {
-        HStack(spacing: 8) {
-            if isLatexAIModePresented {
-                Button {
-                    cancelLatexAIMode()
-                } label: {
-                    Image(systemSymbol: .xmark)
-                }
-                .buttonStyle(MathInlineCircleButtonStyle())
-                .help(String(localizable: .toolbarLatexMathCancelAIModeHelp))
-
-                Button {
-                    if hasInsufficientLatexAICredits {
-                        presentLatexAIInsufficientCreditsPaywall()
-                    } else {
-                        generateLatexWithAI()
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        if isGeneratingLatex && !hasInsufficientLatexAICredits {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Image(systemSymbol: .sparkles)
-                        }
-                        Text(latexAIActionTitle)
-                    }
-                }
-                .buttonStyle(MathInlineGenerateButtonStyle())
-                .disabled(!canUseLatexAIAction)
-                .help(
-                    hasInsufficientLatexAICredits
-                        ? String(localizable: .toolbarLatexMathUpgradeToContinueHelp)
-                        : String(localizable: .toolbarLatexMathGenerateLatexHelp)
-                )
-            } else {
-                Button {
-                    enterLatexAIMode()
-                } label: {
-                    Image(systemSymbol: .sparkles)
-                }
-                .buttonStyle(MathInlineCircleButtonStyle())
-                .disabled(!canUseLatexAI)
-                .help(
-                    canUseLatexAI
-                        ? String(localizable: .toolbarLatexMathGenerateWithAIHelp)
-                        : String(localizable: .toolbarLatexMathEnableAIInSettingsHelp)
-                )
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(Color.secondary.opacity(canvasColorScheme == .dark ? 0.12 : 0.06))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Color.secondary.opacity(0.22))
             }
-        }
-    }
-
-    var canUseLatexAI: Bool {
-        AIChatAvailability.isAvailable && aiChatPreferences.isAIEnabled
-    }
-
-    var canGenerateLatexWithAI: Bool {
-        canUseLatexAI
-            && !isGeneratingLatex
-            && !latexAIPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    var canUseLatexAIAction: Bool {
-        if hasInsufficientLatexAICredits {
-            return canUseLatexAI
-        }
-        return canGenerateLatexWithAI
-    }
-
-    var hasInsufficientLatexAICredits: Bool {
-        guard let balance = llmState.creditsInfo?.balance else {
-            return false
-        }
-        return balance <= 0
-    }
-
-    var latexAICreditsText: String {
-        guard let balance = llmState.creditsInfo?.balance else {
-            return String(localizable: .toolbarLatexMathCreditsUnavailable)
-        }
-        return String(localizable: .toolbarLatexMathCreditsCount(formatLatexAICredits(balance)))
-    }
-
-    func formatLatexAICredits(_ value: Double) -> String {
-        if value.rounded() == value {
-            return Int(value).formatted()
-        }
-        return value.formatted(.number.precision(.fractionLength(0...2)))
-    }
-
-    var latexAIActionTitle: String {
-        if hasInsufficientLatexAICredits {
-            return String(localizable: .generalButtonUpgrade)
-        }
-        return isGeneratingLatex
-            ? String(localizable: .toolbarLatexMathGeneratingButton)
-            : String(localizable: .toolbarLatexMathGenerateButton)
     }
 
     func templateWorkspace(

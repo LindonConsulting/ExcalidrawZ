@@ -161,7 +161,6 @@ struct SerachContent: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.alertToast) private var alertToast
     
-    @EnvironmentObject private var store: Store
     @EnvironmentObject private var fileState: FileState
     
     enum Source {
@@ -318,13 +317,7 @@ struct SerachContent: View {
                     }
                     .onTapGesture(count: tapSelectCount) {
                         dismiss()
-                        if let limit = store.collaborationRoomLimits,
-                           fileState.collaboratingFiles.count >= limit,
-                           !fileState.collaboratingFiles.contains(room) {
-                            store.togglePaywall(reason: .roomLimit)
-                        } else {
-                            fileState.setActiveFile(.collaborationFile(room))
-                        }
+                        fileState.setActiveFile(.collaborationFile(room))
                     }
                 }
             }

@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-import LLMCore
-import LLMKit
 
 extension MathInputSheetView {
     @MainActor
@@ -191,99 +189,6 @@ extension MathInputSheetView {
         generatePreview(input: functionLatexSource)
     }
 
-    func enterLatexAIMode() {
-        guard canUseLatexAI else {
-            return
-        }
-
-        previewTask?.cancel()
-        error = nil
-        withAnimation(.easeInOut(duration: 0.18)) {
-            isLatexAIModePresented = true
-        }
-    }
-
-    func cancelLatexAIMode() {
-        latexAIGenerationTask?.cancel()
-        latexAIGenerationTask = nil
-        isGeneratingLatex = false
-
-        withAnimation(.easeInOut(duration: 0.18)) {
-            isLatexAIModePresented = false
-        }
-    }
-
-    func generateLatexWithAI() {
-        guard canGenerateLatexWithAI else {
-            return
-        }
-        if let balance = llmState.creditsInfo?.balance,
-           balance <= 0 {
-            presentLatexAIInsufficientCreditsPaywall()
-            return
-        }
-
-        let prompt = latexAIPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        latexAIGenerationTask?.cancel()
-        isGeneratingLatex = true
-        error = nil
-
-        latexAIGenerationTask = Task { @MainActor in
-            defer {
-                isGeneratingLatex = false
-                latexAIGenerationTask = nil
-            }
-
-            do {
-                let response: APIResponse<ChatMessageContent> = try await LLMClient.shared.chat(
-                    model: .qwen3_6Plus,
-                    system: latexAIGenerationSystemPrompt,
-                    text: prompt,
-                    metadata: MathLatexAIGenerationMetadata()
-                )
-
-                guard !Task.isCancelled else { return }
-
-                if let apiError = response.error {
-                    if apiError.code == 402 {
-                        presentLatexAIInsufficientCreditsPaywall()
-                        return
-                    }
-                    throw MathLatexAIGenerationError.server(apiError.message)
-                }
-
-                guard let content = response.data?.content,
-                      let generatedLatex = Self.generatedLatex(from: content) else {
-                    throw MathLatexAIGenerationError.emptyResponse
-                }
-
-                inputText = generatedLatex
-                withAnimation(.easeInOut(duration: 0.18)) {
-                    isLatexAIModePresented = false
-                }
-                generatePreview(input: generatedLatex)
-            } catch {
-                guard !Task.isCancelled else { return }
-                if let llmError = error as? LLMError,
-                   case .insufficientCredits = llmError {
-                    presentLatexAIInsufficientCreditsPaywall()
-                    return
-                }
-                logger.error("[MathInputSheetView] latex AI generation error: \(error)")
-                self.error = error
-            }
-        }
-    }
-
-    func presentLatexAIInsufficientCreditsPaywall() {
-        let snapshot = makeMathInputSnapshot()
-        if let onAIInsufficientCredits {
-            onAIInsufficientCredits(snapshot)
-        } else {
-            Store.shared.togglePaywall(reason: .aiInsufficientCredits)
-        }
-    }
-
     func makeMathInputSnapshot() -> MathInputSheetSnapshot {
         MathInputSheetSnapshot(
             inputText: inputText,
@@ -302,87 +207,20 @@ extension MathInputSheetView {
             functionYLabel: functionYLabel,
             functionShowGrid: functionShowGrid,
             functionBackgroundColor: functionBackgroundColor,
-            isLatexAIModePresented: isLatexAIModePresented,
-            latexAIPrompt: latexAIPrompt,
             clipboardText: mathInputClipboardText
         )
     }
 
     var mathInputClipboardText: String {
-        if isLatexAIModePresented {
-            return latexAIPrompt
-        }
         if activeWorkspace == .function {
             return functionLatexSource
         }
         return inputText
-    }
-
-    var latexAIGenerationSystemPrompt: String {
-        """
-        You convert user requests into LaTeX math expressions for MathJax SVG rendering.
-        Return only raw LaTeX.
-        Do not use Markdown fences, explanations, or surrounding delimiters like $...$, $$...$$, \\(...\\), or \\[...\\].
-        Prefer concise, valid MathJax-compatible LaTeX.
-        """
-    }
-
-    static func generatedLatex(from response: String) -> String? {
-        var output = response.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if output.hasPrefix("```") {
-            var lines = output
-                .split(separator: "\n", omittingEmptySubsequences: false)
-                .map(String.init)
-            if !lines.isEmpty {
-                lines.removeFirst()
-            }
-            if lines.last?.trimmingCharacters(in: .whitespacesAndNewlines) == "```" {
-                lines.removeLast()
-            }
-            output = lines.joined(separator: "\n")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        let delimiters: [(String, String)] = [
-            ("\\[", "\\]"),
-            ("\\(", "\\)"),
-            ("$$", "$$"),
-            ("$", "$")
-        ]
-
-        for delimiter in delimiters {
-            if output.hasPrefix(delimiter.0), output.hasSuffix(delimiter.1) {
-                output = String(output.dropFirst(delimiter.0.count).dropLast(delimiter.1.count))
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                break
-            }
-        }
-
-        return output.isEmpty ? nil : output
     }
 }
 
 private extension String {
     var nilIfEmpty: String? {
         isEmpty ? nil : self
-    }
-}
-
-private struct MathLatexAIGenerationMetadata: Codable, Equatable, Sendable {
-    var source: String = "math_input"
-}
-
-private enum MathLatexAIGenerationError: LocalizedError {
-    case emptyResponse
-    case server(String)
-
-    var errorDescription: String? {
-        switch self {
-            case .emptyResponse:
-                String(localizable: .toolbarLatexMathAIEmptyResponseError)
-            case .server(let message):
-                message
-        }
     }
 }

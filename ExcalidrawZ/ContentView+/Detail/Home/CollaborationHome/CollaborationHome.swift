@@ -13,7 +13,6 @@ import ChocofordUI
 struct CollaborationHome: View {
     @Environment(\.alertToast) var alertToast
     
-    @EnvironmentObject private var store: Store
     @EnvironmentObject private var fileState: FileState
     @EnvironmentObject private var collaborationState: CollaborationState
 
@@ -139,11 +138,7 @@ struct CollaborationHome: View {
     @ViewBuilder
     private func actions() -> some View {
         Button {
-            if let limit = store.collaborationRoomLimits, collaborationFiles.count >= limit {
-                store.togglePaywall(reason: .roomLimit)
-            } else {
-                collaborationState.isCreateRoomConfirmationDialogPresented.toggle()
-            }
+            collaborationState.isCreateRoomConfirmationDialogPresented.toggle()
         } label: {
             Text(.localizable(.collaborationButtonCreateNewRoom))
                 .frame(width: 150)
@@ -152,11 +147,7 @@ struct CollaborationHome: View {
 
         
         Button {
-            if let limit = store.collaborationRoomLimits, collaborationFiles.count >= limit {
-                store.togglePaywall(reason: .roomLimit)
-            } else {
-                collaborationState.isJoinRoomSheetPresented.toggle()
-            }
+            collaborationState.isJoinRoomSheetPresented.toggle()
         } label: {
             Text(.localizable(.collaborationButtonJoinRoom))
                 .frame(width: 150)
@@ -249,7 +240,6 @@ struct CollaborationHomeBackground: View {
 
 #Preview {
     CollaborationHome()
-        .environmentObject(Store.shared)
         .environmentObject(FileState())
         .environmentObject(CollaborationState())
 }

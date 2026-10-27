@@ -36,7 +36,6 @@ final class SettingsRouter: ObservableObject {
     /// Tab to switch to the next time `SettingsView` appears or this value
     /// changes. Cleared by `SettingsView` after consumption.
     @Published var pendingRoute: SettingsView.Route?
-    @Published var pendingAISettingsRoute: AISettingsRoute?
 #if os(iOS)
     @Published var iOSSettingsPresentationRequestID = 0
 #endif
@@ -62,8 +61,4 @@ final class SettingsRouter: ObservableObject {
 #endif
     }
 
-    func requestOpenAIUsage() {
-        pendingAISettingsRoute = .usage
-        requestOpen(.ai)
-    }
 }

@@ -111,31 +111,6 @@ struct OrphanCleaner {
                 result[.mediaItem(extension: "")] = Set()
             }
 
-            // Fetch AI chat attachment IDs from message-level persisted file records.
-            // These files are not represented by a standalone Core Data entity; their
-            // ownership lives in AIConversationMessage.filesData.
-            do {
-                let messageRequest = NSFetchRequest<AIConversationMessage>(entityName: "AIConversationMessage")
-                messageRequest.predicate = NSPredicate(format: "filesData != nil")
-                messageRequest.propertiesToFetch = ["filesData"]
-
-                let messages = try context.fetch(messageRequest)
-                let decoder = JSONDecoder()
-                let attachmentIDs = messages
-                    .compactMap(\.filesData)
-                    .flatMap { data -> [String] in
-                        guard let persistedFiles = try? decoder.decode([PersistedFile].self, from: data) else {
-                            return []
-                        }
-                        return persistedFiles.compactMap { file in
-                            guard file.kind == .local else { return nil }
-                            return file.fileID
-                        }
-                    }
-                result[.aiChatAttachment(extension: "")] = Set(attachmentIDs)
-            } catch {
-                result[.aiChatAttachment(extension: "")] = Set()
-            }
 
             return result
         }

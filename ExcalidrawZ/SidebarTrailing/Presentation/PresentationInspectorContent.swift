@@ -24,7 +24,6 @@ struct PresentationInspectorContent: View {
     @EnvironmentObject private var appPreference: AppPreference
 
     @ObservedObject private var model: ExcalidrawPresentationModel
-    @ObservedObject private var store = Store.shared
     @ObservedObject private var presentationController = ExcalidrawPresentationController.shared
     @State private var pendingReloadTask: Task<Void, Never>?
     // File switches can outlive the debounce window, so saves stay isolated by file.
@@ -73,15 +72,7 @@ struct PresentationInspectorContent: View {
 
     var body: some View {
         ZStack {
-            if store.canUsePresentation {
-                contentView
-                    .transition(.opacity)
-            } else {
-                PresentationWelcomeView {
-                    store.togglePaywall(reason: .presentation)
-                }
-                .transition(.opacity)
-            }
+            contentView
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .toolbar {
@@ -92,10 +83,8 @@ struct PresentationInspectorContent: View {
                         isInspectorPresented: layoutState.isInspectorPresented
                     )
                 }
-                if store.canUsePresentation {
-                    ToolbarItem(placement: .primaryAction) {
-                        startPresentationButton
-                    }
+                ToolbarItem(placement: .primaryAction) {
+                    startPresentationButton
                 }
             }
         }

@@ -75,31 +75,11 @@ struct TemporaryGroupMenuItems: View {
             fileState.setActiveFile(nil)
             fileState.temporaryFiles.removeAll()
             fileState.currentActiveGroup = nil
-            deleteAIConversations(for: temporaryFiles)
         } label: {
             Label(.localizable(.sidebarTemporaryGroupRowContextMenuCloseAll), systemSymbol: .xmarkCircle)
         }
     }
 
-    private func deleteAIConversations(for temporaryFiles: [URL]) {
-        Task.detached {
-            for file in temporaryFiles {
-                let scope = AIConversationFileScope(
-                    kind: .temporaryFile,
-                    id: file.absoluteString
-                )
-                do {
-                    try await PersistenceController.shared.aiConversationRepository
-                        .deleteConversations(
-                            forFileScope: scope
-                        )
-                    await AIChatPreferences.shared.deleteFileAccessOverride(for: scope)
-                } catch {
-                    temporaryGroupMenuLogger.warning("Failed to delete AI conversations for temporary file \(file): \(error)")
-                }
-            }
-        }
-    }
     
     private func moveFiles(to groupID: NSManagedObjectID) {
         let temporaryFiles = fileState.temporaryFiles
@@ -124,22 +104,6 @@ struct TemporaryGroupMenuItems: View {
                         }
                         return newFile.id?.uuidString
                             ?? newFile.objectID.uriRepresentation().absoluteString
-                    }
-                    if let newFileScopeID {
-                        do {
-                            let oldScope = AIConversationFileScope(kind: .temporaryFile, id: file.absoluteString)
-                            let newScope = AIConversationFileScope(kind: .libraryFile, id: newFileScopeID)
-                            try await PersistenceController.shared.aiConversationRepository.rebindConversations(
-                                from: oldScope,
-                                to: newScope
-                            )
-                            await AIChatPreferences.shared.rebindFileAccessOverride(
-                                from: oldScope,
-                                to: newScope
-                            )
-                        } catch {
-                            temporaryGroupMenuLogger.warning("Failed to rebind AI conversations for saved temporary file: \(error)")
-                        }
                     }
                     if file == currentFileURL {
                         currentTemporaryFileID = newFileID

@@ -343,44 +343,6 @@ struct FileEnumerator {
                 self.logger.error("Failed to fetch MediaItem entities: \(error.localizedDescription)")
             }
 
-            // Fetch AI chat attachments referenced by message filesData. These do not
-            // have their own Core Data entity, but they are still first-class files
-            // under FileStorage and need DiffScan coverage.
-            do {
-                let messageRequest = NSFetchRequest<AIConversationMessage>(entityName: "AIConversationMessage")
-                messageRequest.predicate = NSPredicate(format: "filesData != nil")
-                messageRequest.propertiesToFetch = ["filesData", "timeStamp"]
-
-                let messages = try context.fetch(messageRequest)
-                let decoder = JSONDecoder()
-                var seenAttachmentIDs = Set<String>()
-
-                for message in messages {
-                    guard let filesData = message.filesData,
-                          let persistedFiles = try? decoder.decode([PersistedFile].self, from: filesData)
-                    else { continue }
-
-                    let timestamp = message.timeStamp ?? Date()
-                    for file in persistedFiles where file.kind == .local {
-                        guard let fileID = file.fileID,
-                              let ext = file.ext,
-                              seenAttachmentIDs.insert(fileID).inserted
-                        else { continue }
-
-                        let contentType = FileStorageContentType.aiChatAttachment(extension: ext)
-                        let relativePath = contentType.generateRelativePath(fileID: fileID)
-                        expectedFiles.append(SyncFileState(
-                            fileID: fileID,
-                            relativePath: relativePath,
-                            contentType: contentType,
-                            modifiedAt: timestamp,
-                            size: 0
-                        ))
-                    }
-                }
-            } catch {
-                self.logger.error("Failed to fetch AI chat attachment records: \(error.localizedDescription)")
-            }
 
             return expectedFiles
         }

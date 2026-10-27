@@ -90,7 +90,6 @@ struct LocalFileMenuProvider: View {
                 
                 // Also update checkpoints
                 updateCheckpoints(oldURL: file, newURL: newURL)
-                rebindAIConversations(oldURL: file, newURL: newURL)
                 
                 localFolderState.itemRenamedPublisher.send(newURL.filePath)
             }
@@ -100,24 +99,6 @@ struct LocalFileMenuProvider: View {
         }
     }
 
-    private func rebindAIConversations(oldURL: URL, newURL: URL) {
-        Task.detached {
-            do {
-                let oldScope = AIConversationFileScope(kind: .localFile, id: oldURL.absoluteString)
-                let newScope = AIConversationFileScope(kind: .localFile, id: newURL.absoluteString)
-                try await PersistenceController.shared.aiConversationRepository.rebindConversations(
-                    from: oldScope,
-                    to: newScope
-                )
-                await AIChatPreferences.shared.rebindFileAccessOverride(
-                    from: oldScope,
-                    to: newScope
-                )
-            } catch {
-                localFileContextMenuLogger.warning("Failed to rebind AI conversations for renamed local file: \(error)")
-            }
-        }
-    }
     
     private func updateCheckpoints(oldURL: URL, newURL: URL) {
         let context = PersistenceController.shared.container.newBackgroundContext()
@@ -501,19 +482,6 @@ struct LocalFileRowMenuItems: View {
                 for file in filesToDelete {
                     try await LocalFolder.withSecurityScopedAccessToContainingFolder(for: file) {
                         _ = try await FileCoordinator.shared.coordinatedTrash(url: file)
-                    }
-                    let scope = AIConversationFileScope(
-                        kind: .localFile,
-                        id: file.absoluteString
-                    )
-                    do {
-                        try await PersistenceController.shared.aiConversationRepository
-                            .deleteConversations(
-                                forFileScope: scope
-                            )
-                        AIChatPreferences.shared.deleteFileAccessOverride(for: scope)
-                    } catch {
-                        localFileContextMenuLogger.warning("Failed to delete AI conversations for local file \(file): \(error)")
                     }
                     await MainActor.run {
                         localFolderState.itemRemovedPublisher.send(file.filePath)

@@ -14,8 +14,6 @@ import ServiceManagement
 
 import SwiftyAlert
 import ChocofordUI
-import LLMCore
-import LLMKit
 
 extension Notification.Name {
     static let shouldHandleImport = Notification.Name("ShouldHandleImport")
@@ -26,35 +24,6 @@ extension Notification.Name {
     static let toggleShare = Notification.Name("ToggleShare")
     static let lockedContentDidReset = Notification.Name("LockedContentDidReset")
     static let lockedContentDidDeleteFile = Notification.Name("LockedContentDidDeleteFile")
-}
-
-extension LLMClient {
-#if DEBUG
-#if os(iOS)
-    static let shared = LLMClient(
-        authProvider: .xcode(bundleID: "com.chocoford.excalidraw-Debug"),
-        uploadProvider: .none,
-        uploadPolicy: .automatic,
-        baseURL: URL(string: "http://192.168.31.133:8080")!
-    )
-#else
-    static let shared = LLMClient(
-        authProvider: .xcode(bundleID: "com.chocoford.excalidraw-Debug"),
-        uploadProvider: .none,
-        uploadPolicy: .automatic,
-    )
-#endif
-#else
-    static let shared = LLMClient(
-        authProvider: .appStore(
-            bundleID: "com.chocoford.excalidraw",
-            ascAppID: 6754812067,
-            subscriptionGroupID: "21660497"
-        ),
-        uploadProvider: .none,
-        uploadPolicy: .automatic
-    )
-#endif
 }
 
 @main
@@ -86,9 +55,6 @@ struct ExcalidrawZApp: App {
         // WindowGroup lifecycle. This also keeps queued offline work moving
         // while the app has no open windows on macOS.
         CloudStorageSyncService.shared.start()
-#if os(macOS)
-        _ = ExcalidrawZMCPServerController.shared
-#endif
 
         // Setting Folder Structure Type
         if #available(macOS 13.0, *) {} else {
@@ -123,109 +89,12 @@ struct ExcalidrawZApp: App {
                 }
             }
         }
-        
-        // Configure LLMKit
-        let llmPersistenceProvider = LLMPersistenceProvider()
-
-        // Setup tool registry with basic tools. The list is pulled out
-        // so we can mirror it into `ToolDisplayNameCache` synchronously
-        // — UI code (ToolCallCard, etc.) can't `await` into the actor
-        // to look up a tool's `displayName`, so the cache snapshot is
-        // populated up-front on the same array.
-        let toolRegistry = ToolRegistry()
-        let tools: [Tool] = [
-            WebSearchTool(client: .shared),
-            WebFetchTool(),
-            CalculatorTool(),
-            DateTimeTool(),
-            FileAccessStatusTool(),
-            GetCurrentFileTool(),
-            ReadFileTool(),
-            ReadCanvasImageTool(),
-            ExportTool(),
-            InsertMathTool(),
-            AdjustElementsTool(),
-            NavigateCanvasTool(),
-            SetCanvasPreferencesTool(),
-            RenameFileTool(),
-            ListGroupsTool(),
-            ListAllFilesTool(),
-            ListLocalFoldersTool(),
-            ListLocalFilesTool(),
-            QueryFileHistoryTool(),
-            RestoreFileHistoryTool(),
-            ListLibrariesTool(),
-            ListLibraryItemsTool(),
-            QueryLibraryItemTool(),
-            AddLibraryItemToCanvasTool(),
-            FinalAnswerTool()
-        ].map(LockedContentProtectedTool.init)
-        ToolDisplayNameCache.register(tools)
-        Task {
-            await toolRegistry.register(tools)
-        }
-
-        self._llmState = StateObject(wrappedValue: LLMStateObject(
-            llmClient: .shared,
-            toolRegistry: toolRegistry,
-            persistenceProvider: llmPersistenceProvider,
-            streamPublishStrategy: .throttled(0.33)
-        ))
-
-        if AIChatPreferences.shared.isAIEnabled {
-            Task {
-                await LLMServiceActivationCoordinator.shared.restoreIfAIEnabled(reason: .appLaunch)
-            }
-        }
-
-        // AI chat attachment GC. Kicked off in the background after a
-        // long delay so it doesn't fight with cold-start work, and so
-        // any in-flight CloudKit hydrate of the messages table can land
-        // first — otherwise we'd see freshly-synced rows as orphaned
-        // (their attachments arrive with the row but the GC runs before
-        // the row is locally visible) and delete legitimate files.
-        Task.detached(priority: .background) {
-            try? await Task.sleep(for: .seconds(15))
-            await Self.runAttachmentGC()
-        }
-
     }
 
-    /// Walk every persisted message's `filesData` JSON, harvest the
-    /// fileIDs that are still referenced, and ask the attachment repo
-    /// to delete on-disk files that aren't in that set. Runs at most
-    /// once per launch — anything written / deleted after this point
-    /// is handled by the live insert / delete paths and doesn't need
-    /// GC. Best-effort: failures inside log and swallow.
-    private static func runAttachmentGC() async {
-        do {
-            let blobs = try await PersistenceController.shared.aiConversationRepository.fetchAllFilesDataBlobs()
-            let referenced = blobs.flatMap { blob -> [PersistedFile] in
-                (try? JSONDecoder().decode([PersistedFile].self, from: blob)) ?? []
-            }
-            let referencedIDs = Set(referenced.compactMap { record -> String? in
-                guard record.kind == .local else { return nil }
-                return record.fileID
-            })
-            await PersistenceController.shared.aiChatAttachmentRepository.garbageCollect(
-                referencedFileIDs: referencedIDs
-            )
-        } catch {
-            // Swallowed: GC is best-effort and a transient fetch failure
-            // shouldn't be surfaced to the user.
-        }
-    }
-    // Can not run agent in a sandboxed app.
-    // let service = SMAppService.agent(plistName: "com.chocoford.excalidraw.ExcalidrawServer.agent.plist")
-    
     @StateObject private var appPrefernece = AppPreference()
-    @StateObject private var store = Store.shared
-    @StateObject private var llmState: LLMStateObject
-    @StateObject private var aiChatState = AIChatState()
     @StateObject private var lockedContentState = LockedContentStateStore()
 
     @State private var isArchiveFilesExporterPresented = false
-    @State private var didScheduleAIConversationCacheWarmup = false
 
 
     let server = ExcalidrawServer()
@@ -241,14 +110,8 @@ struct ExcalidrawZApp: App {
                 ) { _ in }
                 .environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
                 .environmentObject(appPrefernece)
-                .environmentObject(store)
-                .environmentObject(aiChatState)
                 .environmentObject(lockedContentState)
-                .llmProvider(state: llmState, client: .shared)
                 .lockedContentAutoRelock(lockedContentState: lockedContentState)
-                .onAppear {
-                    scheduleAIConversationCacheWarmupIfNeeded()
-                }
         }
         // prevent window being open by urls.
         .handlesExternalEvents(matching: ["*"])
@@ -400,27 +263,11 @@ struct ExcalidrawZApp: App {
                 .preferredColorScheme(appPrefernece.appearance.colorScheme)
                 .environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
                 .environmentObject(appPrefernece)
-                .environmentObject(store)
                 .environmentObject(lockedContentState)
-                .llmProvider(state: llmState, client: .shared)
         }
 #endif
     }
 
-    @MainActor
-    private func scheduleAIConversationCacheWarmupIfNeeded() {
-        guard !didScheduleAIConversationCacheWarmup else { return }
-        didScheduleAIConversationCacheWarmup = true
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(3))
-            guard AIChatAvailability.canUseAI else { return }
-            guard case .loaded = llmState.conversations else {
-                await llmState.refreshConversations()
-                return
-            }
-        }
-    }
 }
 
 fileprivate extension Scene {

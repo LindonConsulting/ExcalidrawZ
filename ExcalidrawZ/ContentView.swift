@@ -14,23 +14,13 @@ import ChocofordUI
 import ChocofordEssentials
 import SwiftyAlert
 import SFSafeSymbols
-import LLMKit
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject var appPreference: AppPreference
-    /// Pulled from the app-level environment (see `ExcalidrawZApp`).
-    /// Both are needed here because we trigger conversation
-    /// pre-selection on every active-file change (see the
-    /// `.task(id:)` below) — the inspector / island panels then just
-    /// read the already-pinned `aiChatConversationID` instead of
-    /// each having to refresh on appear.
-    @EnvironmentObject private var llmState: LLMStateObject
-    @EnvironmentObject private var aiChatState: AIChatState
     @EnvironmentObject private var lockedContentState: LockedContentStateStore
-    @ObservedObject private var aiChatPreferences = AIChatPreferences.shared
     @ObservedObject private var cloudStorageConnections = CloudStorageConnectionStore.shared
 #if os(macOS)
     @ObservedObject private var applicationTerminationPresentation = ApplicationTerminationPresentationCoordinator.shared
@@ -65,8 +55,6 @@ struct ContentView: View {
             .navigationTitle("")
             .modifier(PrintModifier())
             .modifier(NewRoomModifier())
-            .modifier(StoreKitEntitlementRefreshModifier())
-            .modifier(PaywallModifier())
             .modifier(SettingsSheetPresentationModifier())
             .modifier(SearchableModifier())
             .modifier(OpenFromURLModifier())
@@ -78,7 +66,6 @@ struct ContentView: View {
             .modifier(DragStateModifier())
             .modifier(StartupSyncModifier())
             .modifier(CoreDataMigrationModifier())
-            .modifier(ActiveFileSwitchBlockedToastModifier(fileState: fileState))
             .environmentObject(fileState)
             .environmentObject(exportState)
             .environmentObject(layoutState)
@@ -125,15 +112,6 @@ struct ContentView: View {
                     layoutState.isInspectorPresented = false
                 }
             }
-            .watch(value: aiChatPreferences.isAIEnabled) { isEnabled in
-                if isEnabled {
-                    Task {
-                        await llmState.refreshConversations()
-                    }
-                } else {
-                    cancelActiveAIGenerationForDisabledAI()
-                }
-            }
             .watch(value: colorScheme) { newValue in
                 FileCoverCacheCoordinator.shared.scheduleRecentCoverPrewarm(colorScheme: newValue)
             }
@@ -145,22 +123,6 @@ struct ContentView: View {
             .task(id: connectedCloudStorageLocationIDs) {
                 await fileState.reconcileCloudStorageLocations(
                     connectedCloudStorageLocationIDs
-                )
-            }
-            // Pre-select the chat conversation tied to the active file
-            // without restoring the full LLM conversation cache. The id-based
-            // `.task` fires on first appear and on every subsequent change;
-            // AI surfaces restore message content lazily when they appear.
-            // This keeps file transitions away from historical attachment IO.
-            .task(id: fileState.currentActiveFile?.id) {
-                let activeFileID = fileState.currentActiveFile?.id
-                if activeFileID != nil {
-                    try? await Task.sleep(nanoseconds: 350_000_000)
-                    guard !Task.isCancelled,
-                          fileState.currentActiveFile?.id == activeFileID else { return }
-                }
-                await aiChatState.loadConversationForActiveFile(
-                    fileState: fileState
                 )
             }
             .withContainerSize()
@@ -176,10 +138,6 @@ struct ContentView: View {
                         layoutState.isInspectorPresented = false
                         try? await Task.sleep(nanoseconds: Self.activeFileCloseInspectorDismissalDelay)
                     }
-                    ExcalidrawMCPAppBridge.shared.register(
-                        fileState: fileState,
-                        context: viewContext
-                    )
                     FileCoverCacheCoordinator.shared.register(
                         fileState: fileState,
                         lockedContentState: lockedContentState,
@@ -240,17 +198,6 @@ struct ContentView: View {
         layoutState.toggleInspector()
     }
 
-    @MainActor
-    private func cancelActiveAIGenerationForDisabledAI() {
-        if let conversationID = fileState.aiChatConversationID {
-            llmState.cancelGeneration(conversationID: conversationID)
-            aiChatState.markGenerationCancelled(conversationID: conversationID)
-            aiChatState.unmarkCompacting(conversationID: conversationID)
-        }
-        aiChatState.pendingQueue.removeAll()
-        aiChatState.cancelEditing(conversationID: fileState.aiChatConversationID)
-    }
-    
     // Check if it is first launch by checking the files count.
     private func prepare() async {
         self.cloudContainerEventChangeListener?.cancel()
@@ -352,37 +299,4 @@ private struct ApplicationTerminationSheet: View {
         }
     }
 }
-#endif
-
-private struct ActiveFileSwitchBlockedToastModifier: ViewModifier {
-    @Environment(\.alertToast) private var alertToast
-    @ObservedObject var fileState: FileState
-
-    func body(content: Content) -> some View {
-        content
-            .watch(value: fileState.activeFileSwitchBlockedToken) { _ in
-                showToast()
-            }
-    }
-
-    private func showToast() {
-        switch fileState.activeFileSwitchBlockedReason {
-            case .aiGenerationInProgress:
-                alertToast(.init(
-                    displayMode: .hud,
-                    type: .regular,
-                    title: String(localizable: .aiChatActiveFileSwitchBlockedToastTitle)
-                ))
-            case nil:
-                break
-        }
-    }
-}
-
-#if DEBUG
-//struct ContentView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ContentView()
-//    }
-//}
 #endif

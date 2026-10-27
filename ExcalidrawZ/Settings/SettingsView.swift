@@ -15,7 +15,6 @@ struct SettingsView: View {
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
     @Environment(\.containerVerticalSizeClass) private var containerVerticalSizeClass
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var aiChatPreferences = AIChatPreferences.shared
 
     /// App-level deep-link bus — see `SettingsRouter` for the rationale on
     /// why this isn't `LayoutState`.
@@ -44,22 +43,6 @@ struct SettingsView: View {
             }
     }
 
-#if os(iOS)
-    private var showsCompactIOSCreditsButton: Bool {
-        containerHorizontalSizeClass == .compact &&
-        aiChatPreferences.isAIEnabled &&
-        AIChatAvailability.isAvailable
-    }
-
-    private func presentPaywallFromCompactIOSSettings() {
-        dismiss()
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            Store.shared.togglePaywall(reason: .manaully)
-        }
-    }
-#endif
-    
     @ViewBuilder
     private func content() -> some View {
         if #available(macOS 14.0, iOS 17.0, *) {
@@ -160,14 +143,6 @@ struct SettingsView: View {
                     }
                 }
             }
-
-            if showsCompactIOSCreditsButton {
-                ToolbarItem(placement: .topBarTrailing) {
-                    AICreditsToolbarButton {
-                        presentPaywallFromCompactIOSSettings()
-                    }
-                }
-            }
         }
 #endif
     }
@@ -203,8 +178,6 @@ struct SettingsView: View {
                 SecuritySettingsView()
             case .cloudStorage:
                 CloudStorageSettingsView()
-            case .ai:
-                AISettingsView()
             case .lessons:
                 LessonsSettingsView()
 #if os(macOS)
@@ -230,7 +203,6 @@ extension SettingsView {
         case backups
         case security
         case cloudStorage
-        case ai
         case lessons
 #if os(macOS)
         case fonts
@@ -257,9 +229,6 @@ extension SettingsView {
                     return .localizable(.settingsSecurityName)
                 case .cloudStorage:
                     return .localizable(.cloudStorageConnectedAccounts)
-                case .ai:
-                    // TODO: localize once a key is added.
-                    return "AI"
                 case .lessons:
                     return "Lessons"
 #if os(macOS)
@@ -290,8 +259,6 @@ extension SettingsView {
                     return .lockShield
                 case .cloudStorage:
                     return .externaldriveConnectedToLineBelow
-                case .ai:
-                    return .sparkles
                 case .lessons:
                     return .calendarBadgePlus
 #if os(macOS)
@@ -316,7 +283,6 @@ extension SettingsView {
                 case .backups: "backups"
                 case .security: "security"
                 case .cloudStorage: "cloudStorage"
-                case .ai: "ai"
                 case .lessons: "lessons"
 #if os(macOS)
                 case .fonts: "fonts"

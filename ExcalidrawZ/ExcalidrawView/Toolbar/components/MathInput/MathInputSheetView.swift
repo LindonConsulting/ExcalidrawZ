@@ -7,7 +7,6 @@
 
 import SwiftUI
 import Logging
-import LLMKit
 
 import ChocofordUI
 
@@ -15,13 +14,10 @@ struct MathInputSheetView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject private var canvasPreferencesState: CanvasPreferencesState
-    @EnvironmentObject var llmState: LLMStateObject
-    @ObservedObject var aiChatPreferences = AIChatPreferences.shared
 
     let logger = Logger(label: "MathInputSheetView")
 
     var mode: MathInputSheetMode
-    var onAIInsufficientCredits: ((_ snapshot: MathInputSheetSnapshot) -> Void)?
     var onCommit: (_ renderedSVG: MathRenderedSVG) -> Void
 
     @State var inputText: String
@@ -45,10 +41,6 @@ struct MathInputSheetView: View {
     @State var svgContent: MathRenderedSVG?
     @State var error: Error?
     @State var previewTask: Task<Void, Never>?
-    @State var isLatexAIModePresented = false
-    @State var latexAIPrompt: String = ""
-    @State var isGeneratingLatex = false
-    @State var latexAIGenerationTask: Task<Void, Never>?
 #if os(macOS)
     @State var isInspectorPresented: Bool = true
 #endif
@@ -58,11 +50,9 @@ struct MathInputSheetView: View {
         initialLatex: String = "",
         initialSVGColor: String = "#1e1e1e",
         restoredSnapshot: MathInputSheetSnapshot? = nil,
-        onAIInsufficientCredits: ((_ snapshot: MathInputSheetSnapshot) -> Void)? = nil,
         onCommit: @escaping (_ renderedSVG: MathRenderedSVG) -> Void
     ) {
         self.mode = mode
-        self.onAIInsufficientCredits = onAIInsufficientCredits
         self.onCommit = onCommit
         let inputText = restoredSnapshot?.inputText ?? initialLatex
         let selectedSVGColor = restoredSnapshot?.selectedSVGColor ?? initialSVGColor
@@ -92,8 +82,6 @@ struct MathInputSheetView: View {
         self._functionYLabel = State(initialValue: restoredSnapshot?.functionYLabel ?? "y")
         self._functionShowGrid = State(initialValue: restoredSnapshot?.functionShowGrid ?? true)
         self._functionBackgroundColor = State(initialValue: restoredSnapshot?.functionBackgroundColor)
-        self._isLatexAIModePresented = State(initialValue: restoredSnapshot?.isLatexAIModePresented ?? false)
-        self._latexAIPrompt = State(initialValue: restoredSnapshot?.latexAIPrompt ?? "")
     }
 
     var body: some View {
@@ -125,9 +113,6 @@ struct MathInputSheetView: View {
         }
 #endif
         .onChange(of: inputText, debounce: 0.2) { newValue in
-            guard !isLatexAIModePresented else {
-                return
-            }
             generatePreview(input: newValue)
         }
         .onChange(of: functionPreviewConfiguration, debounce: 0.2) { _ in
@@ -140,14 +125,10 @@ struct MathInputSheetView: View {
             generatePreview(input: activeWorkspace == .function ? functionLatexSource : inputText)
         }
         .watch(value: canvasColorScheme) { _ in
-            guard !isLatexAIModePresented else {
-                return
-            }
             generatePreview(input: activeWorkspace == .function ? functionLatexSource : inputText)
         }
         .onDisappear {
             previewTask?.cancel()
-            latexAIGenerationTask?.cancel()
         }
     }
 

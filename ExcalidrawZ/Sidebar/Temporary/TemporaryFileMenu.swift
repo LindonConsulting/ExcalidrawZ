@@ -39,7 +39,6 @@ enum TemporaryFileActions {
         let didCloseCurrent = currentActiveFile.map { filesToClose.contains($0) } ?? false
 
         fileState.temporaryFiles.removeAll { files.contains($0) }
-        deleteAIConversations(for: filesToClose)
 
         if didCloseCurrent {
             if fileState.temporaryFiles.isEmpty {
@@ -51,25 +50,6 @@ enum TemporaryFileActions {
         }
     }
 
-    private static func deleteAIConversations(for temporaryFiles: [URL]) {
-        Task.detached {
-            for file in temporaryFiles {
-                let scope = AIConversationFileScope(
-                    kind: .temporaryFile,
-                    id: file.absoluteString
-                )
-                do {
-                    try await PersistenceController.shared.aiConversationRepository
-                        .deleteConversations(forFileScope: scope)
-                    await AIChatPreferences.shared.deleteFileAccessOverride(for: scope)
-                } catch {
-                    temporaryFileMenuLogger.warning(
-                        "Failed to delete AI conversations for temporary file \(file): \(error)"
-                    )
-                }
-            }
-        }
-    }
 }
 
 
@@ -243,22 +223,6 @@ struct TemporaryFileMenuItems: View {
                     
                     if let id = result.id {
                         currentTemporaryFileID = id
-                    }
-                    if let scopeID = result.scopeID {
-                        do {
-                            let oldScope = AIConversationFileScope(kind: .temporaryFile, id: file.absoluteString)
-                            let newScope = AIConversationFileScope(kind: .libraryFile, id: scopeID)
-                            try await PersistenceController.shared.aiConversationRepository.rebindConversations(
-                                from: oldScope,
-                                to: newScope
-                            )
-                            await AIChatPreferences.shared.rebindFileAccessOverride(
-                                from: oldScope,
-                                to: newScope
-                            )
-                        } catch {
-                            temporaryFileMenuLogger.warning("Failed to rebind AI conversations for saved temporary file: \(error)")
-                        }
                     }
                 }
                 

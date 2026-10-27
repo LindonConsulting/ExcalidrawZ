@@ -9,10 +9,8 @@
 /* Begin PBXBuildFile section */
 		3908EB9929674DF60054A3ED /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3908EB9729674DF60054A3ED /* Model.xcdatamodeld */; };
 		391087832DFFCC1A0057F493 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 391087822DFFCC1A0057F493 /* Logging */; };
-		3910E998301462C600E422D4 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 3910E997301462C600E422D4 /* KeyboardShortcuts */; };
 		3913C0262FED942F00689184 /* ChocofordEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 3913C0252FED942F00689184 /* ChocofordEssentials */; };
 		3913C0282FED942F00689184 /* ChocofordUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3913C0272FED942F00689184 /* ChocofordUI */; };
-		391716552FC3EF3F00568AE9 /* LLMKit in Frameworks */ = {isa = PBXBuildFile; productRef = 391716542FC3EF3F00568AE9 /* LLMKit */; };
 		391721082FC4006800568AE9 /* ChocofordEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 391721072FC4006800568AE9 /* ChocofordEssentials */; };
 		3917210A2FC4006800568AE9 /* ChocofordUI in Frameworks */ = {isa = PBXBuildFile; productRef = 391721092FC4006800568AE9 /* ChocofordUI */; };
 		394A7FAF2C515CB700D4918B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394A7FAE2C515CB700D4918B /* RootView.swift */; };
@@ -23,7 +21,6 @@
 		3965F2102D6F60170065A8C8 /* FSEventsWrapper in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 3965F20F2D6F60170065A8C8 /* FSEventsWrapper */; };
 		396661302C665D4300F863BC /* excalidraw-latest in Resources */ = {isa = PBXBuildFile; fileRef = 3966612F2C665D3E00F863BC /* excalidraw-latest */; };
 		3966623F2C666EC600F863BC /* FlyingFox in Frameworks */ = {isa = PBXBuildFile; productRef = 3966623E2C666EC600F863BC /* FlyingFox */; };
-		39704EDA2E7990AD00B98F7A /* Vortex in Frameworks */ = {isa = PBXBuildFile; productRef = 39704ED92E7990AD00B98F7A /* Vortex */; };
 		3973D6052E7D1A75005FD6A5 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3973D6042E7D1A75005FD6A5 /* AVKit.framework */; };
 		3976C4D62C8789F60037D3AF /* overwrite_console.js in Resources */ = {isa = PBXBuildFile; fileRef = 3976C4D52C8789F60037D3AF /* overwrite_console.js */; };
 		397E4657295838CF003B824B /* ExcalidrawZApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397E4656295838CF003B824B /* ExcalidrawZApp.swift */; };
@@ -45,7 +42,6 @@
 		399812632E73EBF400B7AAC9 /* ChocofordEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 39E556F12CC8060E0009F051 /* ChocofordEssentials */; };
 		399812642E73EBF400B7AAC9 /* ChocofordUI in Frameworks */ = {isa = PBXBuildFile; productRef = 39E556F32CC8060E0009F051 /* ChocofordUI */; };
 		399815472E73EF4C00B7AAC9 /* ExcalidrawZ Icon 26.icon in Resources */ = {isa = PBXBuildFile; fileRef = 399815452E73EF4C00B7AAC9 /* ExcalidrawZ Icon 26.icon */; };
-		399992682E654D5F000FF1EC /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 399992672E654D5F000FF1EC /* MarkdownUI */; };
 		39A7BB822A101B21003887F9 /* FakeToggleColorMode.js in Resources */ = {isa = PBXBuildFile; fileRef = 39A7BB812A101B21003887F9 /* FakeToggleColorMode.js */; };
 		39AD1EE9295AE08800DA9657 /* FakeSaveCommand.js in Resources */ = {isa = PBXBuildFile; fileRef = 39AD1EE8295AE08800DA9657 /* FakeSaveCommand.js */; };
 		39AF4DE12D0611E0009126C4 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = 39AF4DE02D0611E0009126C4 /* CHANGELOG.md */; };
@@ -103,7 +99,6 @@
 		397E468629599DD3003B824B /* FakeDrop.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = FakeDrop.js; sourceTree = "<group>"; };
 		397E468E295AAE5D003B824B /* template.excalidraw */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = template.excalidraw; sourceTree = "<group>"; };
 		397F98DD295EE18E009BED55 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		3990F8352CACF4C500C94983 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		399815452E73EF4C00B7AAC9 /* ExcalidrawZ Icon 26.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "ExcalidrawZ Icon 26.icon"; sourceTree = "<group>"; };
 		39A7BB812A101B21003887F9 /* FakeToggleColorMode.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = FakeToggleColorMode.js; sourceTree = "<group>"; };
 		39AD1EE8295AE08800DA9657 /* FakeSaveCommand.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = FakeSaveCommand.js; sourceTree = "<group>"; };
@@ -209,7 +204,6 @@
 				394BBCDF2FDDEB0300E25D8F /* ChocofordUI in Frameworks */,
 				399812642E73EBF400B7AAC9 /* ChocofordUI in Frameworks */,
 				39F71C4F2FA88BD30040C8D7 /* ChocofordUI in Frameworks */,
-				391716552FC3EF3F00568AE9 /* LLMKit in Frameworks */,
 				399812632E73EBF400B7AAC9 /* ChocofordEssentials in Frameworks */,
 				39EAA0693000FB3B0044EE1C /* ChocofordEssentials in Frameworks */,
 				3913C0282FED942F00689184 /* ChocofordUI in Frameworks */,
@@ -221,7 +215,6 @@
 				398B12CE2E434572003D1F4B /* ChocofordUI in Frameworks */,
 				391721082FC4006800568AE9 /* ChocofordEssentials in Frameworks */,
 				398B12CD2E434572003D1F4B /* ChocofordEssentials in Frameworks */,
-				39704EDA2E7990AD00B98F7A /* Vortex in Frameworks */,
 				394BB86B2FD5F8DB00E25D8F /* ChocofordEssentials in Frameworks */,
 				39EAA06B3000FB3B0044EE1C /* ChocofordUI in Frameworks */,
 				394BBCDD2FDDEB0300E25D8F /* ChocofordEssentials in Frameworks */,
@@ -234,11 +227,9 @@
 				3966623F2C666EC600F863BC /* FlyingFox in Frameworks */,
 				3965F2102D6F60170065A8C8 /* FSEventsWrapper in Frameworks */,
 				39EAA04D3000EFAB0044EE1C /* ChocofordUI in Frameworks */,
-				3910E998301462C600E422D4 /* KeyboardShortcuts in Frameworks */,
 				398F14532CF738DB0061CCF9 /* SwiftyAlert in Frameworks */,
 				3913C0262FED942F00689184 /* ChocofordEssentials in Frameworks */,
 				398B15852E437999003D1F4B /* SmoothGradient in Frameworks */,
-				399992682E654D5F000FF1EC /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,7 +247,6 @@
 			isa = PBXGroup;
 			children = (
 				3973D6042E7D1A75005FD6A5 /* AVKit.framework */,
-				3990F8352CACF4C500C94983 /* StoreKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -396,11 +386,8 @@
 				3965F20F2D6F60170065A8C8 /* FSEventsWrapper */,
 				391087822DFFCC1A0057F493 /* Logging */,
 				398B15842E437999003D1F4B /* SmoothGradient */,
-				399992672E654D5F000FF1EC /* MarkdownUI */,
-				39704ED92E7990AD00B98F7A /* Vortex */,
 				39F71C4C2FA88BD30040C8D7 /* ChocofordEssentials */,
 				39F71C4E2FA88BD30040C8D7 /* ChocofordUI */,
-				391716542FC3EF3F00568AE9 /* LLMKit */,
 				391721072FC4006800568AE9 /* ChocofordEssentials */,
 				391721092FC4006800568AE9 /* ChocofordUI */,
 				394BB86A2FD5F8DB00E25D8F /* ChocofordEssentials */,
@@ -413,7 +400,6 @@
 				39EAA04C3000EFAB0044EE1C /* ChocofordUI */,
 				39EAA0683000FB3B0044EE1C /* ChocofordEssentials */,
 				39EAA06A3000FB3B0044EE1C /* ChocofordUI */,
-				3910E997301462C600E422D4 /* KeyboardShortcuts */,
 			);
 			productName = ExcaliDrawZ;
 			productReference = 397E4653295838CF003B824B /* ExcalidrawZ.app */;
@@ -479,11 +465,7 @@
 				3965F20E2D6F60170065A8C8 /* XCRemoteSwiftPackageReference "FSEventsWrapper" */,
 				391087702DFFCB900057F493 /* XCRemoteSwiftPackageReference "swift-log" */,
 				398B15832E437999003D1F4B /* XCRemoteSwiftPackageReference "SmoothGradient" */,
-				3999925A2E654D3D000FF1EC /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
-				39704ED82E7990AD00B98F7A /* XCRemoteSwiftPackageReference "Vortex" */,
-				391716462FC3EF0100568AE9 /* XCRemoteSwiftPackageReference "LLMKit" */,
 				39EAA0673000FB3B0044EE1C /* XCRemoteSwiftPackageReference "ChocofordKit" */,
-				3910E991301462BD00E422D4 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 			);
 			productRefGroup = 397E4654295838CF003B824B /* Products */;
 			projectDirPath = "";
@@ -1047,22 +1029,6 @@
 				minimumVersion = 1.6.3;
 			};
 		};
-		3910E991301462BD00E422D4 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.1;
-			};
-		};
-		391716462FC3EF0100568AE9 /* XCRemoteSwiftPackageReference "LLMKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/chocoford/LLMKit.git";
-			requirement = {
-				branch = dev;
-				kind = branch;
-			};
-		};
 		3963A03C2C6C7EAA00472AE7 /* XCRemoteSwiftPackageReference "ChocofordKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/chocoford/ChocofordKit.git";
@@ -1095,14 +1061,6 @@
 				minimumVersion = 0.15.0;
 			};
 		};
-		39704ED82E7990AD00B98F7A /* XCRemoteSwiftPackageReference "Vortex" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/twostraws/Vortex.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.3;
-			};
-		};
 		398B15832E437999003D1F4B /* XCRemoteSwiftPackageReference "SmoothGradient" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/raymondjavaxx/SmoothGradient.git";
@@ -1117,14 +1075,6 @@
 			requirement = {
 				branch = dev;
 				kind = branch;
-			};
-		};
-		3999925A2E654D3D000FF1EC /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.4.1;
 			};
 		};
 		39BE12EC2CB7DD8C006781D5 /* XCRemoteSwiftPackageReference "Zlib" */ = {
@@ -1168,11 +1118,6 @@
 			package = 391087702DFFCB900057F493 /* XCRemoteSwiftPackageReference "swift-log" */;
 			productName = Logging;
 		};
-		3910E997301462C600E422D4 /* KeyboardShortcuts */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3910E991301462BD00E422D4 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
-			productName = KeyboardShortcuts;
-		};
 		3913C0252FED942F00689184 /* ChocofordEssentials */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ChocofordEssentials;
@@ -1180,11 +1125,6 @@
 		3913C0272FED942F00689184 /* ChocofordUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ChocofordUI;
-		};
-		391716542FC3EF3F00568AE9 /* LLMKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 391716462FC3EF0100568AE9 /* XCRemoteSwiftPackageReference "LLMKit" */;
-			productName = LLMKit;
 		};
 		391721072FC4006800568AE9 /* ChocofordEssentials */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1236,11 +1176,6 @@
 			package = 3966623D2C666EC600F863BC /* XCRemoteSwiftPackageReference "FlyingFox" */;
 			productName = FlyingFox;
 		};
-		39704ED92E7990AD00B98F7A /* Vortex */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 39704ED82E7990AD00B98F7A /* XCRemoteSwiftPackageReference "Vortex" */;
-			productName = Vortex;
-		};
 		3987A57E2CB558B40054D7D5 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 390716CF2C6E82CF002D7834 /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
@@ -1255,11 +1190,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 398F14512CF738DB0061CCF9 /* XCRemoteSwiftPackageReference "SwiftyAlert" */;
 			productName = SwiftyAlert;
-		};
-		399992672E654D5F000FF1EC /* MarkdownUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3999925A2E654D3D000FF1EC /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
-			productName = MarkdownUI;
 		};
 		39A3FE5F2E40A43700DF6AD0 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;

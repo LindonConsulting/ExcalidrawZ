@@ -254,29 +254,6 @@ final class FileState: ObservableObject {
             }
         }
 
-        var aiConversationFileScope: AIConversationFileScope {
-            switch self {
-                case .file(let file):
-                    AIConversationFileScope(
-                        kind: .libraryFile,
-                        id: file.id?.uuidString ?? file.objectID.uriRepresentation().absoluteString
-                    )
-                case .localFile(let url):
-                    AIConversationFileScope(kind: .localFile, id: url.absoluteString)
-                case .temporaryFile(let url):
-                    AIConversationFileScope(kind: .temporaryFile, id: url.absoluteString)
-                case .collaborationFile(let file):
-                    AIConversationFileScope(
-                        kind: .collaborationFile,
-                        id: file.id?.uuidString
-                            ?? file.roomID
-                            ?? file.objectID.uriRepresentation().absoluteString
-                    )
-                case .cloudStorageFile(let reference):
-                    AIConversationFileScope(kind: .cloudStorageFile, id: reference.id)
-            }
-        }
-        
         var name: String? {
             switch self {
                 case .file(let file):
@@ -451,12 +428,6 @@ final class FileState: ObservableObject {
     @MainActor
     private func applyActiveFile(_ newValue: ActiveFile?) {
         let previousActiveFile = currentActiveFile
-        let previousConversationScope = previousActiveFile?.aiConversationFileScope
-        let nextConversationScope = newValue?.aiConversationFileScope
-        if previousConversationScope != nextConversationScope {
-            aiChatConversationID = nil
-            isAIChatConversationLoading = nextConversationScope != nil
-        }
         if let activeFileIndex,
            activeFileIndex < activeFiles.count {
             if let newValue {
@@ -682,12 +653,6 @@ final class FileState: ObservableObject {
             file
         }
 
-        if aiChatSession != nil, currentActiveFile != file {
-            activeFileSwitchBlockedReason = .aiGenerationInProgress
-            activeFileSwitchBlockedToken += 1
-            return false
-        }
-
         if currentActiveFile == file {
             return true
         }
@@ -854,19 +819,12 @@ final class FileState: ObservableObject {
                     setActiveGroupIfNeeded(.temporary)
                 }
             case .collaborationFile(let room):
-                let store = Store.shared
-                if let limit = store.collaborationRoomLimits,
-                   collaboratingFiles.count >= limit,
-                   !collaboratingFiles.contains(room) {
-                    store.togglePaywall(reason: .roomLimit)
-                } else {
-                    setActiveGroupIfNeeded(.collaboration)
-                    if !collaboratingFiles.contains(room) {
-                        collaboratingFiles.append(room)
-                    }
-                    if collaboratingFilesState[room] == nil {
-                        collaboratingFilesState[room] = .loading
-                    }
+                setActiveGroupIfNeeded(.collaboration)
+                if !collaboratingFiles.contains(room) {
+                    collaboratingFiles.append(room)
+                }
+                if collaboratingFilesState[room] == nil {
+                    collaboratingFilesState[room] = .loading
                 }
             case .cloudStorageFile(let reference):
                 if let folder = CloudStorageDocumentStore.shared.bestKnownParentFolder(for: reference) {
@@ -1028,44 +986,6 @@ final class FileState: ObservableObject {
         return false
     }
     
-    // MARK: - AI Chat
-
-    enum ActiveFileSwitchBlockedReason: Equatable {
-        case aiGenerationInProgress
-    }
-
-    @Published var activeFileSwitchBlockedReason: ActiveFileSwitchBlockedReason?
-    @Published var activeFileSwitchBlockedToken: Int = 0
-
-    /// The currently active AI chat conversation id.
-    ///
-    /// Stored on `FileState` because conversations are conceptually scoped to
-    /// the file the user is working on — each file will eventually own a set
-    /// of persisted conversations (Core Data), with this property pointing at
-    /// the one currently visible. For now we only track a single in-memory id;
-    /// the AIChatView/AIChatIslandView read and write through here so the
-    /// inspector and the floating island stay in sync across presentation
-    /// toggles.
-    @Published var aiChatConversationID: String? = nil
-    @Published var isAIChatConversationLoading: Bool = false
-
-    /// Active AI chat session, if any. While this is non-nil:
-    ///
-    /// 1. `updateFile` / `updateLocalFile` switch to checkpoint policy
-    ///    `.suppress` — content saves, no history rows created. The user
-    ///    explicitly asked for "一刀切" — no per-edit history during AI
-    ///    runs (whether the edit was user-driven or AI-tool-driven).
-    /// 2. `beginAIChatSession` records an `.aiPre` snapshot before the
-    ///    user message hits the LLM and links it to that message through
-    ///    `AIMessageCheckpointLink`. `endAIChatSession(success: true, ...)`
-    ///    records the matching `.aiPost` snapshot and links it to the
-    ///    assistant final-answer id.
-    ///
-    /// One session per (FileState, conversationID) — each user message
-    /// inside the same conversation re-enters begin/end with a fresh
-    /// (pre, post) pair anchored to that message round.
-    @Published var aiChatSession: AIChatSessionState?
-
     /// Nested MCP mutation depth. While non-zero, normal canvas save paths
     /// still persist file content but must not create user-edit checkpoints;
     /// the MCP bridge writes explicit `.mcpPre` / `.mcpPost` rows instead.
@@ -1074,28 +994,7 @@ final class FileState: ObservableObject {
     /// Shared guard for automated mutation sessions that manage their own
     /// explicit checkpoint boundaries.
     var automaticCheckpointWritesSuppressed: Bool {
-        aiChatSession != nil || mcpCheckpointSuppressionDepth > 0
-    }
-
-    struct AIChatSessionState: Equatable {
-        /// Conversation id this session belongs to. Surfaced for sanity
-        /// checks (the conversation could in theory change mid-session
-        /// if the user navigates between files).
-        let conversationID: String
-        /// User chat message id that triggered the session.
-        let userMessageID: String
-        /// `ActiveFile` snapshot at session begin. Optional because the
-        /// user can fire off an AI message with no file open (e.g. asking
-        /// the AI to *create* a new file). When `nil`, no `.aiPre` row
-        /// gets written — there's nothing to snapshot. We still open the
-        /// session so the suppression flag prevents stray history while
-        /// the AI runs.
-        let anchorFile: ActiveFile?
-        /// Exact `.aiPre` checkpoint created for this session, if any.
-        /// Used to delete only this eager checkpoint when a read-only
-        /// round can safely rebind to an earlier checkpoint.
-        var preCheckpointID: UUID? = nil
-        var preCheckpointKind: AIMessageCheckpointKind? = nil
+        mcpCheckpointSuppressionDepth > 0
     }
 
     /// Files that is currently under collaboration.
@@ -2362,21 +2261,8 @@ final class FileState: ObservableObject {
         }
     }
     
-    /// Restores the previous group/space while an AI round is active.
-    /// File switching is already blocked in `setActiveFile`; this catches
-    /// direct space changes such as Home, Collaboration, temporary, and
-    /// local-folder navigation.
     private func shouldRestoreActiveGroupAfterBlockedSwitch(from oldValue: ActiveGroup?) -> Bool {
-        guard !isRestoringActiveGroupAfterBlockedSwitch else { return false }
-        guard aiChatSession != nil else { return false }
-        guard oldValue != currentActiveGroup else { return false }
-
-        activeFileSwitchBlockedReason = .aiGenerationInProgress
-        activeFileSwitchBlockedToken += 1
-        isRestoringActiveGroupAfterBlockedSwitch = true
-        currentActiveGroup = oldValue
-        isRestoringActiveGroupAfterBlockedSwitch = false
-        return true
+        false
     }
 
     private func resetCurrentGroupChangesListener() {
