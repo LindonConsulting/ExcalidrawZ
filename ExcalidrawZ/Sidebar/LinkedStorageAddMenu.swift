@@ -60,23 +60,9 @@ struct LinkedStorageAddMenu<AdditionalContent: View, Label: View>: View {
         )
         .sheet(item: $sheetRoute) { route in
             switch route {
-                case .serverCredentials(let descriptor):
-                    CloudStorageServerConnectionSheet(
-                        providerName: descriptor.displayName,
-                        connectedAccounts: connections.accounts(for: descriptor.id),
-                        onSelectAccount: { account in
-                            try await preparePicker(
-                                providerID: descriptor.id,
-                                account: account
-                            )
-                        }
-                    ) { credentials in
-                        try await selectLocation(
-                            with: descriptor.id,
-                            account: nil,
-                            connectionInput: .serverCredentials(credentials)
-                        )
-                    }
+                case .serverCredentials:
+                    // Server-backed providers (WebDAV) were removed from this build.
+                    EmptyView()
                 case .folderPicker(let context):
                     CloudStorageFolderPicker(context: context) { folder in
                         connections.saveLocation(

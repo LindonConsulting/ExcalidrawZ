@@ -54,7 +54,6 @@
 		39ED18542D3FDE1C00E437A0 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 39ED18532D3FDE1C00E437A0 /* Localizable.xcstrings */; };
 		39F71C4D2FA88BD30040C8D7 /* ChocofordEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 39F71C4C2FA88BD30040C8D7 /* ChocofordEssentials */; };
 		39F71C4F2FA88BD30040C8D7 /* ChocofordUI in Frameworks */ = {isa = PBXBuildFile; productRef = 39F71C4E2FA88BD30040C8D7 /* ChocofordUI */; };
-		39FD00013012100000C10002 /* MSAL in Frameworks */ = {isa = PBXBuildFile; productRef = 39FD00013012100000C10005 /* MSAL */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -200,7 +199,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA5BA1B0977E02D5DAA2ECE9 /* TutorKit in Frameworks */,
-				39FD00013012100000C10002 /* MSAL in Frameworks */,
 				394BBCDF2FDDEB0300E25D8F /* ChocofordUI in Frameworks */,
 				399812642E73EBF400B7AAC9 /* ChocofordUI in Frameworks */,
 				39F71C4F2FA88BD30040C8D7 /* ChocofordUI in Frameworks */,
@@ -371,7 +369,6 @@
 			name = ExcalidrawZ;
 			packageProductDependencies = (
 				2B49D2D5934C3FAD6FB53028 /* TutorKit */,
-				39FD00013012100000C10005 /* MSAL */,
 				3930B2F72C512E7B00F14E88 /* ChocofordEssentials */,
 				3930B2F92C512E7B00F14E88 /* ChocofordUI */,
 				3966623E2C666EC600F863BC /* FlyingFox */,
@@ -457,7 +454,6 @@
 			mainGroup = 397E464A295838CF003B824B;
 			packageReferences = (
 				3B0FE4FE653A7AA45459C2D8 /* XCLocalSwiftPackageReference "Packages/TutorKit" */,
-				39FD00013012100000C10003 /* XCRemoteSwiftPackageReference "microsoft-authentication-library-for-objc" */,
 				3966623D2C666EC600F863BC /* XCRemoteSwiftPackageReference "FlyingFox" */,
 				390716CF2C6E82CF002D7834 /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
 				39BE12EC2CB7DD8C006781D5 /* XCRemoteSwiftPackageReference "Zlib" */,
@@ -1093,14 +1089,6 @@
 				kind = branch;
 			};
 		};
-		39FD00013012100000C10003 /* XCRemoteSwiftPackageReference "microsoft-authentication-library-for-objc" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/AzureAD/microsoft-authentication-library-for-objc";
-			requirement = {
-				kind = exactVersion;
-				version = 2.14.1;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1242,11 +1230,6 @@
 		39F71C4E2FA88BD30040C8D7 /* ChocofordUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ChocofordUI;
-		};
-		39FD00013012100000C10005 /* MSAL */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 39FD00013012100000C10003 /* XCRemoteSwiftPackageReference "microsoft-authentication-library-for-objc" */;
-			productName = MSAL;
 		};
 /* End XCSwiftPackageProductDependency section */
 

@@ -86,16 +86,9 @@ struct LinkedStorageSidebarSection: View {
         }
         .sheet(item: $sheetRoute) { route in
             switch route {
-                case .serverCredentials(let descriptor, let location):
-                    CloudStorageServerConnectionSheet(
-                        providerName: descriptor.displayName,
-                        connectedAccounts: []
-                    ) { credentials in
-                        try await reconnect(
-                            location,
-                            using: .serverCredentials(credentials)
-                        )
-                    }
+                case .serverCredentials:
+                    // Server-backed providers (WebDAV) were removed from this build.
+                    EmptyView()
             }
         }
     }
