@@ -76,8 +76,6 @@ extension ExcalidrawCore: WKNavigationDelegate {
                             validateCurrentParentFile: false
                         )
                         guard outcome.didLoad else { return }
-                        // open collab mode
-                        try await self.openCollabMode()
                     }
                     
                 } catch {

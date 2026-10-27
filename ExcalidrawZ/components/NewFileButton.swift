@@ -21,7 +21,6 @@ struct NewFileButton: View {
     @Environment(\.alertToast) private var alertToast
     @Environment(\.alert) private var alert
     @EnvironmentObject private var fileState: FileState
-    @EnvironmentObject private var collaborationState: CollaborationState
     @EnvironmentObject private var localFolderState: LocalFolderState
     @ObservedObject private var cloudStorageDocumentStore = CloudStorageDocumentStore.shared
     
@@ -41,15 +40,8 @@ struct NewFileButton: View {
     @State private var window: UIWindow?
 #endif
     
-    @FetchRequest(sortDescriptors: [])
-    private var collaborationFiles: FetchedResults<CollaborationFile>
-    
     var body: some View {
-        if fileState.isInCollaborationSpace {
-            collaborationNewButton()
-        } else {
-            localNewButton()
-        }
+        localNewButton()
     }
 
     @ViewBuilder
@@ -104,30 +96,6 @@ struct NewFileButton: View {
 
             self.createNewFileFromClipboard()
         }
-    }
-    
-    @ViewBuilder
-    private func collaborationNewButton() -> some View {
-        Menu {
-            Button {
-                collaborationState.isCreateRoomConfirmationDialogPresented.toggle()
-            } label: {
-                Label(.localizable(.collaborationButtonCreateNewRoom), systemSymbol: .plus)
-            }
-            Button {
-                collaborationState.isJoinRoomSheetPresented.toggle()
-            } label: {
-                Label(.localizable(.collaborationButtonJoinRoom), systemSymbol: .ipadAndArrowForward)
-            }
-        } label: {
-            if #available(macOS 13.0, *) {
-                Label(.localizable(.toolbarButtonCollaborationNewRoom), systemSymbol: .doorLeftHandOpen)
-            } else {
-                Label(.localizable(.toolbarButtonCollaborationNewRoom), systemSymbol: .plus)
-            }
-        }
-        .help(.localizable(.toolbarButtonCollaborationNewRoom))
-        .disabled(collaborationState.userCollaborationInfo.username.isEmpty)
     }
     
     @State private var isCreatingFile = false

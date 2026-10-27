@@ -595,10 +595,9 @@ private struct FileHomeItemContextMenuModifier: ViewModifier {
                 case .temporaryFile:
                     // TemporaryFile never missing
                     content
-                case .collaborationFile(let room):
+                case .collaborationFile:
                     // Missing CollaborationFile no matter
                     content
-                        .modifier(CollaborationFileContextMenuModifier(file: room))
                 case .cloudStorageFile:
                     content
             }
@@ -613,9 +612,8 @@ private struct FileHomeItemContextMenuModifier: ViewModifier {
                 case .temporaryFile(let url):
                     content
                         .modifier(TemporaryFileContextMenuModifier(file: url))
-                case .collaborationFile(let collaborationFile):
+                case .collaborationFile:
                     content
-                        .modifier(CollaborationFileContextMenuModifier(file: collaborationFile))
                 case .cloudStorageFile(let reference):
                     content
                         .modifier(CloudStorageFileActionsModifier(reference: reference))

@@ -12,8 +12,6 @@ import ChocofordEssentials
 import ChocofordUI
 
 struct GroupListView: View {
-    /// Collaboration is hidden by default on the teaching build; flip this default to show it.
-    @AppStorage("sidebar.showsCollaborationRow") private var showsCollaborationRow = false
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
     @Environment(\.alertToast) var alertToast
@@ -87,35 +85,6 @@ struct GroupListView: View {
 
                                 TodaysNoteSidebarRow()
 
-                                if showsCollaborationRow {
-                                Button {
-                                    fileState.setActiveFile(nil)
-                                    fileState.setActiveGroupIfNeeded(.collaboration)
-                                } label: {
-                                    HStack {
-                                        Image(systemSymbol: .person3)
-                                            .frame(width: 30, alignment: .leading)
-                                        Text(.localizable(.sidebarGroupRowCollaborationTitle))
-                                        
-                                        Spacer()
-                                        
-                                        if !fileState.collaboratingFilesState.values.filter({$0 == .loaded}).isEmpty {
-                                            Text(
-                                                fileState.collaboratingFilesState.values.filter({$0 == .loaded}).count.formatted()
-                                            )
-                                            .foregroundStyle(.secondary)
-                                            .padding(.trailing, 4)
-                                        }
-                                    }
-                                }
-                                .buttonStyle(
-                                    .excalidrawSidebarRow(
-                                        isSelected: fileState.currentActiveGroup == .collaboration,
-                                        isMultiSelected: false
-                                    )
-                                )
-                                }
-                                
                                 // Temporary
                                 if !fileState.temporaryFiles.isEmpty {
                                     TemporaryGroupRowView()

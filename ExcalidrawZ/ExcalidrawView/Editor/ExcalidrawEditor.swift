@@ -222,9 +222,6 @@ struct ExcalidrawEditor: View {
                 .opacity(isInCollaborationSpace ? 0 : 1)
                 .allowsHitTesting(!isInCollaborationSpace && !isLoadingFile)
 
-                CollaborationEditorStack()
-                    .opacity(isInCollaborationSpace ? 1 : 0)
-                    .allowsHitTesting(isInCollaborationSpace && !isLoadingFile)
             }
             .environment(\.excalidrawNativeViewportInsets, nativeViewportInsetsForWeb)
             .allowsHitTesting(!isLoadingFile)

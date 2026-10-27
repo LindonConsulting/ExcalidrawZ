@@ -35,7 +35,6 @@ struct ExcalidrawHomeView: View {
         case localFileHome
         case cloudStorageFileHome
         case temporaryFileHome
-        case collaborationFileHome
     }
     
     @State private var lastHomeType: HomeType = .home
@@ -262,14 +261,6 @@ struct ExcalidrawHomeView: View {
                         )
                 case .temporaryFileHome:
                         TemporaryFilesHomeView()
-                            .opacity(
-                                fileHomeItemTransitionState.canShowItemContainerView ||
-                                fileState.currentActiveFile == nil
-                                ? 1
-                                : 0
-                            )
-                case .collaborationFileHome:
-                        CollaborationHome()
                             .opacity(
                                 fileHomeItemTransitionState.canShowItemContainerView ||
                                 fileState.currentActiveFile == nil
@@ -580,8 +571,6 @@ struct ExcalidrawHomeView: View {
                 nextHomeType = .cloudStorageFileHome
             case .temporary:
                 nextHomeType = .temporaryFileHome
-            case .collaboration:
-                nextHomeType = .collaborationFileHome
             default:
                 nextHomeType = .home
         }

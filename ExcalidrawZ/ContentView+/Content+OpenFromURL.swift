@@ -175,9 +175,7 @@ struct OpenFromURLModifier: ViewModifier {
             guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
                 return
             }
-            if components.host == "collab" {
-                onOpenCollabURL(url, components: components)
-            } else if components.host == "entity" {
+            if components.host == "entity" {
                 onOpenDatabaseEntity(components: components)
             } else {
                 self.externalURLToBeOpen = url
@@ -327,48 +325,6 @@ struct OpenFromURLModifier: ViewModifier {
                 }
             } catch {
                 alertToast(error)
-            }
-        }
-    }
-    
-    private func onOpenCollabURL(_ url: URL, components: URLComponents) {
-        let encodedRoomID = String(components.path.dropFirst())
-        if let roomID = CollabRoomIDCoder.shared.decode(encodedString: encodedRoomID),
-           let nameItem = components.queryItems?.first(where: {$0.name == "name"}) {
-            let context = PersistenceController.shared.container.newBackgroundContext()
-            Task.detached {
-                do {
-                    // fetch the room
-                    try await context.perform {
-                        let roomFetchRequest = NSFetchRequest<CollaborationFile>(entityName: "CollaborationFile")
-                        roomFetchRequest.predicate = NSPredicate(format: "roomID = %@", roomID)
-                        let room: CollaborationFile
-                        if let firstRoom = try context.fetch(roomFetchRequest).first {
-                            room = firstRoom
-                        } else {
-                            let newRoom = CollaborationFile(
-                                name: nameItem.value ?? String(localizable: .generalUntitled),
-                                content: nil,
-                                isOwner: false,
-                                context: context
-                            )
-                            newRoom.roomID = roomID
-                            context.insert(newRoom)
-                            try context.save()
-                            room = newRoom
-                        }
-                        let roomID = room.objectID
-                        Task {
-                            await MainActor.run {
-                                if case let room as CollaborationFile = viewContext.object(with: roomID) {
-                                    fileState.setActiveFile(.collaborationFile(room))
-                                }
-                            }
-                        }
-                    }
-                } catch {
-                    await alertToast(error)
-                }
             }
         }
     }

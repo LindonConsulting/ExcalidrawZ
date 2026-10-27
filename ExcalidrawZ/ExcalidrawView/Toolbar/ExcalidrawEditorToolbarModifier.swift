@@ -27,7 +27,6 @@ struct ExcalidrawEditorToolbarModifier: ViewModifier {
     @EnvironmentObject var toolState: ToolState
     @EnvironmentObject private var lockedContentState: LockedContentStateStore
 
-    @State private var isCollaboratorPopoverPresented = false
     @State private var lockedFileAccessRequest: LockedFileAccessRequest?
     @State private var existingRecoveryKeyLockRequest: LockedFileAccessRequest?
     @State private var isLockingFile = false
@@ -604,18 +603,12 @@ struct ExcalidrawEditorToolbarModifier: ViewModifier {
                                 .foregroundStyle(.secondary)
                         }
                     case .collaborationFile(let collaborationFile):
-                        HStack(spacing: 10) {
-                            VStack(alignment: .leading) {
-                                Text(collaborationFile.name ?? String(localizable: .generalUntitled))
-                                    .font(.headline)
-                                Text(collaborationFile.updatedAt?.formatted() ?? String(localizable: .generalFileNeverModified))
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                            
-                            if containerHorizontalSizeClass != .compact {
-                                CollaborationMembersPopoverButton()
-                            }
+                        VStack(alignment: .leading) {
+                            Text(collaborationFile.name ?? String(localizable: .generalUntitled))
+                                .font(.headline)
+                            Text(collaborationFile.updatedAt?.formatted() ?? String(localizable: .generalFileNeverModified))
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
                     case .cloudStorageFile(let reference):
                         VStack(alignment: .leading) {
@@ -654,10 +647,8 @@ struct ExcalidrawEditorToolbarModifier: ViewModifier {
                         } label: {
                             fileMenuLabel()
                         }
-                    case .collaborationFile(let collaborationFile):
-                        CollaborationFileMenu(file: collaborationFile) {
-                            fileMenuLabel()
-                        }
+                    case .collaborationFile:
+                        fileMenuLabel()
                     case .cloudStorageFile(let reference):
                         fileMenuLabel()
                             .modifier(
@@ -766,34 +757,3 @@ struct NavigationBackButton: View {
     }
 }
 
-struct CollaborationMembersPopoverButton: View {
-    @EnvironmentObject private var fileState: FileState
-    
-    @State private var isCollaboratorPopoverPresented = false
-    
-    init() {}
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            Button {
-                isCollaboratorPopoverPresented.toggle()
-            } label: {
-                Label("Collborators", systemSymbol: .person2)
-            }
-            .disabled(fileState.currentCollaborators.isEmpty)
-            .popover(isPresented: $isCollaboratorPopoverPresented, arrowEdge: .bottom) {
-                if #available(macOS 13.0, *) {
-                    CollaboratorsList()
-                        .scrollContentBackground(.hidden)
-                } else {
-                    CollaboratorsList()
-                }
-                
-            }
-            
-            Text("\(fileState.currentCollaborators.count)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-    }
-}

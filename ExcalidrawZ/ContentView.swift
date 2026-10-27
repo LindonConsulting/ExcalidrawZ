@@ -54,7 +54,6 @@ struct ContentView: View {
         content()
             .navigationTitle("")
             .modifier(PrintModifier())
-            .modifier(NewRoomModifier())
             .modifier(SettingsSheetPresentationModifier())
             .modifier(SearchableModifier())
             .modifier(OpenFromURLModifier())
