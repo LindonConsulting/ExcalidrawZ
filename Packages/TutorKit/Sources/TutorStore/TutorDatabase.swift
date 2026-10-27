@@ -2,10 +2,9 @@ import Foundation
 import GRDB
 import TutorModels
 
-/// SQLite database for TutorKit. Media (question payloads) live beside it in `media/`.
+/// SQLite database for TutorKit.
 public final class TutorDatabase: Sendable {
     public let writer: any DatabaseWriter
-    public let media: QuestionMediaStore
 
     public static let databaseFileName = "tutor.sqlite"
 
@@ -13,17 +12,16 @@ public final class TutorDatabase: Sendable {
     public convenience init(directory: URL) throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let queue = try DatabaseQueue(path: directory.appendingPathComponent(Self.databaseFileName).path, configuration: Self.configuration)
-        try self.init(writer: queue, mediaDirectory: directory.appendingPathComponent("media", isDirectory: true))
+        try self.init(writer: queue)
     }
 
     /// In-memory database for tests.
-    public static func inMemory(mediaDirectory: URL) throws -> TutorDatabase {
-        try TutorDatabase(writer: try DatabaseQueue(configuration: configuration), mediaDirectory: mediaDirectory)
+    public static func inMemory() throws -> TutorDatabase {
+        try TutorDatabase(writer: try DatabaseQueue(configuration: configuration))
     }
 
-    public init(writer: any DatabaseWriter, mediaDirectory: URL) throws {
+    public init(writer: any DatabaseWriter) throws {
         self.writer = writer
-        self.media = QuestionMediaStore(directory: mediaDirectory)
         try Self.migrator.migrate(writer)
     }
 
@@ -434,24 +432,44 @@ public final class TutorDatabase: Sendable {
             CREATE TABLE meta (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
             """)
         }
+
+        // MARK: v10 – the question bank moved to its own app: enrolment no longer points at a specification.
+        // The question, outcome, specification and coverageMark tables are left in place (nothing reads them).
+        migrator.registerMigration("v10-no-question-bank") { db in
+            try db.execute(sql: """
+            CREATE TABLE enrolment_new (
+                id BLOB PRIMARY KEY NOT NULL,
+                studentID BLOB NOT NULL REFERENCES student(id) ON DELETE CASCADE,
+                courseID TEXT REFERENCES course(id) ON DELETE SET NULL,
+                subject TEXT NOT NULL,
+                level TEXT NOT NULL,
+                board TEXT,
+                tier TEXT,
+                targetGrade TEXT NOT NULL DEFAULT '',
+                startedAt DATETIME,
+                endedAt DATETIME,
+                isPrimary INTEGER NOT NULL DEFAULT 0,
+                notes TEXT NOT NULL DEFAULT '',
+                remoteID BLOB,
+                createdAt DATETIME NOT NULL,
+                updatedAt DATETIME NOT NULL,
+                deletedAt DATETIME
+            );
+            INSERT INTO enrolment_new (id, studentID, courseID, subject, level, board, tier, targetGrade, startedAt, endedAt, isPrimary, notes, remoteID, createdAt, updatedAt, deletedAt)
+            SELECT id, studentID, courseID, subject, level, board, tier, targetGrade, startedAt, endedAt, isPrimary, notes, remoteID, createdAt, updatedAt, deletedAt
+            FROM enrolment;
+            DROP TABLE enrolment;
+            ALTER TABLE enrolment_new RENAME TO enrolment;
+            CREATE INDEX enrolment_student ON enrolment(studentID);
+            CREATE UNIQUE INDEX enrolment_unique ON enrolment(studentID, subject, level) WHERE deletedAt IS NULL;
+            """)
+        }
         return migrator
     }
 }
 
 // MARK: - GRDB conformances
 
-extension Specification: FetchableRecord, PersistableRecord {
-    public static let databaseTableName = "specification"
-}
-extension SpecSection: FetchableRecord, PersistableRecord {
-    public static let databaseTableName = "specSection"
-}
-extension SpecPoint: FetchableRecord, PersistableRecord {
-    public static let databaseTableName = "specPoint"
-}
-extension QuestionSpecPoint: FetchableRecord, PersistableRecord {
-    public static let databaseTableName = "questionSpecPoint"
-}
 extension Student: FetchableRecord, PersistableRecord {
     public static let databaseTableName = "student"
 }
@@ -470,58 +488,9 @@ extension Topic: FetchableRecord, PersistableRecord {
 extension TopicProgress: FetchableRecord, PersistableRecord {
     public static let databaseTableName = "topicProgress"
 }
-extension CoverageMark: FetchableRecord, PersistableRecord {
-    public static let databaseTableName = "coverageMark"
-}
-extension Outcome: FetchableRecord, PersistableRecord {
-    public static let databaseTableName = "outcome"
-}
 extension Lesson: FetchableRecord, PersistableRecord {
     public static let databaseTableName = "lesson"
 }
 extension LessonTopic: FetchableRecord, PersistableRecord {
     public static let databaseTableName = "lessonTopic"
-}
-
-/// `question` row without the join-table column; `Question.topicIDs` is attached by the store.
-struct QuestionRow: Codable, FetchableRecord, PersistableRecord {
-    static let databaseTableName = "question"
-
-    var id: UUID
-    var title: String
-    var source: String
-    var subject: Subject
-    var level: QualificationLevel?
-    var board: ExamBoard?
-    var tier: Tier?
-    var marks: Int?
-    var difficulty: Int?
-    var notes: String
-    var answer: String
-    var workedSolution: String
-    var freeTags: [String]
-    var imageHash: String?
-    var remoteID: UUID?
-    var createdAt: Date
-    var updatedAt: Date
-    var deletedAt: Date?
-
-    init(_ q: Question) {
-        id = q.id; title = q.title; source = q.source; subject = q.subject; level = q.level; board = q.board; tier = q.tier
-        marks = q.marks; difficulty = q.difficulty; notes = q.notes; answer = q.answer; workedSolution = q.workedSolution
-        freeTags = q.freeTags; imageHash = q.imageHash; remoteID = q.remoteID
-        createdAt = q.createdAt; updatedAt = q.updatedAt; deletedAt = q.deletedAt
-    }
-
-    func question(topicIDs: [String]) -> Question {
-        Question(id: id, title: title, source: source, subject: subject, level: level, board: board, tier: tier, marks: marks,
-                 difficulty: difficulty, notes: notes, answer: answer, workedSolution: workedSolution, topicIDs: topicIDs,
-                 freeTags: freeTags, imageHash: imageHash, remoteID: remoteID, createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt)
-    }
-}
-
-struct QuestionTopic: Codable, FetchableRecord, PersistableRecord {
-    static let databaseTableName = "questionTopic"
-    var questionID: UUID
-    var topicID: String
 }

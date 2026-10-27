@@ -3,7 +3,7 @@
 //  ExcalidrawZ
 //
 //  Edits a student's profile, their enrolments (what you teach them, one per subject/level),
-//  the other specifications they study, their parent contact and focus topics.
+//  their parent contact and focus topics.
 //
 
 import SwiftUI
@@ -129,7 +129,7 @@ struct StudentEditSheet: View {
         .padding(20)
         .frame(width: 580, height: 720)
         .onAppear { loadGroupNames() }
-        .confirmationDialog("Delete \(student.name)? Their enrolments, lesson history and question outcomes are removed too.", isPresented: $isDeleteConfirmPresented, titleVisibility: .visible) {
+        .confirmationDialog("Delete \(student.name)? Their enrolments and lesson history are removed too.", isPresented: $isDeleteConfirmPresented, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
                 do { try container.deleteStudent(id: student.id); dismiss() } catch { alertToast(error) }
             }
@@ -180,14 +180,6 @@ struct StudentEditSheet: View {
                 .disabled(enrolments.count == 1)
             }
             HStack(spacing: 8) {
-                Text("Specification").foregroundStyle(.secondary)
-                Picker("", selection: enrolment.specificationID) {
-                    Text("—").tag(UUID?.none)
-                    ForEach(container.specifications.filter { $0.level == e.level && $0.subject == e.subject }) { spec in
-                        Text(spec.displayName).tag(UUID?.some(spec.id))
-                    }
-                }
-                .labelsHidden()
                 Text("Target").foregroundStyle(.secondary)
                 TextField("", text: enrolment.targetGrade).frame(width: 60)
             }

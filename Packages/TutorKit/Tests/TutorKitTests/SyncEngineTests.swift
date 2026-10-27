@@ -28,7 +28,7 @@ final class SyncEngineTests: XCTestCase {
         XCTAssertEqual(round.timeIntervalSince1970, iso.timeIntervalSince1970, accuracy: 0.001)
     }
 
-    /// Wire a student + enrolment + question out of one database and apply them into another.
+    /// Wire a student + enrolment + lesson out of one database and apply them into another.
     func testWireRoundTrip() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("sync-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
@@ -36,9 +36,7 @@ final class SyncEngineTests: XCTestCase {
         let b = try TutorDatabase(directory: root.appendingPathComponent("b"))
         let student = try a.save(Student(name: "Frankie", yearGroup: "Year 11", remoteID: UUID()))
         let enrolment = try a.save(Enrolment(studentID: student.id, board: .wjec, tier: .higher, targetGrade: "7", isPrimary: true))
-        let question = Question(title: "Expand", topicIDs: ["maths.algebra"], freeTags: ["cgp"], imageHash: "00ff")
-        try a.add(question, payload: QuestionPayload(elementsJSON: Data("[]".utf8)))
-        try a.record(Outcome(questionID: question.id, studentID: student.id, result: .partial, perceivedDifficulty: 3))
+        let lesson = try a.save(Lesson(studentID: student.id, enrolmentID: enrolment.id, fileID: "file-1", subjectLine: "Maths", recap: "Expanding"))
 
         let client = SupabaseRESTClient(baseURL: URL(string: "https://example.invalid")!, apiKey: "x")
         let engineA = TutorSyncEngine(database: a, client: client)
@@ -59,8 +57,8 @@ final class SyncEngineTests: XCTestCase {
                 XCTAssertEqual(row["is_primary"] as? Bool, true)
                 XCTAssertEqual(row["tier"] as? String, "Higher")
             }
-            if table.local == "question" {
-                XCTAssertEqual(wire.first?["free_tags"] as? [String], ["cgp"])
+            if table.local == "lesson" {
+                XCTAssertEqual(wire.first?["file_id"] as? String, "file-1")
             }
             // Simulate the JSON hop (dates and uuids as strings, bools as JSON bools).
             let data = try JSONSerialization.data(withJSONObject: wire)
@@ -74,9 +72,8 @@ final class SyncEngineTests: XCTestCase {
         XCTAssertEqual(copied.updatedAt.timeIntervalSince1970, student.updatedAt.timeIntervalSince1970, accuracy: 0.001)
         XCTAssertEqual(try b.enrolments(forStudent: student.id).first?.id, enrolment.id)
         XCTAssertEqual(try b.enrolments(forStudent: student.id).first?.isPrimary, true)
-        let q = try XCTUnwrap(b.question(id: question.id))
-        XCTAssertEqual(q.topicIDs, ["maths.algebra"]); XCTAssertEqual(q.freeTags, ["cgp"])
-        XCTAssertEqual(try b.outcomes(forStudent: student.id).first?.result, .partial)
+        XCTAssertEqual(try b.lesson(forFile: "file-1")?.id, lesson.id)
+        XCTAssertEqual(try b.lesson(forFile: "file-1")?.recap, "Expanding")
 
         // Latest wins: an older copy must not overwrite a newer local row.
         var newer = copied; newer.name = "Frankie R"

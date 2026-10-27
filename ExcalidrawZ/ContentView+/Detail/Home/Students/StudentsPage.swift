@@ -20,7 +20,6 @@ struct StudentsPage: View {
     @State private var detailStudent: Student?
     @State private var editingStudent: Student?
     @State private var creatingName: String?
-    @State private var isSpecificationsPresented = false
 
     struct Row: Identifiable {
         var name: String
@@ -61,7 +60,6 @@ struct StudentsPage: View {
         .sheet(isPresented: Binding(get: { creatingName != nil }, set: { if !$0 { creatingName = nil } })) {
             StudentEditSheet(student: Student(name: creatingName ?? ""))
         }
-        .sheet(isPresented: $isSpecificationsPresented) { SpecificationsSheet() }
     }
 
     @ViewBuilder
@@ -70,7 +68,6 @@ struct StudentsPage: View {
             HStack {
                 Text("Students").font(.largeTitle.bold())
                 Spacer()
-                Button { isSpecificationsPresented = true } label: { Label("Specifications…", systemSymbol: .listBulletRectangle) }
                 Button {
                     Task { await container.syncFromSupabase(); await container.refreshRoster() }
                 } label: {
@@ -125,21 +122,6 @@ struct StudentsPage: View {
                 Text(row.roster.map { "\($0.pastLessons) past · \($0.upcomingLessons) ahead" + ($0.lastLesson.map { " · last \($0.formatted(date: .abbreviated, time: .omitted))" } ?? "") } ?? "none in window").foregroundStyle(.secondary)
             }
             .width(min: 160)
-            TableColumn("Coverage") { row in
-                if let s = row.student, let c = container.stats(for: s).coverage {
-                    Text("\(c.total - c.count(.notCovered))/\(c.total)")
-                } else {
-                    Text("—").foregroundStyle(.secondary)
-                }
-            }
-            .width(80)
-            TableColumn("To record") { row in
-                if let s = row.student {
-                    let n = container.stats(for: s).pendingOutcomes
-                    Text(n == 0 ? "" : "\(n)").foregroundStyle(.orange)
-                }
-            }
-            .width(70)
             TableColumn("Decks") { row in
                 if let id = row.student?.remoteID {
                     let assigned = container.deckAssignmentsByStudent[id] ?? []

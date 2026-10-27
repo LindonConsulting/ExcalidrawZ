@@ -172,13 +172,6 @@ struct ExcalidrawTrailingControls: View {
                 )
 
                 InspectorTabButton(
-                    tab: .questionBank,
-                    icon: .archivebox,
-                    title: "Question Bank",
-                    isDisabled: isDisabled(tab: .questionBank)
-                )
-
-                InspectorTabButton(
                     tab: .history,
                     icon: .clockArrowCirclepath,
                     title: String(localizable: .checkpoints),

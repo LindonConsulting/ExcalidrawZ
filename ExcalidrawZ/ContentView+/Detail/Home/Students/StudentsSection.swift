@@ -18,7 +18,6 @@ struct StudentsSection: View {
     @State private var editingStudent: Student?
     @State private var detailStudent: Student?
     @State private var isAddingStudent = false
-    @State private var isSpecificationsPresented = false
 
     private let columns = [GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 12)]
 
@@ -28,8 +27,6 @@ struct StudentsSection: View {
                 Image(systemSymbol: .person2)
                 Text("Students")
                 Spacer()
-                Button { isSpecificationsPresented = true } label: { Label("Specifications…", systemSymbol: .listBulletRectangle) }
-                    .controlSize(.small)
                 Button { isAddingStudent = true } label: { Label("Add student", systemSymbol: .plus) }
                     .controlSize(.small)
             }
@@ -60,7 +57,6 @@ struct StudentsSection: View {
         .sheet(item: $editingStudent) { student in StudentEditSheet(student: student) }
         .sheet(isPresented: $isAddingStudent) { StudentEditSheet(student: nil) }
         .sheet(item: $detailStudent) { student in StudentDetailSheet(studentID: student.id) }
-        .sheet(isPresented: $isSpecificationsPresented) { SpecificationsSheet() }
     }
 
     private func archive(_ student: Student) {
@@ -95,17 +91,10 @@ struct StudentCard: View {
                 }
             }
             Text(course).font(.caption).foregroundStyle(.secondary)
-            if let coverage = stats.coverage {
-                CoverageBar(coverage: coverage)
-            }
             HStack(spacing: 12) {
                 Label("\(stats.lessons)", systemSymbol: .calendar)
-                Label("\(stats.questionsShown)", systemSymbol: .archivebox)
                 if let last = stats.lastLesson {
                     Label(last.formatted(date: .abbreviated, time: .omitted), systemSymbol: .clock)
-                }
-                if stats.pendingOutcomes > 0 {
-                    Label("\(stats.pendingOutcomes) to record", systemSymbol: .checklist).foregroundStyle(.orange)
                 }
             }
             .font(.caption).foregroundStyle(.secondary)

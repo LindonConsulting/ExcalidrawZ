@@ -33,7 +33,7 @@ public extension TutorDatabase {
         return student
     }
 
-    /// Hard delete; enrolments, lessons, progress and contacts cascade, outcomes keep the question.
+    /// Hard delete; enrolments, lessons, progress and contacts cascade.
     func deleteStudent(id: UUID) throws {
         _ = try writer.write { db in try Student.deleteOne(db, key: id) }
     }
@@ -181,24 +181,6 @@ public extension TutorDatabase {
         }
     }
 
-    // MARK: Coverage marks
-
-    func coverageMarks(forStudent id: UUID) throws -> [CoverageMark] {
-        try writer.read { db in try CoverageMark.filter(Column("studentID") == id).fetchAll(db) }
-    }
-
-    @discardableResult
-    func save(_ mark: CoverageMark) throws -> CoverageMark {
-        try writer.write { db in try mark.save(db) }
-        return mark
-    }
-
-    func deleteCoverageMark(studentID: UUID, specPointID: UUID) throws {
-        _ = try writer.write { db in
-            try CoverageMark.filter(Column("studentID") == studentID && Column("specPointID") == specPointID).deleteAll(db)
-        }
-    }
-
     // MARK: Topics
 
     func topics(subject: Subject? = nil) throws -> [Topic] {
@@ -220,118 +202,6 @@ public extension TutorDatabase {
         try writer.write { db in
             for topic in topics { try topic.save(db) }
         }
-    }
-
-    // MARK: Questions
-
-    func questions(includeDeleted: Bool = false) throws -> [Question] {
-        try writer.read { db in
-            var request = QuestionRow.order(Column("createdAt").desc)
-            if !includeDeleted { request = request.filter(Column("deletedAt") == nil) }
-            let rows = try request.fetchAll(db)
-            let topics = try Self.topicIDsByQuestion(db)
-            return rows.map { $0.question(topicIDs: topics[$0.id] ?? []) }
-        }
-    }
-
-    func question(id: UUID) throws -> Question? {
-        try writer.read { db in
-            guard let row = try QuestionRow.fetchOne(db, key: id) else { return nil }
-            let topics = try QuestionTopic.filter(Column("questionID") == id).fetchAll(db).map(\.topicID)
-            return row.question(topicIDs: topics.sorted())
-        }
-    }
-
-    /// Saves the record and its payload together.
-    func add(_ question: Question, payload: QuestionPayload) throws {
-        try media.save(payload, for: question.id)
-        try writer.write { db in
-            try QuestionRow(question).insert(db)
-            try Self.writeTopics(question.topicIDs, for: question.id, db)
-        }
-    }
-
-    func update(_ question: Question) throws {
-        var question = question
-        question.updatedAt = .now
-        try writer.write { db in
-            try QuestionRow(question).update(db)
-            try Self.writeTopics(question.topicIDs, for: question.id, db)
-        }
-    }
-
-    /// Hard delete, including media.
-    func deleteQuestion(id: UUID) throws {
-        _ = try writer.write { db in try QuestionRow.deleteOne(db, key: id) }
-        media.delete(for: id)
-    }
-
-    func questions(withImageHashNear hash: String, threshold: Int, excluding id: UUID? = nil) throws -> [Question] {
-        try questions(includeDeleted: true).filter { question in
-            guard question.id != id, let other = question.imageHash else { return false }
-            return ImageHashDistance.hamming(hash, other) <= threshold
-        }
-    }
-
-    /// Question ids tagged with the topic.
-    func questionIDs(forTopic topicID: String) throws -> [UUID] {
-        try writer.read { db in
-            try UUID.fetchAll(db, sql: "SELECT questionID FROM questionTopic WHERE topicID = ?", arguments: [topicID])
-        }
-    }
-
-    private static func topicIDsByQuestion(_ db: Database) throws -> [UUID: [String]] {
-        let links = try QuestionTopic.order(Column("topicID")).fetchAll(db)
-        return Dictionary(grouping: links, by: \.questionID).mapValues { $0.map(\.topicID) }
-    }
-
-    private static func writeTopics(_ topicIDs: [String], for questionID: UUID, _ db: Database) throws {
-        _ = try QuestionTopic.filter(Column("questionID") == questionID).deleteAll(db)
-        for topicID in Set(topicIDs) {
-            // Unknown ids get a placeholder topic so the link survives; the taxonomy upsert fixes names later.
-            if try Topic.fetchOne(db, key: topicID) == nil {
-                try Topic(id: topicID, subject: .maths, name: topicID, sortOrder: 999).insert(db)
-            }
-            try QuestionTopic(questionID: questionID, topicID: topicID).insert(db)
-        }
-    }
-
-    // MARK: Outcomes
-
-    func outcomes(forQuestion id: UUID) throws -> [Outcome] {
-        try writer.read { db in
-            try Outcome.filter(Column("questionID") == id && Column("deletedAt") == nil).order(Column("shownAt").desc).fetchAll(db)
-        }
-    }
-
-    func outcomes(forStudent id: UUID) throws -> [Outcome] {
-        try writer.read { db in
-            try Outcome.filter(Column("studentID") == id && Column("deletedAt") == nil).order(Column("shownAt").desc).fetchAll(db)
-        }
-    }
-
-    func outcomes(forLesson id: UUID) throws -> [Outcome] {
-        try writer.read { db in
-            try Outcome.filter(Column("lessonID") == id && Column("deletedAt") == nil).order(Column("shownAt").desc).fetchAll(db)
-        }
-    }
-
-    /// All live outcomes keyed by question id, for list screens.
-    func outcomesByQuestion() throws -> [UUID: [Outcome]] {
-        let all = try writer.read { db in try Outcome.filter(Column("deletedAt") == nil).order(Column("shownAt").desc).fetchAll(db) }
-        return Dictionary(grouping: all, by: \.questionID)
-    }
-
-    @discardableResult
-    func record(_ outcome: Outcome) throws -> Outcome {
-        var outcome = outcome
-        outcome.updatedAt = .now
-        try writer.write { db in try outcome.save(db) }
-        return outcome
-    }
-
-    func deleteOutcome(id: UUID) throws {
-        _ = try writer.write { db in try Outcome.deleteOne(db, key: id) }
     }
 
     // MARK: Lessons
@@ -389,14 +259,5 @@ public extension TutorDatabase {
         try writer.write { db in
             try db.execute(sql: "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", arguments: [key, value])
         }
-    }
-}
-
-public enum ImageHashDistance {
-    public static let duplicateThreshold = 4
-
-    public static func hamming(_ a: String, _ b: String) -> Int {
-        guard let x = UInt64(a, radix: 16), let y = UInt64(b, radix: 16) else { return Int.max }
-        return (x ^ y).nonzeroBitCount
     }
 }

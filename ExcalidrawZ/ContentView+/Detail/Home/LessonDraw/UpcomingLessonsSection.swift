@@ -105,12 +105,6 @@ struct UpcomingLessonsSection: View {
             if let student = row.student {
                 let stats = container.stats(for: student)
                 VStack(alignment: .trailing, spacing: 2) {
-                    if let coverage = stats.coverage {
-                        Text("\(coverage.total - coverage.count(.notCovered))/\(coverage.total) covered").font(.caption).foregroundStyle(.secondary)
-                    }
-                    if stats.pendingOutcomes > 0 {
-                        Text("\(stats.pendingOutcomes) to record").font(.caption).foregroundStyle(.orange)
-                    }
                     if let last = stats.lastLesson {
                         Text("Last: \(last.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary)
                     }

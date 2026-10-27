@@ -50,7 +50,7 @@ struct LessonsSettingsView: View {
             await MainActor.run { pendingRestoreURL = url; isRestoreConfirmPresented = true }
         }
         .confirmationDialog(
-            "Replace all tutor data with the backup\(pendingRestoreURL.flatMap { TutorBackupManager.manifest(of: $0) }.map { " from \($0.createdAt.formatted(date: .abbreviated, time: .shortened)) (\($0.questionCount) questions, \($0.studentCount) students)" } ?? "")?",
+            "Replace all tutor data with the backup\(pendingRestoreURL.flatMap { TutorBackupManager.manifest(of: $0) }.map { " from \($0.createdAt.formatted(date: .abbreviated, time: .shortened)) (\($0.studentCount) students)" } ?? "")?",
             isPresented: $isRestoreConfirmPresented, titleVisibility: .visible
         ) {
             Button("Restore", role: .destructive) {
@@ -123,7 +123,7 @@ struct LessonsSettingsView: View {
         } header: {
             Text("TutorKit cloud backup (Supabase)")
         } footer: {
-            Text("Sync pulls changes made elsewhere, then pushes this Mac's students, enrolments, lessons, outcomes, questions and specifications to the TutorKit project (latest change wins). Question images stay local. The service role key stays in this Mac's Keychain.")
+            Text("Sync pulls changes made elsewhere, then pushes this Mac's students, enrolments and lessons to the TutorKit project (latest change wins). The service role key stays in this Mac's Keychain.")
                 .foregroundStyle(.secondary)
         }
 
@@ -146,9 +146,9 @@ struct LessonsSettingsView: View {
                 Text(backupMessage).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         } header: {
-            Text("Tutor data (students, questions, specifications, results)")
+            Text("Tutor data (students, enrolments, lessons)")
         } footer: {
-            Text("A backup is a folder named TutorKit-Backup-<date> holding the database and question images. To move to another Mac, back up to a shared folder or drive there, then Restore on the other machine. Restoring replaces the current data (a safety copy is kept in the automatic backups).")
+            Text("A backup is a folder named TutorKit-Backup-<date> holding the database. To move to another Mac, back up to a shared folder or drive there, then Restore on the other machine. Restoring replaces the current data (a safety copy is kept in the automatic backups).")
                 .foregroundStyle(.secondary)
         }
 

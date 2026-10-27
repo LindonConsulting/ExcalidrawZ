@@ -174,8 +174,6 @@ struct InspectorPresentationModifier: ViewModifier {
                 CanvasSettingsInspectorContent()
             case .search:
                 SearchInspectorContent()
-            case .questionBank:
-                QuestionBankInspectorContent()
 #if DEBUG
             case .debug:
                 DebugPanelView()
@@ -227,8 +225,6 @@ struct InspectorPresentationModifier: ViewModifier {
                 String(localizable: .canvasPreferencesTitle)
             case .search:
                 String(localizable: .searchButtonTitle)
-            case .questionBank:
-                "Question Bank"
 #if DEBUG
             case .debug:
                 "Debug"
@@ -336,7 +332,7 @@ struct InspectorPresentationModifier: ViewModifier {
 
     private var shouldUseFloatingNavigationInspectorContent: Bool {
         switch layoutState.activeInspectorTab {
-            case .aiChat, .library, .presentation, .questionBank:
+            case .aiChat, .library, .presentation:
                 true
             case .history:
                 !isCompactIOS

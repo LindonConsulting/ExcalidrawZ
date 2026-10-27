@@ -35,21 +35,13 @@ public final class TutorSyncEngine: Sendable {
     /// Parents before children, so foreign keys hold on push.
     static let tables: [Table] = [
         Table(local: "course", remote: "courses", key: ["id"], hasUpdatedAt: false),
-        Table(local: "specification", remote: "specifications", key: ["id"], hasUpdatedAt: false),
-        Table(local: "specSection", remote: "spec_sections", key: ["id"], hasUpdatedAt: false),
-        Table(local: "specPoint", remote: "spec_points", key: ["id"], hasUpdatedAt: false),
         Table(local: "topic", remote: "topics", key: ["id"], hasUpdatedAt: false),
         Table(local: "student", remote: "students", key: ["id"], localOnly: ["remoteID", "remoteSyncedAt"]),
         Table(local: "studentContact", remote: "student_contacts", key: ["id"], hasUpdatedAt: false),
         Table(local: "enrolment", remote: "enrolments", key: ["id"], localOnly: ["remoteID"]),
-        Table(local: "question", remote: "questions", key: ["id"], localOnly: ["remoteID"]),
-        Table(local: "questionTopic", remote: "question_topics", key: ["questionID", "topicID"], hasUpdatedAt: false),
-        Table(local: "questionSpecPoint", remote: "question_spec_points", key: ["questionID", "specPointID"], hasUpdatedAt: false),
         Table(local: "lesson", remote: "lessons", key: ["id"], localOnly: ["remoteID"]),
         Table(local: "lessonTopic", remote: "lesson_topics", key: ["lessonID", "topicID"], hasUpdatedAt: false),
-        Table(local: "outcome", remote: "outcomes", key: ["id"], localOnly: ["remoteID"]),
         Table(local: "topicProgress", remote: "topic_progress", key: ["studentID", "topicID"], localOnly: ["remoteID"]),
-        Table(local: "coverageMark", remote: "coverage_marks", key: ["studentID", "specPointID"], hasUpdatedAt: false),
     ]
 
     private let database: TutorDatabase
@@ -173,7 +165,7 @@ public final class TutorSyncEngine: Sendable {
     static let dateColumns: Set<String> = ["createdAt", "updatedAt", "deletedAt", "importedAt", "startedAt", "endedAt", "startAt", "endAt",
                                             "shownAt", "lastRevisedAt", "markedAt", "remoteSyncedAt"]
     static let boolColumns: Set<String> = ["isPrimary", "isFocus", "billable", "active"]
-    static let uuidColumns: Set<String> = ["id", "studentID", "enrolmentID", "specificationID", "sectionID", "specPointID", "questionID",
+    static let uuidColumns: Set<String> = ["id", "studentID", "enrolmentID",
                                             "lessonID", "remoteID", "deckID"]
 
     static func jsonValue(_ value: DatabaseValue, column: String) -> Any {

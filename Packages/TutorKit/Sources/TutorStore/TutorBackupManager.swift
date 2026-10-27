@@ -2,7 +2,7 @@ import Foundation
 import GRDB
 import TutorModels
 
-/// Export / restore of the whole TutorKit store (SQLite + media) as a folder,
+/// Export / restore of the whole TutorKit store (SQLite) as a folder,
 /// plus rolling automatic backups. Used for moving data between machines.
 public struct TutorBackupManager: Sendable {
     public static let databaseFileName = TutorDatabase.databaseFileName
@@ -13,7 +13,8 @@ public struct TutorBackupManager: Sendable {
         public var version = 1
         public var createdAt: Date
         public var hostName: String
-        public var questionCount: Int
+        /// Present in backups made before the question bank was removed.
+        public var questionCount: Int? = nil
         public var studentCount: Int
     }
 
@@ -40,13 +41,9 @@ public struct TutorBackupManager: Sendable {
         let target = try DatabaseQueue(path: folder.appendingPathComponent(Self.databaseFileName).path)
         try database.writer.backup(to: target)
 
-        if fm.fileExists(atPath: database.media.directory.path) {
-            try fm.copyItem(at: database.media.directory, to: folder.appendingPathComponent("media", isDirectory: true))
-        }
         let manifest = Manifest(
             createdAt: now,
             hostName: ProcessInfo.processInfo.hostName,
-            questionCount: try database.questions(includeDeleted: true).count,
             studentCount: try database.students(includeDeleted: true).count
         )
         let encoder = JSONEncoder()
@@ -63,7 +60,7 @@ public struct TutorBackupManager: Sendable {
         return try? decoder.decode(Manifest.self, from: data)
     }
 
-    /// Replaces the live database contents and media with the backup's.
+    /// Replaces the live database contents with the backup's.
     /// Takes a safety backup into `safetyDirectory` first when given.
     public func restoreBackup(from folder: URL, safetyDirectory: URL? = nil) throws {
         let fm = FileManager.default
@@ -77,14 +74,6 @@ public struct TutorBackupManager: Sendable {
         try source.backup(to: database.writer)
         // The restored schema may be older than this build: run migrations.
         try TutorDatabase.migrator.migrate(database.writer)
-
-        let mediaSource = folder.appendingPathComponent("media", isDirectory: true)
-        try? fm.removeItem(at: database.media.directory)
-        if fm.fileExists(atPath: mediaSource.path) {
-            try fm.copyItem(at: mediaSource, to: database.media.directory)
-        } else {
-            try fm.createDirectory(at: database.media.directory, withIntermediateDirectories: true)
-        }
     }
 
     /// Daily rolling backups into `directory`, keeping the newest `keep`.

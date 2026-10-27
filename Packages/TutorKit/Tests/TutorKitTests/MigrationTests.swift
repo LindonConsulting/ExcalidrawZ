@@ -16,7 +16,7 @@ final class MigrationTests: XCTestCase {
         try? FileManager.default.removeItem(at: dir)
     }
 
-    func testV4DataSurvivesTheV9Schema() throws {
+    func testV4DataSurvivesTheCurrentSchema() throws {
         try TutorDatabase.migrate(directory: dir, upTo: "v4-multi-spec")
         let queue = try DatabaseQueue(path: dir.appendingPathComponent(TutorDatabase.databaseFileName).path)
 
@@ -73,9 +73,9 @@ final class MigrationTests: XCTestCase {
         let primary = try XCTUnwrap(enrolments.first)
         XCTAssertTrue(primary.isPrimary)
         XCTAssertEqual(primary.subject, .maths); XCTAssertEqual(primary.level, .gcse); XCTAssertEqual(primary.board, .edexcel)
-        XCTAssertEqual(primary.tier, .higher); XCTAssertEqual(primary.targetGrade, "7"); XCTAssertEqual(primary.specificationID, mathsSpec)
+        XCTAssertEqual(primary.tier, .higher); XCTAssertEqual(primary.targetGrade, "7")
         let physics = try XCTUnwrap(enrolments.last)
-        XCTAssertFalse(physics.isPrimary); XCTAssertEqual(physics.subject, .physics); XCTAssertEqual(physics.specificationID, physicsSpec)
+        XCTAssertFalse(physics.isPrimary); XCTAssertEqual(physics.subject, .physics)
         XCTAssertEqual(physics.tier, .higher)
         XCTAssertEqual(try db.enrolments(forStudent: george).first?.subject, .computerScience)
 
@@ -88,34 +88,17 @@ final class MigrationTests: XCTestCase {
         XCTAssertEqual(try db.focusTopicIDs(forStudent: frankie), ["maths.algebra.quadratics", "maths.unknown.topic"])
         XCTAssertNotNil(try db.topics().first { $0.id == "maths.unknown.topic" })
 
-        // Questions keep their topics through the join table; archived → deleted.
-        let questions = try db.questions()
-        XCTAssertEqual(questions.count, 2)
-        XCTAssertEqual(try db.question(id: q1)?.topicIDs, ["maths.algebra.quadratics"])
-        XCTAssertEqual(try db.question(id: q1)?.freeTags, ["misc"])
-        XCTAssertEqual(try db.questionIDs(forTopic: "maths.algebra.quadratics"), [q1])
-
         // Lesson from lessonSession, linked to the primary enrolment.
         let lesson = try XCTUnwrap(db.lesson(forFile: "file-1"))
         XCTAssertEqual(lesson.id, session); XCTAssertEqual(lesson.studentID, frankie); XCTAssertEqual(lesson.status, .done)
         XCTAssertEqual(lesson.enrolmentID, primary.id); XCTAssertEqual(lesson.recap, "Did quadratics")
         XCTAssertEqual(try db.lessons(forStudent: frankie).count, 1)
 
-        // Outcomes: lessonID resolved from the file, the name-only row resolved to Frankie.
-        let outcomes = try db.outcomes(forStudent: frankie)
-        XCTAssertEqual(outcomes.count, 2)
-        XCTAssertEqual(outcomes.first { $0.questionID == q1 }?.lessonID, lesson.id)
-        XCTAssertEqual(outcomes.first { $0.questionID == q1 }?.result, .wrong)
-        XCTAssertNil(outcomes.first { $0.questionID == q2 }?.lessonID)
-        XCTAssertEqual(try db.coverage(specificationID: mathsSpec, studentID: frankie).count, 0)   // no spec points linked, just no crash
-
         // Round trip on the new schema and idempotent reopen.
-        try db.update(Question(id: q1, title: "Solve x²=4", topicIDs: ["maths.algebra"], createdAt: .now))
-        XCTAssertEqual(try db.question(id: q1)?.topicIDs, ["maths.algebra"])
         try db.setFocusTopics(["maths.algebra"], forStudent: frankie)
         XCTAssertEqual(try db.focusTopicIDs(forStudent: frankie), ["maths.algebra"])
         _ = try TutorDatabase(directory: dir)
-        XCTAssertEqual(TutorDatabase.migrationIdentifiers.last, "v9-student-cleanup")
+        XCTAssertEqual(TutorDatabase.migrationIdentifiers.last, "v10-no-question-bank")
     }
 
     func testFreshDatabaseHasNoLegacyColumns() throws {
@@ -123,8 +106,8 @@ final class MigrationTests: XCTestCase {
         let studentColumns = try db.writer.read { db in try db.columns(in: "student").map(\.name) }
         XCTAssertFalse(studentColumns.contains("subject"))
         XCTAssertTrue(studentColumns.contains("deletedAt"))
-        let questionColumns = try db.writer.read { db in try db.columns(in: "question").map(\.name) }
-        XCTAssertFalse(questionColumns.contains("topicIDs"))
+        let enrolmentColumns = try db.writer.read { db in try db.columns(in: "enrolment").map(\.name) }
+        XCTAssertFalse(enrolmentColumns.contains("specificationID"))
         XCTAssertFalse(try db.writer.read { db in try db.tableExists("lessonSession") })
     }
 }
