@@ -15,9 +15,6 @@ final class LayoutState: ObservableObject {
         case presentation
         case preference
         case search
-#if DEBUG
-        case debug
-#endif
     }
 
     @Published var isSidebarPresented: Bool = true

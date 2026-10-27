@@ -64,7 +64,6 @@ struct ContentView: View {
         content()
             .navigationTitle("")
             .modifier(PrintModifier())
-            .modifier(WhatsNewSheetViewModifier())
             .modifier(NewRoomModifier())
             .modifier(StoreKitEntitlementRefreshModifier())
             .modifier(PaywallModifier())
@@ -98,13 +97,6 @@ struct ContentView: View {
                     forceQuitAction: {
                         applicationTerminationPresentation.forceQuit()
                     }
-                )
-            }
-            .task(id: window?.windowNumber) {
-                guard let window else { return }
-                ScreenAnnotationController.shared.register(
-                    fileState: fileState,
-                    for: window
                 )
             }
 #endif
@@ -349,8 +341,6 @@ private struct ApplicationTerminationSheet: View {
     @ViewBuilder
     private var stageDescription: some View {
         switch stage {
-            case .screenAnnotationSaves:
-                Text(.localizable(.applicationTerminationStageScreenAnnotationSaves))
             case .backgroundDocumentOperations:
                 Text(.localizable(.applicationTerminationStageBackgroundDocumentOperations))
             case .currentDrawing:

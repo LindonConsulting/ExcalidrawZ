@@ -9,7 +9,6 @@ import SwiftUI
 import ChocofordUI
 import SFSafeSymbols
 #if os(macOS) && !APP_STORE
-import Sparkle
 #endif
 
 struct SettingsView: View {
@@ -214,9 +213,6 @@ struct SettingsView: View {
 #elseif os(iOS)
             case .pencil:
                 PencilSettingsView()
-
-            case .whatsNews:
-                WhatsNewView(showContinue: false)
 #endif
 
             case .about:
@@ -240,7 +236,6 @@ extension SettingsView {
         case fonts
 #elseif os(iOS)
         case pencil
-        case whatsNews
 #endif
 
         case about
@@ -273,8 +268,6 @@ extension SettingsView {
 #elseif os(iOS)
                 case .pencil:
                     return "Apple Pencil"
-                case .whatsNews:
-                    return .localizable(.whatsNewTitle)
 #endif
                 case .about:
                     return .localizable(.settingsAboutName)
@@ -307,8 +300,6 @@ extension SettingsView {
 #elseif os(iOS)
                 case .pencil:
                     return .pencilTip
-                case .whatsNews:
-                    return .sparkles
 #endif
                 case .about:
                     return .infoCircle
@@ -331,7 +322,6 @@ extension SettingsView {
                 case .fonts: "fonts"
 #elseif os(iOS)
                 case .pencil: "pencil"
-                case .whatsNews: "whatsNews"
 #endif
                 case .about: "about"
             }
@@ -344,7 +334,6 @@ extension SettingsView {
 //    static var previews: some View {
 //        SettingsView()
 //            .environmentObject(AppSettingsStore())
-//            .environmentObject(UpdateChecker())
 //    }
 //}
 #endif

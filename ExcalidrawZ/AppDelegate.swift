@@ -40,7 +40,7 @@ final class ApplicationTerminationPresentationCoordinator: ObservableObject {
     static let shared = ApplicationTerminationPresentationCoordinator()
 
     @Published private(set) var targetWindowNumber: Int?
-    @Published private(set) var stage: ApplicationTerminationStage = .screenAnnotationSaves
+    @Published private(set) var stage: ApplicationTerminationStage = .backgroundDocumentOperations
 
     private var cancelAction: (() -> Void)?
     private var forceQuitAction: (() -> Void)?
@@ -81,7 +81,6 @@ final class ApplicationTerminationPresentationCoordinator: ObservableObject {
 }
 
 enum ApplicationTerminationStage {
-    case screenAnnotationSaves
     case backgroundDocumentOperations
     case currentDrawing
     case applicationData
@@ -178,9 +177,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func prepareForApplicationTermination() async {
-        guard !Task.isCancelled else { return }
-        updateTerminationStage(.screenAnnotationSaves)
-        await ScreenAnnotationSaveTaskManager.shared.waitUntilIdle()
         guard !Task.isCancelled else { return }
         updateTerminationStage(.backgroundDocumentOperations)
         await OffscreenExcalidrawEditor.waitForPendingOperations()

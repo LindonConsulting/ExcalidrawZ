@@ -192,15 +192,6 @@ struct ExcalidrawTrailingControls: View {
                     isDisabled: isDisabled(tab: .aiChat),
                     action: toggleAIChatPresentation
                 )
-
-#if DEBUG
-//                InspectorTabButton(
-//                    tab: .debug,
-//                    icon: .ladybug,
-//                    title: "Debug",
-//                    isDisabled: isDisabled(tab: .debug)
-//                )
-#endif
             }
             .padding(.top, topPadding)
             .padding(.trailing, trailingPadding + effectiveHorizontalOffset)

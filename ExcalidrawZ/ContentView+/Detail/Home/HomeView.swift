@@ -103,11 +103,6 @@ struct HomeView: View {
 
                         RecentlyFilesSection()
 
-#if DEBUG || DEV
-                        // TemplatesSection()
-#endif
-                        
-                        HomeTipsSection()
                     }
                 }
             }

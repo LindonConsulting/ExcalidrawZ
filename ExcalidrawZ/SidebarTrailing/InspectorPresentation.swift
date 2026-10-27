@@ -174,10 +174,6 @@ struct InspectorPresentationModifier: ViewModifier {
                 CanvasSettingsInspectorContent()
             case .search:
                 SearchInspectorContent()
-#if DEBUG
-            case .debug:
-                DebugPanelView()
-#endif
         }
     }
 
@@ -225,10 +221,6 @@ struct InspectorPresentationModifier: ViewModifier {
                 String(localizable: .canvasPreferencesTitle)
             case .search:
                 String(localizable: .searchButtonTitle)
-#if DEBUG
-            case .debug:
-                "Debug"
-#endif
         }
     }
 

@@ -14,7 +14,6 @@
 		3910E998301462C600E422D4 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 3910E997301462C600E422D4 /* KeyboardShortcuts */; };
 		3913C0262FED942F00689184 /* ChocofordEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 3913C0252FED942F00689184 /* ChocofordEssentials */; };
 		3913C0282FED942F00689184 /* ChocofordUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3913C0272FED942F00689184 /* ChocofordUI */; };
-		3914876D2960AFD10042927A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 3914876C2960AFD10042927A /* Sparkle */; };
 		391716482FC3EF0100568AE9 /* LLMKit in Frameworks */ = {isa = PBXBuildFile; productRef = 391716472FC3EF0100568AE9 /* LLMKit */; };
 		391716552FC3EF3F00568AE9 /* LLMKit in Frameworks */ = {isa = PBXBuildFile; productRef = 391716542FC3EF3F00568AE9 /* LLMKit */; };
 		391721082FC4006800568AE9 /* ChocofordEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 391721072FC4006800568AE9 /* ChocofordEssentials */; };
@@ -65,8 +64,6 @@
 		398F14592CF738F70061CCF9 /* SwiftyAlert in Frameworks */ = {isa = PBXBuildFile; productRef = 398F14582CF738F70061CCF9 /* SwiftyAlert */; };
 		FAFB34109CFCF3ABAECFBC2B /* TutorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 54ECBED33A71B49CF2E62B8D /* TutorKit */; };
 		AA5BA1B0977E02D5DAA2ECE9 /* TutorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2B49D2D5934C3FAD6FB53028 /* TutorKit */; };
-		3990F82D2CA9C55100C94983 /* Store.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 3990F82B2CA9C55100C94983 /* Store.storekit */; };
-		3990F82E2CA9C55100C94983 /* Store.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 3990F82B2CA9C55100C94983 /* Store.storekit */; };
 		3990F8362CACF4C500C94983 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3990F8352CACF4C500C94983 /* StoreKit.framework */; };
 		3998125D2E73EBF400B7AAC9 /* ChocofordEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 3963A03B2C6C7EAA00472AE7 /* ChocofordEssentials */; };
 		3998125E2E73EBF400B7AAC9 /* ChocofordUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3963A03D2C6C7EAA00472AE7 /* ChocofordUI */; };
@@ -188,7 +185,6 @@
 		397E468E295AAE5D003B824B /* template.excalidraw */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = template.excalidraw; sourceTree = "<group>"; };
 		397F98DD295EE18E009BED55 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3987A5072CB54B200054D7D5 /* QuickLookPreviewExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = QuickLookPreviewExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		3990F82B2CA9C55100C94983 /* Store.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Store.storekit; sourceTree = "<group>"; };
 		3990F8352CACF4C500C94983 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		399815452E73EF4C00B7AAC9 /* ExcalidrawZ Icon 26.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "ExcalidrawZ Icon 26.icon"; sourceTree = "<group>"; };
 		39A7BB812A101B21003887F9 /* FakeToggleColorMode.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = FakeToggleColorMode.js; sourceTree = "<group>"; };
@@ -202,14 +198,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3963A0352C6BD6B900472AE7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				CheckForUpdatesView.swift,
-				UpdateChecker.swift,
-			);
-			target = 397E4652295838CF003B824B /* ExcalidrawZ */;
-		};
 		396603652D096D2900870AC9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -377,9 +365,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		392CF8EA2C8EF1A700CC81B9 /* ci_scripts */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ci_scripts; sourceTree = "<group>"; };
 		394EF5032DAD358A005C18E7 /* Debug */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Debug; sourceTree = "<group>"; };
-		3963A0342C6BD6B200472AE7 /* Sparkle */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (3963A0352C6BD6B900472AE7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Sparkle; sourceTree = "<group>"; };
 		3966034F2D096D2900870AC9 /* Utils */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (396603652D096D2900870AC9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 396603662D096D2900870AC9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 39A28CA22D92AB8700B079B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Utils; sourceTree = "<group>"; };
 		396603722D096D3400870AC9 /* Extensions */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (396603882D096D3400870AC9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Extensions; sourceTree = "<group>"; };
 		396603912D096D3E00870AC9 /* Models */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (39B69A0A2D831503003369E8 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Models; sourceTree = "<group>"; };
@@ -456,7 +442,6 @@
 				39F71C4D2FA88BD30040C8D7 /* ChocofordEssentials in Frameworks */,
 				3973D6052E7D1A75005FD6A5 /* AVKit.framework in Frameworks */,
 				391087832DFFCC1A0057F493 /* Logging in Frameworks */,
-				3914876D2960AFD10042927A /* Sparkle in Frameworks */,
 				39BE12EE2CB7DD8C006781D5 /* Zlib in Frameworks */,
 				394BB86D2FD5F8DB00E25D8F /* ChocofordUI in Frameworks */,
 				39EAA04B3000EFAB0044EE1C /* ChocofordEssentials in Frameworks */,
@@ -514,7 +499,6 @@
 			children = (
 				391673912CF85EEC0001AE18 /* PRIVATE_TIPS.md */,
 				500E089C2CF1BFB600392CC2 /* Config */,
-				392CF8EA2C8EF1A700CC81B9 /* ci_scripts */,
 				397E4655295838CF003B824B /* ExcalidrawZ */,
 				396604742D096D8700870AC9 /* ExcalidrawZTests */,
 				396604782D096D9200870AC9 /* ExcalidrawZUITests */,
@@ -555,7 +539,6 @@
 				39B69BC52D8BD74C003369E8 /* Subscription */,
 				396603D92D096D5700870AC9 /* Settings */,
 				394EF5032DAD358A005C18E7 /* Debug */,
-				3963A0342C6BD6B200472AE7 /* Sparkle */,
 				396603C42D096D4900870AC9 /* Store */,
 				396603AE2D096D4500870AC9 /* Persistence */,
 				396603912D096D3E00870AC9 /* Models */,
@@ -564,7 +547,6 @@
 				397E468529599DA0003B824B /* Resources */,
 				399815452E73EF4C00B7AAC9 /* ExcalidrawZ Icon 26.icon */,
 				397E465A295838D0003B824B /* Assets.xcassets */,
-				3990F82B2CA9C55100C94983 /* Store.storekit */,
 				39ED18532D3FDE1C00E437A0 /* Localizable.xcstrings */,
 				3908EB9729674DF60054A3ED /* Model.xcdatamodeld */,
 				397E465C295838D0003B824B /* ExcalidrawZ.entitlements */,
@@ -697,7 +679,6 @@
 			packageProductDependencies = (
 				2B49D2D5934C3FAD6FB53028 /* TutorKit */,
 				39FD00013012100000C10005 /* MSAL */,
-				3914876C2960AFD10042927A /* Sparkle */,
 				3930B2F72C512E7B00F14E88 /* ChocofordEssentials */,
 				3930B2F92C512E7B00F14E88 /* ChocofordUI */,
 				3966623E2C666EC600F863BC /* FlyingFox */,
@@ -844,7 +825,6 @@
 			packageReferences = (
 				3B0FE4FE653A7AA45459C2D8 /* XCLocalSwiftPackageReference "Packages/TutorKit" */,
 				39FD00013012100000C10003 /* XCRemoteSwiftPackageReference "microsoft-authentication-library-for-objc" */,
-				3914876B2960AFD00042927A /* XCRemoteSwiftPackageReference "Sparkle" */,
 				3966623D2C666EC600F863BC /* XCRemoteSwiftPackageReference "FlyingFox" */,
 				390716CF2C6E82CF002D7834 /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
 				39BE12EC2CB7DD8C006781D5 /* XCRemoteSwiftPackageReference "Zlib" */,
@@ -885,7 +865,6 @@
 				3963A07C2C6C7EAA00472AE7 /* Assets.xcassets in Resources */,
 				399815462E73EF4C00B7AAC9 /* ExcalidrawZ Icon 26.icon in Resources */,
 				3963A07D2C6C7EAA00472AE7 /* FakeToggleColorMode.js in Resources */,
-				3990F82E2CA9C55100C94983 /* Store.storekit in Resources */,
 				3976C4D72C8789F60037D3AF /* overwrite_console.js in Resources */,
 				3963A07E2C6C7EAA00472AE7 /* FakeSaveCommand.js in Resources */,
 				9009E9B6D7F84E138B7BDA37 /* MathRendering in Resources */,
@@ -905,7 +884,6 @@
 				397E465B295838D0003B824B /* Assets.xcassets in Resources */,
 				399815472E73EF4C00B7AAC9 /* ExcalidrawZ Icon 26.icon in Resources */,
 				39A7BB822A101B21003887F9 /* FakeToggleColorMode.js in Resources */,
-				3990F82D2CA9C55100C94983 /* Store.storekit in Resources */,
 				3976C4D62C8789F60037D3AF /* overwrite_console.js in Resources */,
 				39AD1EE9295AE08800DA9657 /* FakeSaveCommand.js in Resources */,
 				397E465D295838D0003B824B /* MathRendering in Resources */,
@@ -1902,14 +1880,6 @@
 				minimumVersion = 3.0.1;
 			};
 		};
-		3914876B2960AFD00042927A /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
 		391716462FC3EF0100568AE9 /* XCRemoteSwiftPackageReference "LLMKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/chocoford/LLMKit.git";
@@ -2049,11 +2019,6 @@
 		3913C0272FED942F00689184 /* ChocofordUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ChocofordUI;
-		};
-		3914876C2960AFD10042927A /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3914876B2960AFD00042927A /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
 		};
 		391716472FC3EF0100568AE9 /* LLMKit */ = {
 			isa = XCSwiftPackageProductDependency;

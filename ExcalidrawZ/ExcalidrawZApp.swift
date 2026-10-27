@@ -9,22 +9,17 @@ import Foundation
 import SwiftUI
 import Logging
 #if os(macOS)
-import KeyboardShortcuts
 import ServiceManagement
 #endif
 
 import SwiftyAlert
 import ChocofordUI
-#if os(macOS) && !APP_STORE
-import Sparkle
-#endif
 import LLMCore
 import LLMKit
 
 extension Notification.Name {
     static let shouldHandleImport = Notification.Name("ShouldHandleImport")
     static let didImportToExcalidrawZ = Notification.Name("DidImportToExcalidrawZ")
-    static let toggleWhatsNewSheet = Notification.Name("ToggleWhatsNewSheet")
     static let togglePrintModalSheet = Notification.Name("TogglePrintModalSheet")
     static let toggleSidebar = Notification.Name("ToggleSidebar")
     static let toggleInspector = Notification.Name("ToggleInspector")
@@ -72,9 +67,6 @@ struct ExcalidrawZApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 #endif
         
-#if os(macOS) && !APP_STORE
-    private let updaterController: SPUStandardUpdaterController
-#endif
 #if os(macOS)
     @Environment(\.openWindow) private var openWindow
 #endif
@@ -98,16 +90,6 @@ struct ExcalidrawZApp: App {
         _ = ExcalidrawZMCPServerController.shared
 #endif
 
-        // If you want to start the updater manually, pass false to startingUpdater and call .startUpdater() later
-        // This is where you can also pass an updater delegate if you need one
-#if os(macOS) && !APP_STORE
-        updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: nil,
-            userDriverDelegate: nil
-        )
-#endif
-        
         // Setting Folder Structure Type
         if #available(macOS 13.0, *) {} else {
             UserDefaults.standard.set(1, forKey: "FolderStructureStyle")
@@ -238,9 +220,6 @@ struct ExcalidrawZApp: App {
     
     @StateObject private var appPrefernece = AppPreference()
     @StateObject private var store = Store.shared
-#if os(macOS) && !APP_STORE
-    @StateObject private var updateChecker = UpdateChecker()
-#endif
     @StateObject private var llmState: LLMStateObject
     @StateObject private var aiChatState = AIChatState()
     @StateObject private var lockedContentState = LockedContentStateStore()
@@ -268,26 +247,11 @@ struct ExcalidrawZApp: App {
                 .llmProvider(state: llmState, client: .shared)
                 .lockedContentAutoRelock(lockedContentState: lockedContentState)
                 .onAppear {
-#if os(macOS)
-                    // Initialize after the SwiftUI scene to avoid shortcut event
-                    // monitoring affecting the initial accent color environment.
-                    _ = ScreenAnnotationController.shared
-#endif
-#if os(macOS) && !APP_STORE
-                    updateChecker.assignUpdater(updater: updaterController.updater)
-#endif
                     scheduleAIConversationCacheWarmupIfNeeded()
                 }
         }
         // prevent window being open by urls.
         .handlesExternalEvents(matching: ["*"])
-#if os(macOS) && !APP_STORE
-        .commands {
-            CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(checkForUpdatesViewModel: updateChecker)
-            }
-        }
-#endif
 #if os(macOS)
         .defaultSizeIfAvailable(CGSize(width: 1200, height: 700))
         .commands {
@@ -409,22 +373,6 @@ struct ExcalidrawZApp: App {
                 }
             }
 
-            CommandGroup(after: .help) {
-                Button {
-                    NotificationCenter.default.post(name: .toggleWhatsNewSheet, object: nil)
-                } label: {
-                    Text(.localizable(.whatsNewTitle))
-                }
-            }
-
-            CommandMenu("Tools") {
-                Button {
-                    ScreenAnnotationController.shared.toggle()
-                } label: {
-                    Text(.localizable(.screenAnnotationTitle))
-                }
-                .globalKeyboardShortcut(.toggleScreenAnnotation)
-            }
         }
 #endif
         
@@ -455,9 +403,6 @@ struct ExcalidrawZApp: App {
                 .environmentObject(store)
                 .environmentObject(lockedContentState)
                 .llmProvider(state: llmState, client: .shared)
-#if !APP_STORE
-                .environmentObject(updateChecker)
-#endif
         }
 #endif
     }
