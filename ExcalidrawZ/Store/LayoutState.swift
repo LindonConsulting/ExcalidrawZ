@@ -14,6 +14,7 @@ final class LayoutState: ObservableObject {
         case presentation
         case preference
         case search
+        case mathsTools
     }
 
     @Published var isSidebarPresented: Bool = true

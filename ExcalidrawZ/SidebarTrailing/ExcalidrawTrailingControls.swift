@@ -153,6 +153,13 @@ struct ExcalidrawTrailingControls: View {
                 )
 
                 InspectorTabButton(
+                    tab: .mathsTools,
+                    icon: .angle,
+                    title: "Maths Tools",
+                    isDisabled: isDisabled(tab: .mathsTools)
+                )
+
+                InspectorTabButton(
                     tab: .history,
                     icon: .clockArrowCirclepath,
                     title: String(localizable: .checkpoints),

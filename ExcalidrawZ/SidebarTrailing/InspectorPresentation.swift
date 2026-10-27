@@ -172,6 +172,8 @@ struct InspectorPresentationModifier: ViewModifier {
                 CanvasSettingsInspectorContent()
             case .search:
                 SearchInspectorContent()
+            case .mathsTools:
+                MathsToolsInspectorContent()
         }
     }
 
@@ -217,6 +219,8 @@ struct InspectorPresentationModifier: ViewModifier {
                 String(localizable: .canvasPreferencesTitle)
             case .search:
                 String(localizable: .searchButtonTitle)
+            case .mathsTools:
+                "Maths Tools"
         }
     }
 
@@ -320,7 +324,7 @@ struct InspectorPresentationModifier: ViewModifier {
 
     private var shouldUseFloatingNavigationInspectorContent: Bool {
         switch layoutState.activeInspectorTab {
-            case .library, .presentation:
+            case .library, .presentation, .mathsTools:
                 true
             case .history:
                 !isCompactIOS

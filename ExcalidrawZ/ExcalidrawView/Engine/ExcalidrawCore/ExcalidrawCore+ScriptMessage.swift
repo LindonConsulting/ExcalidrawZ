@@ -121,6 +121,10 @@ extension ExcalidrawCore: WKScriptMessageHandler {
                     DispatchQueue.main.async {
                         self.laserPointerPathPublisher.send(message.data)
                     }
+                case .mathsToolStateChanged(let message):
+                    DispatchQueue.main.async {
+                        self.mathsToolState = message.data
+                    }
                 case .onCameraChanged(let message):
                     DispatchQueue.main.async {
                         self.updateCameraState(message.data)
@@ -562,6 +566,7 @@ extension ExcalidrawCore {
         case onElementsChanged
         case onViewerMirrorDirty
         case laserPointerPath
+        case mathsToolStateChanged
         case onCameraChanged
         case onAICameraSessionStarted
         case onAICameraSessionUpdated
@@ -618,6 +623,7 @@ extension ExcalidrawCore {
         case onElementsChanged(ElementsChangedMessage)
         case onViewerMirrorDirty
         case laserPointerPath(LaserPointerPathMessage)
+        case mathsToolStateChanged(MathsToolStateMessage)
         case onCameraChanged(CameraChangedMessage)
         case onAICameraSessionStarted(AICameraSessionMessage)
         case onAICameraSessionUpdated(AICameraSessionMessage)
@@ -716,6 +722,8 @@ extension ExcalidrawCore {
                     self = .onViewerMirrorDirty
                 case .laserPointerPath:
                     self = .laserPointerPath(try LaserPointerPathMessage(from: decoder))
+                case .mathsToolStateChanged:
+                    self = .mathsToolStateChanged(try MathsToolStateMessage(from: decoder))
                 case .onCameraChanged:
                     self = .onCameraChanged(try CameraChangedMessage(from: decoder))
                 case .onAICameraSessionStarted:
@@ -797,6 +805,17 @@ extension ExcalidrawCore {
     struct LaserPointerPathMessage: AnyExcalidrawZMessage {
         var event: String
         var data: LaserPointerPath
+    }
+    struct MathsToolState: Codable, Hashable {
+        var active: Bool
+        var kind: String?
+        var variant: String?
+        var radius: Double?
+        var hasPin: Bool?
+    }
+    struct MathsToolStateMessage: AnyExcalidrawZMessage {
+        var event: String
+        var data: MathsToolState
     }
     struct AICameraSessionMessage: AnyExcalidrawZMessage {
         var event: String
