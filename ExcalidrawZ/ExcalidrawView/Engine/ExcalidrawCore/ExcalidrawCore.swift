@@ -137,6 +137,18 @@ class ExcalidrawCore: NSObject, ObservableObject {
         } catch {
             logger.error("Config consoleHandler failed: \(error)")
         }
+
+        // Excalidraw mirrors the whole scene into localStorage on every autosave
+        // and shows a "storage quota exceeded, changes will not be saved" banner
+        // when WebKit's ~5 MB cap is hit. We never read that copy (files persist
+        // through the Swift bridge), so swallow the error instead of alarming.
+        userContentController.addUserScript(
+            WKUserScript(
+                source: Self.suppressStorageQuotaScript,
+                injectionTime: .atDocumentStart,
+                forMainFrameOnly: false
+            )
+        )
         
         config.userContentController = userContentController
         
@@ -331,4 +343,25 @@ extension ExcalidrawCore {
             try? await Task.sleep(nanoseconds: 100_000_000)
         }
     }
+}
+
+extension ExcalidrawCore {
+    /// Makes `Storage.setItem` swallow `QuotaExceededError` so Excalidraw's
+    /// localStorage backup fails silently on large scenes.
+    static let suppressStorageQuotaScript = """
+    (function () {
+        if (typeof Storage === 'undefined' || !Storage.prototype) { return; }
+        var originalSetItem = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (key, value) {
+            try {
+                return originalSetItem.call(this, key, value);
+            } catch (error) {
+                if (error && error.name === 'QuotaExceededError') {
+                    return;
+                }
+                throw error;
+            }
+        };
+    })();
+    """
 }

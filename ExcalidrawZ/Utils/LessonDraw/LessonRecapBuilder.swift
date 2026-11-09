@@ -2,9 +2,9 @@
 //  LessonRecapBuilder.swift
 //  ExcalidrawZ
 //
-//  Builds the content of a new lesson file: the previous lesson's elements
-//  carried over inside a "Recap – <date>" frame, plus an AI summary text
-//  block beside it. Works on raw JSON dictionaries so files containing
+//  Builds the content of a new lesson file: the previous lesson's own work
+//  (not what it had itself carried over) inside a "Recap – <date>" frame,
+//  plus an AI summary text block beside it. Works on raw JSON dictionaries so files containing
 //  element types unknown to the Swift model still round-trip untouched.
 //
 
@@ -38,6 +38,8 @@ struct LessonRecapBuilder {
         return json["elements"] as? [[String: Any]] ?? []
     }
 
+    static let recapFrameNamePrefix = "Recap – "
+
     /// Live (non-deleted) elements, excluding frames themselves (nested
     /// frames are not supported by Excalidraw; their children are kept).
     static func liveElements(_ elements: [[String: Any]]) -> [[String: Any]] {
@@ -48,6 +50,22 @@ struct LessonRecapBuilder {
         }
     }
 
+    /// The previous lesson's own work: live elements minus anything inside
+    /// that file's "Recap – …" frames. Without this, each lesson would carry
+    /// every earlier lesson too, and files would grow without bound.
+    static func ownWork(_ elements: [[String: Any]]) -> [[String: Any]] {
+        let recapFrameIDs = Set(elements.compactMap { element -> String? in
+            guard (element["type"] as? String) == "frame",
+                  (element["name"] as? String)?.hasPrefix(recapFrameNamePrefix) == true
+            else { return nil }
+            return element["id"] as? String
+        })
+        return liveElements(elements).filter { element in
+            guard let frameID = element["frameId"] as? String else { return true }
+            return !recapFrameIDs.contains(frameID)
+        }
+    }
+
     /// Text and structure handed to the summarizer.
     static func recapInput(
         from elements: [[String: Any]],
@@ -55,7 +73,7 @@ struct LessonRecapBuilder {
         subject: String?,
         previousLessonDate: Date
     ) -> LessonRecapInput {
-        let live = liveElements(elements)
+        let live = ownWork(elements)
         let texts = live
             .filter { ($0["type"] as? String) == "text" }
             .sorted { lhs, rhs in
@@ -99,7 +117,7 @@ struct LessonRecapBuilder {
         var newElements: [[String: Any]] = []
         var frameRight: Double = 0
 
-        let carried = liveElements(previousElements)
+        let carried = ownWork(previousElements)
         if !carried.isEmpty, let previousLessonDate {
             let bounds = boundingBox(of: carried)
             let frameID = randomID()
@@ -113,7 +131,7 @@ struct LessonRecapBuilder {
             formatter.timeStyle = .none
 
             newElements.append(makeElement(type: "frame", id: frameID, x: 0, y: 0, width: frameWidth, height: frameHeight, extra: [
-                "name": "Recap – \(formatter.string(from: previousLessonDate))",
+                "name": recapFrameNamePrefix + formatter.string(from: previousLessonDate),
                 "strokeColor": "#bbb",
                 "backgroundColor": "transparent",
                 "roughness": 0,
