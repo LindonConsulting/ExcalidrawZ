@@ -24,6 +24,10 @@ extension ExcalidrawCore {
     func handleInlineMathRenderRequest(_ request: InlineMathRenderRequest) async {
         guard !webView.isLoading else { return }
         do {
+            if let expressions = request.expressions {
+                try await replaceTextWithInlineSegments(request, expressions: expressions)
+                return
+            }
             let rendered = try await MathRenderService.shared.renderLatex(
                 request.latex,
                 foregroundColor: request.strokeColor
@@ -43,5 +47,41 @@ extension ExcalidrawCore {
         } catch {
             logger.warning("Inline LaTeX render failed for \(request.textElementId): \(error)")
         }
+    }
+
+    /// Mixed prose + math: render every span, then let the web bundle lay the
+    /// pieces out in place of the text element. Any failing span aborts so the
+    /// text stays editable.
+    @MainActor
+    private func replaceTextWithInlineSegments(
+        _ request: InlineMathRenderRequest,
+        expressions: [String]
+    ) async throws {
+        var renders: [MathImageParams] = []
+        for latex in expressions {
+            let rendered = try await MathRenderService.shared.renderLatex(
+                latex,
+                foregroundColor: request.strokeColor
+            )
+            renders.append(rendered.mathImageParams)
+        }
+        let paramsJSON = try encodeJSON(InlineSegmentsParams(
+            originalText: request.originalText,
+            renders: renders
+        ))
+        let elementIdJSON = try encodeJSON(request.textElementId)
+        _ = try await webView.callAsyncJavaScript(
+            makeJavaScriptHelperCall(
+                "window.excalidrawZHelper.replaceTextWithInlineSegments(\(elementIdJSON), \(paramsJSON))"
+            ),
+            arguments: [:],
+            contentWorld: .page
+        )
+        documentSyncController.scheduleProgrammaticMutationCommit(reason: "replaceTextWithInlineSegments")
+    }
+
+    private struct InlineSegmentsParams: Codable {
+        var originalText: String?
+        var renders: [MathImageParams]
     }
 }

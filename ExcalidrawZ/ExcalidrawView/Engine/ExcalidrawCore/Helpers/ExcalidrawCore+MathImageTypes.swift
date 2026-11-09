@@ -43,6 +43,8 @@ extension ExcalidrawCore {
     struct InlineMathRenderRequest: Codable, Hashable {
         var textElementId: String
         var latex: String
+        /// Set when the text mixes prose and math: one entry per math span.
+        var expressions: [String]?
         var originalText: String?
         var fontSize: Double?
         var strokeColor: String?
